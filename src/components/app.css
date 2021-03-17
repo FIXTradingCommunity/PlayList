@@ -1,11 +1,11 @@
 .App {
-    display: block;
-    width: 100%;
-    min-height: 500px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  display: block;
+  width: 100%;
+  min-height: 500px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .App-logo {
@@ -15,316 +15,334 @@
 }
 
 .App-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 2rem;
 }
 
 .titleContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .subTitle {
-    color: #9D9D9D;
-    text-align: left;
+  color: #9D9D9D;
+  text-align: left;
 }
 
 body {
-    font-family: sans-serif;
-    font-size: small;
-	color: black;
-    min-height: 100%;
-    margin: 0;
+  font-family: sans-serif;
+  font-size: small;
+color: black;
+  min-height: 100%;
+  margin: 0;
 }
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 label {
-    font-family: sans-serif;
-    font-size: small;
-    margin-top: 2px;
-    margin-bottom: 2px;
-    text-align: left;
-    color: #737373;
+  font-family: sans-serif;
+  font-size: small;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  text-align: left;
+  color: #737373;
 }
 
 input[type=file] {
-    margin-top: 2px;
-    margin-bottom: 2px;
-    min-width: 500px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  min-width: 500px;
 }
 
 input[type=text] {
-    margin-top: 2px;
-    margin-bottom: 2px;
-    min-width: 250px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  min-width: 250px;
 }
 
 input[type=checkbox] {
-    margin-top: 2px;
-    margin-bottom: 2px;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 button {
-    margin: 5px;
+  margin: 5px;
 }
 
 h1 {
-    margin-top: 3px;
-    margin-bottom: 2px;
-    font-family: Verdana;
-    font-weight: bold;
-    font-size: x-large;
-    text-align: center;
+  margin-top: 3px;
+  margin-bottom: 2px;
+  font-family: Verdana;
+  font-weight: bold;
+  font-size: x-large;
+  text-align: center;
 }
 
 h2 {
-    font-family: Verdana;
-    font-weight: lighter;
-    font-size: large;
-    text-align: center;
+  font-family: Verdana;
+  font-weight: lighter;
+  font-size: large;
+  text-align: center;
 }
 
 h3 {
-    font-family: Verdana;
-    font-weight: normal;
-    font-size: medium;
-    text-align: center;
+  font-family: Verdana;
+  font-weight: normal;
+  font-size: medium;
+  text-align: center;
 }
 
 h4 {
-    margin: 0 0 0 10px;
-    font-size: 14px;
-    color: red;
+  margin: 0 0 0 10px;
+  font-size: 14px;
+  color: red;
 }
 
 p {
-    font-family: Verdana;
-    margin-top: 0em;
-    margin-bottom: 1em;
-    font-size: small;
-	  color: black;
+  font-family: Verdana;
+  margin-top: 0em;
+  margin-bottom: 1em;
+  font-size: small;
+  color: black;
 }
 
 img {
-    border-style: none;
-    float: right;
+  border-style: none;
+  float: right;
 }
 
 a {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 .container {
-    width: 100%;
-    padding-right: 15px;
-    padding-left: 15px;
-    margin-right: auto;
-    margin-left: auto;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .contentContainer {
-    display: flex;
-    flex-grow: 1;
+  display: flex;
+  flex-grow: 1;
 }
 
-.form {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+.form, .treeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 350px;
+  padding: 25px;
+}
+
+.treeContainer {
+  height: 500px;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 footer {
-    padding-bottom: 40px;
+  padding-bottom: 40px;
 }
 
 footer p {
-    margin: 0;
-    color: #9D9D9D;
-    font-weight: 100;
+  margin: 0;
+  color: #9D9D9D;
+  font-weight: 100;
 }
 
 .field {
-    border: none;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    width: 200px;
-    margin-right: 20px;
+  border: none;
+  margin-top: 10px;
+  width: 200px;
 }
 
 .inputsContainer {
-    display: flex;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .bar {
-    width: 200px;
-    background-color: lightgrey;
-    visibility: hidden;
+  width: 200px;
+  background-color: lightgrey;
+  visibility: hidden;
 }
 
 .textField-focused fieldset {
-    border-color: #009FE3 !important;
+  border-color: #009FE3 !important;
 }
 
 .textField-label-focused {
-    color: #009FE3 !important;
+  color: #009FE3 !important;
 }
 
 .checkboxContainer {
-    display: flex;
-    align-items: center;
-}
-
-.checkbox {
-    color: #009FE3 !important;
-    padding: 0 !important;
-    margin-right: 10px !important;
-}
-
-.checkbox:hover {
-    background-color: transparent !important;
-}
-
-.buttonsContainer {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.submitButton {
-    margin: 0;
-    display: inline-block;
-    border: none;
-    height: 46px;
-    min-width: 210px;
-    background-color: #64C97C;
-    border-radius: 23px;
-    padding: 15px 40px;
-    color: #FFFFFF;
-    font-weight: 500;
-    font-size: 14px;
-    cursor: pointer;
-    text-align: center;
-}
-
-.submitButton:hover {
-    background-color: #4eb767;
-}
-
-.submitButton:disabled {
-  background-color: #CCC;
-  color: #666666;
-  cursor: auto;
-}
-
-.downloadButton {
-    background-color: #009FE3;
-}
-
-.downloadButton:hover {
-    background-color: #006c9a;
-}
-
-.redirectButtonContainers {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
   align-items: center;
 }
 
+.checkbox {
+  color: #009FE3 !important;
+  padding: 0 !important;
+  margin-right: 10px !important;
+}
+
+.checkbox:hover {
+  background-color: transparent !important;
+}
+
+.buttonsContainer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.submitButton {
+  margin: 0;
+  display: inline-block;
+  border: none;
+  height: 46px;
+  min-width: 210px;
+  background-color: #64C97C;
+  border-radius: 23px;
+  padding: 15px 40px;
+  color: #FFFFFF;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.submitButton:hover {
+  background-color: #4eb767;
+}
+
+.submitButton:disabled {
+background-color: #CCC;
+color: #666666;
+cursor: auto;
+}
+
+.downloadButton {
+  background-color: #009FE3;
+}
+
+.downloadButton:hover {
+  background-color: #006c9a;
+}
+
+.redirectButtonContainers {
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+}
+
 .redirectButton {
-    background: none;
-    margin: 0 10px;
-    padding-top: 8px;
-    height: 36px;
-    width: 150px;
-    border: 2px solid #c7c7c7;
-    border-radius: 23px;
-    color: #009FE3;
-    font-weight: 500;
-    font-size: 14px;
-    cursor: pointer;
-    text-align: center;
+  background: none;
+  margin: 0 10px;
+  padding-top: 8px;
+  height: 36px;
+  width: 150px;
+  border: 2px solid #c7c7c7;
+  border-radius: 23px;
+  color: #009FE3;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
 }
 
 .errorContainer {
-    width: 100%;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    padding: 10px;
-    resize: both;
-    border: 1px solid rgba(0,0,0,0.1);
-    border-radius: 10px;
-    overflow: hidden;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  resize: both;
+  background-color: white;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .errorMessage {
-    width: 100%;
-    height: calc(100% - 10px);
-    padding: 10px;
-    border: none;
-    resize: none;
-    outline: none;
-    overflow: hidden;
-    color: red;
+  width: 100%;
+  height: calc(100% - 10px);
+  padding: 10px;
+  border: none;
+  resize: none;
+  outline: none;
+  overflow: hidden;
+  color: red;
 }
 
 #output {
-    padding-top: 20px;
-    padding-bottom: 20px;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 .fileReadyButton {
-    padding: 10px 20px;
-    border: 1px solid #009FE3;
-    border-radius: 8px;
-    color: #009FE3;
+  padding: 10px 20px;
+  border: 1px solid #009FE3;
+  border-radius: 8px;
+  color: #009FE3;
 }
 
 .fileReadyButton:hover {
-    background-color:#009FE3;
-    color: #FFF;
+  background-color:#009FE3;
+  color: #FFF;
 }
 
 .clearFieldsButton {
-    background: none;
-    border: none;
-    border-color: white;
-    padding: 10px;
-    color: #9D9D9D;
-    font-size: 14px;
+  background: none;
+  border: none;
+  border-color: white;
+  padding: 10px;
+  color: #9D9D9D;
+  font-size: 14px;
 }
 
 .showResultsButton {
-    margin-left: 20px;
-    color: #009FE3;
+  margin-left: 20px;
+  color: #009FE3;
 }
 
 .submitButton.closeResultsButton {
-    margin: 0;
-    background-color: #bfbfbf;
+  margin: 0;
+  background-color: #bfbfbf;
+}
+
+ol {
+padding: 0;
+overflow: hidden;
+}
+
+ol li {
+padding-left: 45px;
 }
 
 @media (min-width: 576px) {
-    .container {
-        max-width: 540px;
-    }
+  .container {
+      max-width: 540px;
+  }
 }
 
 @media (min-width: 992px) {
-    .container {
-        max-width: 1080px;
-    }
+  .container {
+      max-width: 1080px;
+  }
 }
 
 @media (min-width: 1200px) {
-    .container {
-        max-width: 1360px;
-    }
+  .container {
+      max-width: 1360px;
+  }
 }
