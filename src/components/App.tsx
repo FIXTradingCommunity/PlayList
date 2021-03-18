@@ -9,6 +9,7 @@ import './app.css';
 import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import Playlist from '../lib/playlist';
+import convert from 'xml-js';
 import CheckboxTree from 'react-checkbox-tree';
 
 const currentYear = new Date().getFullYear();
@@ -168,6 +169,8 @@ export default class App extends Component {
         console.log('dom', runner.dom);
 
         this.setState({ readingFile: false });
+        const jsonDom = convert.xml2json(runner.dom);
+        console.log('jsonDom', jsonDom);
         this.setState({
           treeData: [
             {
