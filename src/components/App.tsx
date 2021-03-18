@@ -7,6 +7,8 @@ import { version } from '../../package.json';
 import logo from '../assets/FIXorchestraLogo.png';
 import './app.css';
 import FileInput from './FileInput/FileInput';
+import ProgressBar from './ProgressBar/ProgressBar';
+import Playlist from '../lib/playlist';
 import CheckboxTree from 'react-checkbox-tree';
 
 const currentYear = new Date().getFullYear();
@@ -52,7 +54,7 @@ export default class App extends Component {
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
                   clearError={() => {
-                    this.setState({ referenceFileError: "", showAlerts: false }) //make sure it is false and not ""
+                    this.setState({ referenceFileError: "", showAlerts: false })
                   }}
                 />
               </div>
@@ -76,7 +78,7 @@ export default class App extends Component {
               <button
                 type="button"
                 className="submitButton"
-                // onClick={() => this.readOrchestra()}
+                onClick={() => this.readOrchestra()}
                 disabled={!this.referenceFile || this.state.readingFile}
               >
                 {this.state.readingFile ? 'Loading...' : 'Read Orchestra file'}
@@ -91,8 +93,8 @@ export default class App extends Component {
                 checkModel="all"
                 nodes={this.state.treeData}
                 icons={{
-                  expandClose: <span className={'icon'}>+</span>,
-                  expandOpen: <span className={'icon'}>-</span>,
+                  expandClose: <div className={'icon'}>+</div>,
+                  expandOpen: <div className={'icon'}>-</div>
                 }}
                 iconsClass="fa5"
                 checked={this.state.treeState.checked}
@@ -135,4 +137,81 @@ export default class App extends Component {
   private setInputFileBarRef = (instance: HTMLDivElement): void => {
     this.inputProgress = instance;
   };
+
+  private showProgress(progressNode: HTMLElement, percent: number): void {
+    if (percent >= 0) {
+      if (
+        progressNode instanceof FileInput ||
+        progressNode instanceof ProgressBar
+      ) {
+        progressNode.setProgress(percent);
+      }
+    } else if (progressNode.style) {
+      progressNode.style.backgroundColor = 'red';
+    }
+    if (progressNode.parentElement) {
+      progressNode.parentElement.style.visibility = 'visible';
+    }
+  };
+
+  private async readOrchestra(): Promise<void> {
+    if (this.referenceFile && this.inputProgress) {
+      this.setState({ showAlerts: false, readingFile: true });
+      const runner: Playlist = new Playlist(
+        this.referenceFile,
+        this.inputProgress,
+        this.showProgress
+      );
+      try {
+        // read local reference Orchestra file
+        await runner.runReader();
+        console.log('dom', runner.dom);
+
+        this.setState({ readingFile: false });
+        this.setState({
+          treeData: [
+            {
+              value: 'Example 1',
+              label: 'First Example',
+              children: [
+                {
+                  value: 'Child 1',
+                  label: 'First Child',
+                },
+                {
+                  value: 'Child 2',
+                  label: 'Second Child',
+                }
+              ]
+            },
+            {
+              value: 'Example 2',
+              label: 'Second Example',
+              children: [
+                {
+                  value: 'Child 3',
+                  label: 'Third Child',
+                },
+                {
+                  value: 'Child 4',
+                  label: 'Fourth Child',
+                }
+              ]
+            }
+          ]
+        });
+      } catch (error) {
+        if (error) {
+          this.alertMsg = error;
+        }
+        this.setState({ showAlerts: true, readingFile: false });
+      }
+    } else {
+      this.setState({ readingFile: false });
+
+      if (!this.referenceFile) {
+        this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
+      }
+    }
+  }
 }
