@@ -11,6 +11,7 @@ import ProgressBar from './ProgressBar/ProgressBar';
 import Playlist from '../lib/playlist';
 import convert from 'xml-js';
 import CheckboxTree from 'react-checkbox-tree';
+import Utility from '../lib/utility';
 
 const currentYear = new Date().getFullYear();
 
@@ -23,10 +24,8 @@ export default class App extends Component {
     showAlerts: false,
     readingFile: false,
     treeData: [],
-    treeState: {
-      checked: [],
-      expanded: [],
-    },
+    checkedTreeState: [],
+    expandedTreeState: []
   };
   private referenceFile: File | undefined = undefined;
   private orchestraFileName: string | undefined = 'myorchestra.xml';
@@ -89,7 +88,7 @@ export default class App extends Component {
           </div>
           {this.state.treeData && this.state.treeData.length ? (
             <div className="treeContainer">
-              <h2>Tree Control</h2>
+              <h2>Select Your Content</h2>
               <CheckboxTree
                 checkModel="all"
                 nodes={this.state.treeData}
@@ -98,10 +97,16 @@ export default class App extends Component {
                   expandOpen: <div className={'icon'}>-</div>
                 }}
                 iconsClass="fa5"
-                checked={this.state.treeState.checked}
-                expanded={this.state.treeState.expanded}
-                onCheck={(checked) => this.setState({ treeState: { checked } })}
-                onExpand={(expanded) => this.setState({ treeState: { expanded } })}
+                checked={this.state.checkedTreeState}
+                expanded={this.state.expandedTreeState}
+                onCheck={(checked) => this.setState({
+                  ...this.state,
+                  checkedTreeState: checked
+                })}
+                onExpand={(expanded) => this.setState({
+                  ...this.state,
+                  expandedTreeState: expanded
+                })}
               />
             </div>
           ) : (
@@ -166,43 +171,12 @@ export default class App extends Component {
       try {
         // read local reference Orchestra file
         await runner.runReader();
-        console.log('dom', runner.dom);
 
-        this.setState({ readingFile: false });
-        const jsonDom = convert.xml2json(runner.dom);
-        console.log('jsonDom', jsonDom);
-        this.setState({
-          treeData: [
-            {
-              value: 'Example 1',
-              label: 'First Example',
-              children: [
-                {
-                  value: 'Child 1',
-                  label: 'First Child',
-                },
-                {
-                  value: 'Child 2',
-                  label: 'Second Child',
-                }
-              ]
-            },
-            {
-              value: 'Example 2',
-              label: 'Second Example',
-              children: [
-                {
-                  value: 'Child 3',
-                  label: 'Third Child',
-                },
-                {
-                  value: 'Child 4',
-                  label: 'Fourth Child',
-                }
-              ]
-            }
-          ]
-        });
+        this.setState({ readingFile: false }); // verify if this is the correct place for this or if it should go after mapping
+        const jsonDom = convert.xml2js(runner.dom);
+        const tree = Utility.mapOrchestraDom(jsonDom.elements[0].elements);
+
+        this.setState({treeData: tree});
       } catch (error) {
         if (error) {
           this.alertMsg = error;
