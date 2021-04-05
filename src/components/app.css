@@ -133,7 +133,7 @@ a {
   flex-grow: 1;
 }
 
-.form, .treeContainer {
+.form, .treeContainer, .outputContainer {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -145,6 +145,13 @@ a {
   height: 500px;
   overflow-y: scroll;
   overflow-x: hidden;
+}
+
+.outputContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; 
 }
 
 .rct-collapse-btn {
@@ -209,7 +216,6 @@ footer p {
 }
 
 .buttonsContainer {
-  width: 100%;
   display: flex;
   justify-content: space-between;
   margin-top: 20px;
@@ -272,7 +278,7 @@ footer p {
 }
 
 .errorContainer {
-  width: 100%;
+  width: 75%;
   margin-top: 10px;
   margin-bottom: 20px;
   padding: 10px;
