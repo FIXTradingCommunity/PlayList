@@ -8,11 +8,13 @@ import logo from '../assets/FIXorchestraLogo.png';
 import './app.css';
 import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
+import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
 import convert from 'xml-js';
 import CheckboxTree from 'react-checkbox-tree';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
+import ResultsPage from './ResultsPage/ResultsPage';
 
 const currentYear = new Date().getFullYear();
 
@@ -23,8 +25,13 @@ export default class App extends Component {
     orchestraFileNameError: '',
     referenceFileError: '',
     showAlerts: false,
+    downloadHref: "",
+    downloadUrl: "",
     readingFile: false,
     creatingFile: false,
+    downloaded: false,
+    results: undefined,
+    showResults: false,
     treeData: [],
     checkedTreeState: [],
     expandedTreeState: []
@@ -137,21 +144,34 @@ export default class App extends Component {
                   />
                 </div>
                 <div className='buttonsContainer'>
-                  <button
-                    type="button"
-                    className="submitButton"
-                    onClick={() => this.createOrchestra()}
-                    disabled={
-                      this.state.showAlerts ||
-                      Boolean(this.state.orchestraFileNameError) ||
-                      Boolean(this.state.referenceFileError) ||
-                      this.state.checkedTreeState.length === 0
-                    }
-                  >
-                    {
-                      this.state.creatingFile ? "Loading..." : "Create Orchestra file"
-                    }
-                  </button>
+                  {
+                    !this.state.downloadHref
+                      ? <button
+                          type="button"
+                          className="submitButton"
+                          onClick={() => this.setState({ creatingFile: true }, () => this.createOrchestra())}
+                          disabled={
+                            this.state.showAlerts ||
+                            Boolean(this.state.orchestraFileNameError) ||
+                            Boolean(this.state.referenceFileError) ||
+                            this.state.checkedTreeState.length === 0
+                          }
+                        >
+                          {
+                            this.state.creatingFile ? "Loading..." : "Create Orchestra file"
+                          }
+                        </button>
+                      : <a
+                          className="submitButton downloadButton"
+                          href={this.state.downloadHref}
+                          download={this.orchestraFileName}
+                          data-downloadurl={this.state.downloadUrl}
+                          onClick={this.handleDownloadClick.bind(this)}
+                        >
+                          { this.state.downloaded ? "Downloaded" : "Download File"}
+                        </a>
+                  }
+                { (this.state.results && this.state.downloadHref) && <button className="clearFieldsButton showResultsButton" onClick={this.openResults}>Show Results</button> }
                 </div>
               </div>
             </>
@@ -162,6 +182,27 @@ export default class App extends Component {
           <p>Version {version}</p>
           <p>{App.rightsMsg}</p>
         </footer>
+        {
+          this.state.showResults &&
+          <ResultsPage
+            results={this.state.results}
+            onClose={this.closeResults}
+            downloadButton={
+              this.state.downloadHref ? <a
+              className="submitButton downloadButton"
+              href={this.state.downloadHref}
+              download={this.orchestraFileName}
+              data-downloadurl={this.state.downloadUrl}
+              onClick={this.handleDownloadClick.bind(this)}
+            >
+              { this.state.downloaded ? "Downloaded" : "Download File"}
+            </a> : 
+            <button className="submitButton closeResultsButton" onClick={this.closeResults}>
+              Close Results
+            </button>
+            }
+          />
+        }
       </div>
     );
   }
@@ -222,7 +263,14 @@ export default class App extends Component {
     if (this.referenceFile && this.inputProgress && this.outputProgress) {
       this.setState({
         showAlerts: false,
-        readingFile: true
+        readingFile: true,
+        downloadHref: "",
+        downloadUrl: "", 
+        downloaded: false,
+        results: undefined,
+        showResults: false,
+        checkedTreeState: [],
+        expandedTreeState: []
       });
 
       const runner: Playlist = new Playlist(
@@ -250,10 +298,77 @@ export default class App extends Component {
     this.setState({ readingFile: false });
   }
 
-  private createOrchestra(): void {
+  private handleReaderFinish = (output: OrchestraFile) => {
+    //return the values from the statistics dictionary
+  }
+
+  private openResults = () => {
+    this.setState({
+      showResults: true,
+    });
+  }
+  private closeResults = () => {
+    this.setState({
+      showResults: false,
+    });
+  }
+
+  private async createOrchestra(): Promise<void> {
     this.setState({ creatingFile: true });
-    if (this.outputProgress instanceof ProgressBar) {
-      this.outputProgress.setProgress(100);
+    if (this.playlist && this.orchestraFileName) {
+      const runner = this.playlist;
+      try {
+        runner.onFinish = this.handleReaderFinish;
+        await runner.runCreator(this.orchestraFileName, this.state.checkedTreeState);
+
+
+        if (this.outputProgress instanceof ProgressBar) {
+          this.outputProgress.setProgress(0);
+        }
+        
+      } catch (error) {
+        if (error) {
+          this.alertMsg = error;
+        }
+        this.setState({ showAlerts: true });
+      }
+
+      if (runner.contents) {
+        this.createLink(runner.contents);
+        this.openResults();
+      }
+    } else {
+      this.setState({
+        orchestraFileNameError: !this.orchestraFileName && "Orchestra file name not entered",
+        referenceFileError: !this.referenceFile && !this.playlist && "FIX log file not selected",
+      });
     }
+    this.setState({ creatingFile: false });
+  }
+
+  private createLink(contents: Blob): void {
+    if (this.orchestraFileName) {
+      const url = window.URL.createObjectURL(contents);
+
+      this.setState({
+        downloadHref: url,
+        downloadUrl: [OrchestraFile.MIME_TYPE, this.orchestraFileName, url].join(':'),
+        loading: true,
+      });
+    }
+  }
+
+  private handleDownloadClick(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>): void {
+    this.setState({
+      downloaded: true
+    });
+    setTimeout(() => {
+      this.setState({
+        downloadHref: "",
+        downloadUrl: "",
+        downloaded: false,
+        loading: false,
+      });
+    }, 1500);
   }
 }
