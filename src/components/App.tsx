@@ -34,6 +34,7 @@ export default class App extends Component {
   private inputProgress: HTMLElement | undefined = undefined;
   private outputProgress: HTMLElement | undefined = undefined;
   private alertMsg: string = '';
+  private playlist: Playlist | undefined = undefined;
 
   public render() {
     return (
@@ -219,33 +220,34 @@ export default class App extends Component {
 
   private async readOrchestra(): Promise<void> {
     if (this.referenceFile && this.inputProgress && this.outputProgress) {
-      this.setState({ showAlerts: false, readingFile: true });
+      this.setState({
+        showAlerts: false,
+        readingFile: true
+      });
+
       const runner: Playlist = new Playlist(
         this.referenceFile,
         this.inputProgress,
         this.outputProgress,
         this.showProgress
       );
+      this.playlist = runner; 
       try {
         // read local reference Orchestra file
-        await runner.runReader();
-
-        const jsonDom = convert.xml2js(runner.dom);
+        const inputDom = await runner.runReader();
+        const jsonDom = convert.xml2js(inputDom);
         const tree = Utility.mapOrchestraDom(jsonDom.elements[0].elements);
         this.setState({ treeData: tree });
       } catch (error) {
         if (error) {
           this.alertMsg = error;
         }
-        this.setState({ showAlerts: true, readingFile: false });
+        this.setState({ showAlerts: true });
       }
-    } else {
-      this.setState({ readingFile: false });
-
-      if (!this.referenceFile) {
-        this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
-      }
+    } else if (!this.referenceFile) {
+      this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
     }
+    this.setState({ readingFile: false });
   }
 
   private createOrchestra(): void {

@@ -22,7 +22,6 @@ export default class OrchestraFile {
     private progressNode: HTMLElement | null;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
     private appendOnly: boolean;
-    private stringDom: string = '';
 
     constructor(file: File, appendOnly: boolean = false, progressNode: HTMLElement | null, progressFunc: (progressNode: HTMLElement, percent: number) => void) {
         this.file = file;
@@ -80,36 +79,31 @@ export default class OrchestraFile {
     get statistics(): KeyedCollection<Number> {
         return this.repositoryStatistics;
     }
-    get xmlDom(): string {
-      return this.stringDom;
-    }
-    readFile(): Promise<void> {
+    readFile(): Promise<string> {
         const reader = new FileReader();
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             reader.onload = () => {
                 if (this.progressNode) {
                     this.progressFunc(this.progressNode, 100);
                 }
                 const res = reader.result;
                 if (typeof res === "string") {
-                    this.stringDom = res;
                     const dom = OrchestraFile.parse(res);
                     if (dom instanceof Error) {
                         reject(dom);
                     } else {
                         this.dom = dom;
-                        resolve();
+                        resolve(res);
                     }
                 }
                 else if (res) {
                     const stringRes = res.toString();
-                    this.stringDom = stringRes;
                     const dom = OrchestraFile.parse(stringRes);
                     if (dom instanceof Error) {
                         reject(dom);
                     } else {
                         this.dom = dom;
-                        resolve();
+                        resolve(stringRes);
                     }
                 } else {
                     reject("Failed to read XML file; possibly empty");
