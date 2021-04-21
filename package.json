@@ -44,6 +44,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "@types/lodash": "^4.14.168",
     "webpack-manifest-plugin": "^2.0.4"
   }
 }

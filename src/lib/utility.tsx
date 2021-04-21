@@ -84,9 +84,10 @@ export default class Utility {
       };
       sections.elements.forEach((section, index) => {
         const { name } = section.attributes;
-        sectionsIndexes[name.toLowerCase()] = { value: index, categories: {} };
+        const sectionKey = `section:${name}`;
+        sectionsIndexes[name.toLowerCase()] = { value: index, categories: {}, modelKey: sectionKey };
         sectionsObject.children.push({
-          value: name.toLowerCase(),
+          value: sectionKey,
           label: name,
           children: []
         });
@@ -98,17 +99,18 @@ export default class Utility {
           const { name, section } = category.attributes;
           if (section) {
             const sectionName = section.toLowerCase();
-            const sectionIndex = sectionsIndexes[sectionName].value;
+            const { value, modelKey } = sectionsIndexes[sectionName];
             const newIndex = Object.keys(sectionsIndexes[sectionName].categories).length;
             sectionsIndexes[sectionName].categories[name.toLowerCase()] = newIndex;
+            const categoryKey = `${modelKey}->category:${name}`;
             categoriesIndexes[name.toLowerCase()] = {
               sectionName,
-              sectionIndex
+              sectionIndex: value,
+              modelKey: categoryKey
             };
-            const categoryName = `Category ${name}`;
-            sectionsObject.children[sectionIndex].children.push({
-              value: categoryName.toLowerCase(),
-              label: categoryName,
+            sectionsObject.children[value].children.push({
+              value: categoryKey,
+              label: `Category ${name}`,
               children: []
             });
           }
@@ -118,21 +120,22 @@ export default class Utility {
         if (messages && messages.elements) {
           messages.elements.forEach((message) => {
             const { name, category, msgType } = message.attributes;
-            const { sectionIndex, sectionName } = categoriesIndexes[category.toLowerCase()];
+            const { sectionIndex, sectionName, modelKey } = categoriesIndexes[category.toLowerCase()];
             const categoryIndex = sectionsIndexes[sectionName].categories[category.toLowerCase()];
-            const messageName = `Message ${name} - Type ${msgType}`;
+            const messageKey = `${modelKey}->message:${name}`;
             const messageStructure = message.elements.find((msg) => {
               return msg.name === "fixr:structure"
             });
             if (messageStructure) {
               const newMessage: OneChildrenTC = {
-                value: messageName.toLowerCase(),
-                label: messageName,
+                value: messageKey,
+                label: `Message ${name} - Type ${msgType}`,
                 children: messageStructure.elements.map((ref) => {
-                  const refName = `${Utility.capitalize(ref.name.split(":")[1])} ${ref.attributes.id}`
+                  const refName = ref.name.split(":")[1];
+                  const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
                   return {
-                    value: refName.toLowerCase(),
-                    label: refName
+                    value: `${messageKey}-${refKey}->${refKey}`,
+                    label: `${Utility.capitalize(refName)} ${ref.attributes.id}`
                   }
                 })
               };
@@ -144,21 +147,22 @@ export default class Utility {
         // MAP COMPONENTS
         if (components && components.elements) {
           components.elements.forEach((component) => {
-            const { name, category } = component.attributes;
+            const { id, name, category } = component.attributes;
             if (categoriesIndexes[category.toLowerCase()]) {
-              const { sectionIndex, sectionName } = categoriesIndexes[category.toLowerCase()];
+              const { sectionIndex, sectionName, modelKey } = categoriesIndexes[category.toLowerCase()];
               const categoryIndex = sectionsIndexes[sectionName].categories[category.toLowerCase()];
-              const componentName = `Component ${name}`;
+              const componentKey = `${modelKey}->component:${id}`;
               const newComponent: OneChildrenTC = {
-                value: componentName.toLowerCase(),
-                label: componentName,
+                value: componentKey,
+                label: `Component ${name}`,
                 children: component.elements.filter(({ name }) => {
                   return name !== "fixr:annotation"
                 }).map((ref) => {
-                  const refName = `${Utility.capitalize(ref.name.split(":")[1])} ${ref.attributes && ref.attributes.id}`
+                  const refName = ref.name.split(":")[1];
+                  const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
                   return {
-                    value: refName.toLowerCase(),
-                    label: refName
+                    value: `${componentKey}-${refKey}->${refKey}`,
+                    label: `${Utility.capitalize(refName)} ${ref.attributes && ref.attributes.id}`
                   }
                 })
               }
@@ -178,10 +182,10 @@ export default class Utility {
         value: 'fields',
         label: 'Fields',
         children: fields.elements.map((field) => {
-          const { name, type } = field.attributes;
+          const { id, name, type } = field.attributes;
           const fieldName = `${name} - Type ${type}`;
           return {
-            value: fieldName.toLowerCase(),
+            value: `field:${id}`,
             label: fieldName,
           };
         })
@@ -196,17 +200,18 @@ export default class Utility {
         label: 'Codesets',
         children: codesets.elements.map((codeset) => {
           const { name } = codeset.attributes;
+          const codesetKey = `codeset:${name}`;
           return {
-            value: name.toLowerCase(),
+            value: codesetKey,
             label: name,
             children: codeset.elements
               .map((code) => {
                 if (code.attributes) {
                   const { name, value } = code.attributes;
-                  const codeName: string = `${name} - Value: ${value}`;
+                  const codeKey = `${codesetKey}-code:${name}`;
                   return {
-                    value: codeName.toLowerCase(),
-                    label: codeName,
+                    value: codeKey,
+                    label: `${name} - Value: ${value}`
                   };
                 } else {
                   return {
@@ -234,8 +239,9 @@ export default class Utility {
           const datatypeName = baseType
             ? `Datatype ${name} - Type ${baseType}`
             : `Datatype ${name}`;
+          const datatypeKey = `datatype:${name}`;
           return {
-            value: datatypeName.toLowerCase(),
+            value: datatypeKey,
             label: datatypeName
           };
         })

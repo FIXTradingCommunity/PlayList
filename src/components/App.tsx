@@ -69,7 +69,7 @@ export default class App extends Component {
                   }}
                 />
               </div>
-              <button className="clearFieldsButton" onClick={this.handleClearFields}>
+              <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
                 Clear Field
               </button>
             </div>
@@ -101,7 +101,6 @@ export default class App extends Component {
               <div className="treeContainer">
                 <h2>Select Your Content</h2>
                 <CheckboxTree
-                  checkModel="all"
                   nodes={this.state.treeData}
                   icons={{
                     expandClose: <div className={'icon'}>+</div>,
@@ -298,9 +297,19 @@ export default class App extends Component {
     this.setState({ readingFile: false });
   }
 
-  private handleReaderFinish = (output: OrchestraFile) => {
-    //return the values from the statistics dictionary
-  }
+  // Uncomment this lines when adding content to Modal. Also add the missing values
+  // private handleReaderFinish = (output: OrchestraFile) => {
+  //   //return the values from the statistics dictionary
+  //   const addedFields = output.statistics.Item("Fields.Added");
+  //   const removedFields = output.statistics.Item("Fields.Removed");
+
+  //   this.setState({
+  //     results: {
+  //       addedFields,
+  //       removedFields
+  //     }
+  //   });
+  // }
 
   private openResults = () => {
     this.setState({
@@ -318,7 +327,8 @@ export default class App extends Component {
     if (this.playlist && this.orchestraFileName) {
       const runner = this.playlist;
       try {
-        runner.onFinish = this.handleReaderFinish;
+        // Uncomment this line when adding content to Modal
+        // runner.onFinish = this.handleReaderFinish;
         await runner.runCreator(this.orchestraFileName, this.state.checkedTreeState);
 
 

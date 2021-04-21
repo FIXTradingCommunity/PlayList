@@ -39,44 +39,13 @@ const ProgressCircle: React.FC<Props> = (props) => {
 
   return (
     <div className="resultsPageContainer">
-      <div className="resultsPageOverlay" />
+      <button className="resultsPageOverlay" onClick={onClose} />
       <div className="resultsContainer">
-        <button className="closeButton" onClick={onClose}>
-          <img className="closeIcon" src={cancelIcon} alt="close" />
-        </button>
-        <div className="resultsValueContainer no-margin-top">
-          <div className="resultsLabel"># FIX Message Types discovered</div>
-          <div className="resultsValue">{fixMessageTypes}</div>
-        </div>
-        <div className="resultsValueContainer">
-          <div className="resultsLabel"># scenarios created</div>
-          <div className="resultsValue">{messageScenarios}</div>
-        </div>
-        <div className="resultsValueContainer">
-          <div className="resultsLabel"># fields discovered</div>
-          <div className="resultsValue">{fields}</div>
-        </div>
-        <div className="resultsValueContainer">
-          <div className="resultsLabel"># user defined fields discovered</div>
-          <div className="resultsValue">{userDefinedFields}</div>
-        </div>
-        <div className="resultsValueContainer">
-          <div className="resultsLabel"># components discovered</div>
-          <div className="resultsValue">{components}</div>
-        </div>
-        <div className="resultsValueContainer">
-          <div className="resultsLabel"># component scenarios discovered</div>
-          <div className="resultsValue">{componentScenarios}</div>
-        </div>
-        <div className="resultsValueContainer">
-          <div className="resultsLabel"># FIX messages from log file processed</div>
-          <div className="resultsValue">{messagesCount}</div>
-        </div>
-        <div className="downloadButtonContainer">
-          {downloadButton}
-        </div>
+      <div className="downloadButtonContainer">
+        {downloadButton}
       </div>
     </div>
+  </div>
   );
 };
 

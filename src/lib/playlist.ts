@@ -3,6 +3,7 @@
  */
 import OrchestraFile from "./OrchestraFile";
 import OrchestraModel from "./OrchestraModel";
+import uniq from 'lodash/uniq';
 
 /**
  * Controller for Playlist operations
@@ -48,6 +49,99 @@ export default class Playlist {
         // clones reference dom to output file
         output.dom = this.inputFile.cloneDom();
 
+        // parse selected items
+        const itemList: string[] = [];
+        selectedItems.forEach((selectedItem: string) => {
+          const items = selectedItem.split("->");
+          items.forEach((item) => {
+            itemList.push(item);
+          });
+        });
+        const newItemList = uniq(itemList);
+
+        const dataModel = newItemList.reduce((data: any, newItem) => {
+          const splittedItem = newItem.split(":");
+          switch(splittedItem[0]) {
+            case "field":
+              data.fields.push({ "id": splittedItem[1] });
+              break;
+            case "datatype":
+              data.datatypes.push({ "name": splittedItem[1] });
+              break;
+            case "section":
+              data.sections.push({ "name": splittedItem[1] });
+              break;
+            case "category":
+              data.categories.push({ "name": splittedItem[1] });
+              break;
+            case "codeset":
+              const splittedCodeset = newItem.split('-');
+              const codesetName = splittedCodeset[0].split(':')[1];
+              const codeName = splittedCodeset[1].split(':')[1];
+              if (data.codesets[codesetName]) {
+                data.codesets[codesetName].push({ "codeName": codeName })
+              }
+              else {
+                data.codesets[codesetName] = [{ "codeName": codeName }];
+              }
+              break;
+            case "group":
+              data.groups.push({ id: splittedItem[1] });
+              break;
+            case "message":
+              const splittedMessage = newItem.split('-');
+              const messageName = splittedMessage[0].split(':')[1];
+              const messageRef = splittedMessage[1].split(':');
+              const messageRefType = messageRef[0];
+              const messageRefValue = messageRef[1];
+              if (!data.messages[messageName]) {
+                data.messages[messageName] = {};
+              }
+              if (!data.messages[messageName][messageRefType]) {
+                data.messages[messageName][messageRefType] = [{ "id": messageRefValue }];
+              }
+              else {
+                data.messages[messageName][messageRefType].push({ "id": messageRefValue});
+              }
+              break;
+            case "component":
+              const splittedComponent = newItem.split('-');
+              const componentName = splittedComponent[0].split(':')[1];
+              if (splittedComponent.length > 1) {
+                  const componentRef = splittedComponent[1].split(':');
+                  const componentRefType = componentRef[0];
+                  const componentRefValue = componentRef[1];
+                  if (!data.components[componentName]) {
+                    data.components[componentName] = {};
+                  }
+                  if (!data.components[componentName][componentRefType]) {
+                    data.components[componentName][componentRefType] = [{ "id": componentRefValue }];
+                  }
+                  else {
+                    data.components[componentName][componentRefType].push({ "id": componentRefValue});
+                  }
+              }
+              else {
+                  data.components[componentName] = { all: true };
+              }
+              break;
+            default: 
+              break;
+          }
+
+          return data;
+        }, {
+          fields: [],
+          datatypes: [],
+          categories: [],
+          sections: [],
+          codesets: {},
+          groups: [],
+          messages: {},
+          components: {}
+        });
+
+        output.updateDomFromModel(dataModel, this.outputProgress);
         if (this.onFinish) {
             this.onFinish(output);
         }

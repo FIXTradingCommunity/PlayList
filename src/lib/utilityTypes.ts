@@ -325,6 +325,7 @@ export interface SectionIndexes {
 interface SectionIndex {
   value: number;
   categories: CategoriesForSectionsIndexes;
+  modelKey: string;
 }
 
 interface CategoriesForSectionsIndexes {
@@ -339,6 +340,7 @@ export interface CategoryIndexes {
 interface CategoryIndex {
   sectionName: string;
   sectionIndex: number;
+  modelKey: string;
 }
 
 // TREE CONTROL NODES

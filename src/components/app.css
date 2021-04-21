@@ -136,22 +136,25 @@ a {
 .form, .treeContainer, .outputContainer {
   display: flex;
   flex-direction: column;
+  padding: 25px;
+}
+
+.form {
   align-items: flex-start;
   min-width: 350px;
-  padding: 25px;
 }
 
 .treeContainer {
   height: 500px;
+  min-width: 500px;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
 .outputContainer {
-  display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center; 
+  align-items: center;
+  min-width: 350px;
 }
 
 .rct-collapse-btn {
