@@ -1,19 +1,19 @@
 import {
-  TreeControl,
-  SectionIndexes,
-  CategoryIndexes,
-  OneChildrenTC,
-  TwoChildrenTC,
-  FourChildrenTC,
-  DomData,
-  SectionData,
   CategoryData,
-  MessageData,
-  ComponentData,
-  FieldData,
+  CategoryIndexes,
   CodesetData,
-  DatatypeData
-} from './utilityTypes';
+  ComponentData,
+  DatatypeData,
+  DomData,
+  FieldData,
+  FourChildrenTC,
+  MessageData,
+  OneChildrenTC,
+  SectionData,
+  SectionIndexes,
+  TreeControl,
+  TwoChildrenTC
+} from './types';
 
 export default class Utility {
   public static FN(val: string | null): string {

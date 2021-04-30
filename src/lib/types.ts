@@ -33,6 +33,7 @@ export interface SectionData {
     }[];
   }[];
 }
+
 // CATEGORY DATA
 export interface CategoryData {
   type: string;
@@ -404,4 +405,50 @@ export interface OneChildrenTC {
     value: string;
     label: string;
   }[];
+}
+
+
+// SELECTION MODEL
+export interface SelectionModel {
+  fields: IdSelectionModel[];
+  datatypes: NameSelectionModel[];
+  categories: NameSelectionModel[];
+  sections: NameSelectionModel[];
+  codesets: CodesetSelectionModel;
+  groups: IdSelectionModel[];
+  messages: MessageSelectionModel;
+  components: ComponentSelectionModel;
+}
+
+export interface IdSelectionModel {
+  id: string
+}
+
+export interface NameSelectionModel {
+  name: string
+}
+
+export interface CodesetSelectionModel {
+  [key: string]: CodeSelectionModel[];
+}
+
+interface CodeSelectionModel {
+  codeName: string;
+}
+
+export interface MessageSelectionModel {
+  [key: string]: MessageObject;
+}
+
+interface MessageObject {
+  [key: string]: IdSelectionModel[];
+}
+
+export interface ComponentSelectionModel {
+  [key: string]: ComponentObject;
+}
+
+interface ComponentObject {
+  all: boolean;
+  [key: string]: IdSelectionModel[] | any;
 }

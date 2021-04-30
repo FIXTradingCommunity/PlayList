@@ -4,6 +4,7 @@
 import OrchestraFile from "./OrchestraFile";
 import OrchestraModel from "./OrchestraModel";
 import uniq from 'lodash/uniq';
+import { SelectionModel } from "./types";
 
 /**
  * Controller for Playlist operations
@@ -49,7 +50,7 @@ export default class Playlist {
         // clones reference dom to output file
         output.dom = this.inputFile.cloneDom();
 
-        // parse selected items
+        // parse selected keys into array of items
         const itemList: string[] = [];
         selectedItems.forEach((selectedItem: string) => {
           const items = selectedItem.split("->");
@@ -59,7 +60,8 @@ export default class Playlist {
         });
         const newItemList = uniq(itemList);
 
-        const dataModel = newItemList.reduce((data: any, newItem) => {
+        // divide items according to their types
+        const dataModel = newItemList.reduce((data: SelectionModel, newItem) => {
           const splittedItem = newItem.split(":");
           switch(splittedItem[0]) {
             case "field":
@@ -112,7 +114,7 @@ export default class Playlist {
                   const componentRefType = componentRef[0];
                   const componentRefValue = componentRef[1];
                   if (!data.components[componentName]) {
-                    data.components[componentName] = {};
+                    data.components[componentName] = { all: false };
                   }
                   if (!data.components[componentName][componentRefType]) {
                     data.components[componentName][componentRefType] = [{ "id": componentRefValue }];
@@ -128,7 +130,6 @@ export default class Playlist {
             default: 
               break;
           }
-
           return data;
         }, {
           fields: [],

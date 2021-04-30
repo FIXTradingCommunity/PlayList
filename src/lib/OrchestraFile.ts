@@ -8,6 +8,7 @@ import OrchestraModel, { CodesetsModel, ComponentsModel, FieldsModel, GroupsMode
 import { IsSupportedfromString, Presence, PresencefromString, StructureModel } from "./StructureModel";
 import { KeyedCollection } from "./KeyedCollection";
 import { xml } from "vkbeautify";
+import { CodesetSelectionModel, ComponentSelectionModel, IdSelectionModel, MessageSelectionModel, NameSelectionModel, SelectionModel } from "./types";
 
 export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
@@ -123,7 +124,7 @@ export default class OrchestraFile {
         });
     }
 
-    updateDomFromModel(dataModel: any, progressNode: HTMLElement | null): void {
+    updateDomFromModel(dataModel: SelectionModel, progressNode: HTMLElement | null): void {
         this.updateDomMetadata();
         this.updateDomSections(dataModel.sections);
         this.updateDomCategories(dataModel.categories);
@@ -185,7 +186,7 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Messages.Added",countMessagesAdded);
         this.repositoryStatistics.Add("Scenarios.Added",countScenariosAdded);
     }
-    private updateDomMessages(messagesModel: any): void {
+    private updateDomMessages(messagesModel: MessageSelectionModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const messagesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const messagesElement: Element = messagesSnapshot.snapshotItem(0) as Element;
@@ -210,7 +211,7 @@ export default class OrchestraFile {
                 const refKey = refName.substring(0, refName.length-3);
                 if (messagesModel[name][refKey] && messagesModel[name][refKey].length > 0) {
                   const id: string | null = refs[i].getAttribute("id");
-                  const found = messagesModel[name][refKey].find((messageModel: any) => {
+                  const found = messagesModel[name][refKey].find((messageModel) => {
                     return messageModel.id === id
                   });
                   if (!found) {
@@ -571,7 +572,7 @@ export default class OrchestraFile {
         }
         this.repositoryStatistics.Add("Members.Unused", countMembersRemoved);
     }
-    private updateDomCodes(codesetsModel: any): void {
+    private updateDomCodes(codesetsModel: CodesetSelectionModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const codesetsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const codesetsElement: Element = codesetsSnapshot.snapshotItem(0) as Element;
@@ -594,7 +595,7 @@ export default class OrchestraFile {
             const codeElements: HTMLCollectionOf<Element> = codesetElement.getElementsByTagName("fixr:code");
             for (let i: number = codeElements.length - 1; i >= 0; i--) {
               const value: string | null = codeElements[i].getAttribute("name");
-              const codeFound = codesetsModel[name].find((codeModel: any) => (codeModel.codeName === value));
+              const codeFound = codesetsModel[name].find((codeModel) => (codeModel.codeName === value));
               if (!codeFound) {
                 codesetElement.removeChild(codeElements[i]);
                 countCodesRemoved++;
@@ -621,7 +622,7 @@ export default class OrchestraFile {
         }
         return false;
     }
-    private updateDomFields(fieldsModel: any): void {
+    private updateDomFields(fieldsModel: IdSelectionModel[]): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const fieldsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:fields", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
         const fieldsElement: Element = fieldsSnapshot.snapshotItem(0) as Element;
@@ -632,7 +633,7 @@ export default class OrchestraFile {
         for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
             const node: Element = nodesSnapshot.snapshotItem(i) as Element;
             const id: string | null = node.getAttribute("id");
-            const fieldFound = fieldsModel.find((fieldModel: any) => (fieldModel.id === id));
+            const fieldFound = fieldsModel.find((fieldModel) => (fieldModel.id === id));
             if (!fieldFound) {
               fieldsElement.removeChild(node);
               countFieldsRemoved++;
@@ -646,7 +647,7 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Fields.Removed",countFieldsRemoved);
         this.repositoryStatistics.Add("Fields.Added",countFieldsAdded);
     }
-    private updateDomGroups(groupsModel: any): void {
+    private updateDomGroups(groupsModel: IdSelectionModel[]): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const groupsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
       const groupsElement: Element = groupsSnapshot.snapshotItem(0) as Element;
@@ -657,7 +658,7 @@ export default class OrchestraFile {
       for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
           const node: Element = nodesSnapshot.snapshotItem(i) as Element;
           const id: string | null = node.getAttribute("id");
-          const fieldFound = groupsModel.find((groupModel: any) => (groupModel.id === id));
+          const fieldFound = groupsModel.find((groupModel) => (groupModel.id === id));
           if (!fieldFound) {
             groupsElement.removeChild(node);
             countGroupsRemoved++;
@@ -713,7 +714,7 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Components.Removed",countComponentsRemoved);
         this.repositoryStatistics.Add("Components.Added",countComponentsAdded);
     }
-    private updateDomComponents(componentsModel: any): void {
+    private updateDomComponents(componentsModel: ComponentSelectionModel): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const componentsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
       const componentsElement: Element = componentsSnapshot.snapshotItem(0) as Element;
@@ -738,7 +739,7 @@ export default class OrchestraFile {
                 const refKey = refName.substring(0, refName.length-3);
                 if (componentsModel[id][refKey] && componentsModel[id][refKey].length > 0) {
                   const refId: string | null = refs[i].getAttribute("id");
-                  const found = componentsModel[id][refKey].find((componentModel: any) => {
+                  const found = componentsModel[id][refKey].find((componentModel: IdSelectionModel) => {
                     return componentModel.id === refId
                   });
                   if (!found) {
@@ -807,7 +808,7 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Groups.Removed", countGroupsRemoved);
         this.repositoryStatistics.Add("Groups.Added", countGroupsAdded);
     }
-    private updateDomDatatypes(datatypesModel: any): void {
+    private updateDomDatatypes(datatypesModel: NameSelectionModel[]): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const datatypesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:datatypes", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
       const datatypesElement: Element = datatypesSnapshot.snapshotItem(0) as Element;
@@ -818,7 +819,7 @@ export default class OrchestraFile {
       for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
           const node: Element = nodesSnapshot.snapshotItem(i) as Element;
           const name: string | null = node.getAttribute("name");
-          const datatypeFound = datatypesModel.find((datatypeModel: any) => (datatypeModel.name === name));
+          const datatypeFound = datatypesModel.find((datatypeModel) => (datatypeModel.name === name));
           if (!datatypeFound) {
             datatypesElement.removeChild(node);
             countDatatypesRemoved++;
@@ -832,7 +833,7 @@ export default class OrchestraFile {
       this.repositoryStatistics.Add("Datatypes.Removed", countDatatypesRemoved);
       this.repositoryStatistics.Add("Datatypes.Added", countDatatypesAdded);
     }
-    private updateDomSections(sectionsModel: any): void {
+    private updateDomSections(sectionsModel: NameSelectionModel[]): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const sectionsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:sections", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
       const sectionsElement: Element = sectionsSnapshot.snapshotItem(0) as Element;
@@ -843,7 +844,7 @@ export default class OrchestraFile {
       for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
           const node: Element = nodesSnapshot.snapshotItem(i) as Element;
           const name: string | null = node.getAttribute("name");
-          const sectionFound = sectionsModel.find((sectionModel: any) => (sectionModel.name === name));
+          const sectionFound = sectionsModel.find((sectionModel) => (sectionModel.name === name));
           if (!sectionFound) {
             sectionsElement.removeChild(node);
             countSectionsRemoved++;
@@ -857,7 +858,7 @@ export default class OrchestraFile {
       this.repositoryStatistics.Add("Sections.Removed", countSectionsRemoved);
       this.repositoryStatistics.Add("Sections.Added", countSectionsAdded);
     }
-    private updateDomCategories(categoriesModel: any): void {
+    private updateDomCategories(categoriesModel: NameSelectionModel[]): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const categoriesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:categories", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
       const categoriesElement: Element = categoriesSnapshot.snapshotItem(0) as Element;
@@ -868,7 +869,7 @@ export default class OrchestraFile {
       for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
           const node: Element = nodesSnapshot.snapshotItem(i) as Element;
           const name: string | null = node.getAttribute("name");
-          const categoryFound = categoriesModel.find((categoryModel: any) => (categoryModel.name === name));
+          const categoryFound = categoriesModel.find((categoryModel) => (categoryModel.name === name));
           if (!categoryFound) {
             categoriesElement.removeChild(node);
             countCategoriesRemoved++;
