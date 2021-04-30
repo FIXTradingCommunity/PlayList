@@ -4,6 +4,9 @@
 
 import React, { Component } from 'react';
 import { version } from '../../package.json';
+import * as Sentry from '@sentry/browser';
+import * as jwt from 'jsonwebtoken';
+import * as QueryString from 'query-string';
 import logo from '../assets/FIXorchestraLogo.png';
 import './app.css';
 import FileInput from './FileInput/FileInput';
@@ -16,7 +19,38 @@ import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import ResultsPage from './ResultsPage/ResultsPage';
 
+const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
+
 const currentYear = new Date().getFullYear();
+
+interface IDecodedUserData {
+  at_hash: string;
+  sub: string;
+  firstname: string;
+  Employer: string;
+  "Zip/Postcode": string | null;
+  iss: string;
+  groups: string[] | null;
+  Title: null;
+  Website: null;
+  "State/Region": string | null;
+  "City": string | null;
+  "Street Address 1": string | null;
+  "Job Title": string | null;
+  nonce: string | null;
+  "Street Address 2": string | null;
+  lastname: string;
+  aud: string[];
+  auth_time: string;
+  Country: string | null;
+  exp: number;
+  iat: number;
+  email: string;
+}
+
+interface IDecoded {
+  exp?: number;
+}
 
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
@@ -42,6 +76,12 @@ export default class App extends Component {
   private outputProgress: HTMLElement | undefined = undefined;
   private alertMsg: string = '';
   private playlist: Playlist | undefined = undefined;
+  
+  constructor(props: {}) {
+    super(props);
+
+    Sentry.init({ dsn: SENTRY_DNS_KEY });
+  }
 
   public render() {
     return (
@@ -206,6 +246,10 @@ export default class App extends Component {
     );
   }
 
+  public componentDidMount() {
+    this.CheckAuthenticated();
+  }
+
   private handleClearFields() {
     if (this.referenceFile) {
       this.referenceFile = undefined;
@@ -338,6 +382,7 @@ export default class App extends Component {
         
       } catch (error) {
         if (error) {
+          Sentry.captureException(error);
           this.alertMsg = error;
         }
         this.setState({ showAlerts: true });
@@ -380,5 +425,67 @@ export default class App extends Component {
         loading: false,
       });
     }, 1500);
+  }
+
+  private CheckAuthenticated() {
+
+    if (process.env.NODE_ENV === "development") {
+      this.setState({
+        authVerified: true,
+      })
+      return;
+    }
+
+    const urlparsed = QueryString.parse(window.location.search);
+    const id_token = urlparsed.id_token as string;
+    try {
+      const decoded: null | IDecoded | string = jwt.decode(id_token);
+      if (!decoded) {
+        throw new Error("unauthenticated");
+      }
+      if (typeof decoded !== "string" && decoded.exp) {
+        const sec = decoded.exp as number;
+        const date: Date = new Date(0);
+        date.setUTCSeconds(sec);
+        const now: Date = new Date();
+        if (date < now) {
+          throw new Error("expired");
+        }
+      }
+
+      const verified: object | string = jwt.verify(id_token, Utility.GetMOPublicKey());
+      if (!verified) {
+        throw new Error("unauthenticated");
+      }
+
+      const userData = (decoded as IDecodedUserData);
+      Sentry.configureScope((scope) => {
+        scope.setUser({
+          Employer: userData.Employer,
+          email: userData.email,
+          firstname: userData.firstname,
+          groups: userData.groups,
+          lastname: userData.lastname,
+          sub: userData.sub,
+        });
+      });
+
+      this.setState({
+        authVerified: true,
+      })
+
+    } catch (e) {
+      Utility.Log(e);
+
+      const redirectUri = process.env.REACT_APP_REDIRECT_URL;
+      const clientId = process.env.REACT_APP_CLIENT_ID;
+
+      window.location.href = "https://fixtrading.xecurify.com/moas/idp/openidsso?" +
+        "client_id="+ clientId +"&" +
+        "redirect_uri="+ redirectUri + "&" +
+        "scope=profile&" +
+        "response_type=token&" +
+        "state=123";
+    }
   }
 }
