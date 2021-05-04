@@ -19,7 +19,7 @@ import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import ResultsPage from './ResultsPage/ResultsPage';
 
-const SENTRY_DNS_KEY = "https://fe4fa82d476149429ed674627a222a8b@sentry.io/1476091";
+const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
 
 const currentYear = new Date().getFullYear();
 
@@ -331,6 +331,7 @@ export default class App extends Component {
         this.setState({ treeData: tree });
       } catch (error) {
         if (error) {
+          Sentry.captureException(error);
           this.alertMsg = error;
         }
         this.setState({ showAlerts: true });
