@@ -6,6 +6,7 @@ import {
   DatatypeData,
   DomData,
   FieldData,
+  GroupData,
   FourChildrenTC,
   MessageData,
   OneChildrenTC,
@@ -72,7 +73,39 @@ export default class Utility {
     const datatypes: DatatypeData | undefined = data.find(
       (data: DomData) => data.name === 'fixr:datatypes'
     );
+    const groups: GroupData = data.find(
+      (data: DomData) => data.name === 'fixr:groups'
+    );
 
+    const fieldNames = fields && fields.elements.reduce((fields: any, field) => {
+      const { id, name, type } = field.attributes;
+      fields[id] = `Field ${name}(${id}) - Type ${type}`;
+      return fields;
+    }, {});
+    const componentNames = components && components.elements.reduce((components: any, component) => {
+      const { id, name } = component.attributes;
+      components[id] = `Component ${name}`;
+      return components;
+    }, {});
+    const groupNames = groups && groups.elements.reduce((groups: any, group: any) => {
+      const { id, name } = group.attributes;
+      groups[id] = `Group ${name}`;
+      return groups;
+    }, {});
+
+    const getReferencesNames = (referenceType: string, referenceId: string) => {
+      switch(referenceType) {
+        case 'fieldRef': 
+          return fieldNames[referenceId];
+        case 'componentRef':
+          return componentNames[referenceId];
+        case 'groupRef':
+          return groupNames[referenceId];
+        default:
+          break;
+      }
+    }
+  
     // MAP SECTIONS
     if (sections && sections.elements) {
       const sectionsIndexes: SectionIndexes = {};
@@ -135,7 +168,7 @@ export default class Utility {
                   const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
                   return {
                     value: `${messageKey}-${refKey}->${refKey}`,
-                    label: `${Utility.capitalize(refName)} ${ref.attributes.id}`
+                    label: getReferencesNames(refName, ref.attributes.id || '')
                   }
                 })
               };
@@ -162,7 +195,7 @@ export default class Utility {
                   const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
                   return {
                     value: `${componentKey}-${refKey}->${refKey}`,
-                    label: `${Utility.capitalize(refName)} ${ref.attributes && ref.attributes.id}`
+                    label: getReferencesNames(refName, ref.attributes && ref.attributes.id || '')
                   }
                 })
               }

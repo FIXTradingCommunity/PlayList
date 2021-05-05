@@ -1,6 +1,6 @@
 // DOM DATA
 export type DomData = SectionData | CategoryData | MessageData |
-ComponentData | FieldData | CodesetData | DatatypeData;
+ComponentData | FieldData | CodesetData | DatatypeData | GroupData;
 
 // SECTION DATA
 export interface SectionData {
@@ -314,6 +314,62 @@ export interface DatatypeData {
           text: string;
         }[];
       }[];
+    }[];
+  }[];
+}
+
+// GROUP DATA
+export interface GroupData {
+  type: string
+  name: string
+  attributes: {
+    latestEP: string
+  }
+  elements: {
+    type: string
+    name: string
+    attributes: {
+      id: string
+      added: string
+      name: string
+      category: string
+      abbrName: string
+      updated?: string
+      updatedEP?: string
+      deprecated?: string
+      deprecatedEP?: string
+      addedEP?: string
+    }
+    elements: {
+      type: string
+      name: string
+      attributes?: {
+        id: string
+        added?: string
+        addedEP?: string
+        updated?: string
+        updatedEP?: string
+        deprecated?: string
+        deprecatedEP?: string
+        presence?: string
+        issue?: string
+      }
+      elements: {
+        type: string
+        name: string
+        elements?: {
+          type: string
+          name?: string
+          elements?: {
+            type: string
+            text: string
+          }[]
+          text?: string
+        }[]
+        attributes?: {
+          purpose: string
+        }
+      }[]
     }[];
   }[];
 }
