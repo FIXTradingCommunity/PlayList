@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
-  "short_name": "log2orchestra",
-  "name": "FIX log to Orchestra",
+  "short_name": "playlist",
+  "name": "FIX playlist",
   "version": "0.1.0",
-  "description": "Creates an Orchestra file from one or more FIX message logs (tag-value encoding)",
+  "description": "Creates a subset of an Orchestra file",
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
