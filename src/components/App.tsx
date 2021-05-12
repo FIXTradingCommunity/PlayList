@@ -332,7 +332,7 @@ export default class App extends Component {
       } catch (error) {
         if (error) {
           Sentry.captureException(error);
-          this.alertMsg = error;
+          this.alertMsg = error.message || error;
         }
         this.setState({ showAlerts: true });
       }
