@@ -162,7 +162,7 @@ export default class Utility {
             if (messageStructure) {
               const newMessage: OneChildrenTC = {
                 value: messageKey,
-                label: `Message ${name} - Type ${msgType}`,
+                label: `Message ${name}(35=${msgType})`,
                 children: messageStructure.elements.map((ref) => {
                   const refName = ref.name.split(":")[1];
                   const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
