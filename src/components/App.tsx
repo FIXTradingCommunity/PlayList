@@ -52,6 +52,11 @@ interface IDecoded {
   exp?: number;
 }
 
+interface ErrorMsg {
+  title: string,
+  message: string
+}
+
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
 
@@ -66,6 +71,7 @@ export default class App extends Component {
     downloaded: false,
     results: undefined,
     showResults: false,
+    authVerified: false,
     treeData: [],
     checkedTreeState: [],
     expandedTreeState: []
@@ -74,7 +80,7 @@ export default class App extends Component {
   private orchestraFileName: string | undefined = 'myorchestra.xml';
   private inputProgress: HTMLElement | undefined = undefined;
   private outputProgress: HTMLElement | undefined = undefined;
-  private alertMsg: string = '';
+  private alertMsg: ErrorMsg = { title: "", message: "" };
   private playlist: Playlist | undefined = undefined;
   
   constructor(props: {}) {
@@ -84,6 +90,10 @@ export default class App extends Component {
   }
 
   public render() {
+    if (!this.state.authVerified) {
+      return null
+    }
+
     return (
       <div className="App">
         <div className="App-header container">
@@ -115,13 +125,11 @@ export default class App extends Component {
             </div>
             {this.state.showAlerts && (
               <div className="errorContainer">
-                <h4>{`Your input orchestra file ${
-                  this.referenceFile && `named '${this.referenceFile.name}'`
-                } is invalid or empty`}</h4>
+                <h4>{this.alertMsg.title}</h4>
                 <textarea
                   readOnly={true}
                   className="errorMessage"
-                  value={this.alertMsg}
+                  value={this.alertMsg.message}
                 ></textarea>
               </div>
             )}
@@ -130,7 +138,7 @@ export default class App extends Component {
                 type="button"
                 className="submitButton"
                 onClick={() => this.readOrchestra()}
-                disabled={!this.referenceFile || this.state.readingFile}
+                disabled={!this.referenceFile || this.state.readingFile || this.state.showAlerts}
               >
                 {this.state.readingFile ? 'Loading...' : 'Read Orchestra file'}
               </button>
@@ -332,7 +340,10 @@ export default class App extends Component {
       } catch (error) {
         if (error) {
           Sentry.captureException(error);
-          this.alertMsg = error.message || error;
+          this.alertMsg = {
+            title: this.getErrorName(error.name),
+            message: error.message || error
+          };
         }
         this.setState({ showAlerts: true });
       }
@@ -384,7 +395,10 @@ export default class App extends Component {
       } catch (error) {
         if (error) {
           Sentry.captureException(error);
-          this.alertMsg = error;
+          this.alertMsg = {
+            title: this.getErrorName(error.name),
+            message: error.message || error
+          };
         }
         this.setState({ showAlerts: true });
       }
@@ -400,6 +414,15 @@ export default class App extends Component {
       });
     }
     this.setState({ creatingFile: false });
+  }
+
+  private getErrorName(error: string): string {
+    switch (error) {
+      case 'Orchestra File':
+        return `There was an error reading your input ${error.toLowerCase()}, please reupload it`;
+      default:
+        return `Your input orchestra file ${this.referenceFile && `named '${this.referenceFile.name}'`} is invalid or empty`;
+    }
   }
 
   private createLink(contents: Blob): void {

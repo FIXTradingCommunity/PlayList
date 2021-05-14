@@ -115,7 +115,7 @@ export default class OrchestraFile {
                 reader.abort();
                 if (reader.error && reader.error.toString) {
                   const newError = new Error(reader.error.toString());
-                  newError.name = 'Orchestra File Error';
+                  newError.name = 'Orchestra File';
                   reject(newError);
                 }
                 reject(reader.error);
