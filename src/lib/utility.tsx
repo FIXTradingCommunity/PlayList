@@ -1,20 +1,20 @@
 import {
   CategoryData,
-  CategoryIndexes,
   CodesetData,
   ComponentData,
   DatatypeData,
   DomData,
   FieldData,
   GroupData,
-  FourChildrenTC,
   MessageData,
   OneChildrenTC,
   SectionData,
-  SectionIndexes,
   TreeControl,
-  TwoChildrenTC
+  TwoChildrenTC,
+  SelectionModel,
+  ThreeChildrenTC
 } from './types';
+import uniq from 'lodash/uniq';
 
 export default class Utility {
   public static FN(val: string | null): string {
@@ -51,7 +51,6 @@ export default class Utility {
   }
 
   public static mapOrchestraDom(data: any) {
-    const res: TreeControl = [];
     const sections: SectionData | undefined = data.find(
       (data: DomData) => data.name === 'fixr:sections'
     );
@@ -77,21 +76,149 @@ export default class Utility {
       (data: DomData) => data.name === 'fixr:groups'
     );
 
-    const fieldNames = fields && fields.elements.reduce((fields: any, field) => {
+    const fieldNames = fields && fields.elements && fields.elements.reduce((fields: { [key: string]: string }, field) => {
       const { id, name, type } = field.attributes;
-      fields[id] = `Field ${name}(${id}) - Type ${type}`;
+      fields[id] = `${name}(${id}) - Type ${type}`;
       return fields;
     }, {});
-    const componentNames = components && components.elements.reduce((components: any, component) => {
+    const componentNames = components && components.elements && components.elements.reduce((components: { [key: string]: string }, component) => {
       const { id, name } = component.attributes;
-      components[id] = `Component ${name}`;
+      components[id] = `${name} - Component`;
       return components;
     }, {});
-    const groupNames = groups && groups.elements.reduce((groups: any, group: any) => {
+    const groupNames = groups && groups.elements && groups.elements.reduce((groups: { [key: string]: string }, group) => {
       const { id, name } = group.attributes;
-      groups[id] = `Group ${name}`;
+      groups[id] = `${name} - Group`;
       return groups;
     }, {});
+
+    return {
+      sections,
+      categories,
+      messages,
+      components,
+      fields,
+      codesets,
+      datatypes,
+      groups,
+      fieldNames,
+      componentNames,
+      groupNames
+    }
+  }
+  public static groupSelectedItems(selectedItems: Array<string>) {
+    // parse selected keys into array of items
+    const itemList: string[] = [];
+    selectedItems.forEach((selectedItem) => {
+      const items = selectedItem.split("->");
+      items.forEach((item) => {
+        itemList.push(item);
+      });
+    });
+    const newItemList = uniq(itemList);
+
+    // divide items according to their types
+    const dataModel = newItemList.reduce((data: SelectionModel, newItem) => {
+      const splittedItem = newItem.split(":");
+      switch(splittedItem[0]) {
+        case "field":
+          data.fields.push({ "id": splittedItem[1] });
+          break;
+        case "datatype":
+          data.datatypes.push({ "name": splittedItem[1] });
+          break;
+        case "section":
+          data.sections.push({ "name": splittedItem[1] });
+          break;
+        case "category":
+          data.categories.push({ "name": splittedItem[1] });
+          break;
+        case "codeset":
+          const splittedCodeset = newItem.split('-');
+          if (splittedCodeset.length > 1) {
+            const codesetName = splittedCodeset[0].split(':')[1];
+            const codeName = splittedCodeset[1].split(':')[1];
+            if (data.codesets[codesetName]) {
+              data.codesets[codesetName].push({ "codeName": codeName })
+            }
+            else {
+              data.codesets[codesetName] = [{ "codeName": codeName }];
+            }
+          }
+          break;
+        case "group":
+          data.groups.push({ id: splittedItem[1] });
+          break;
+        case "message":
+          const splittedMessage = newItem.split('-');
+          if (splittedMessage.length > 1) {
+            const messageName = splittedMessage[0].split(':')[1];
+            const messageRef = splittedMessage[1].split(':');
+            const messageRefType = messageRef[0];
+            const messageRefValue = messageRef[1];
+            if (!data.messages[messageName]) {
+              data.messages[messageName] = {};
+            }
+            if (!data.messages[messageName][messageRefType]) {
+              data.messages[messageName][messageRefType] = [{ "id": messageRefValue }];
+            }
+            else {
+              data.messages[messageName][messageRefType].push({ "id": messageRefValue});
+            }
+          }
+          break;
+        case "component":
+          const splittedComponent = newItem.split('-');
+          const componentName = splittedComponent[0].split(':')[1];
+          if (splittedComponent.length > 1) {
+              const componentRef = splittedComponent[1].split(':');
+              const componentRefType = componentRef[0];
+              const componentRefValue = componentRef[1];
+              if (!data.components[componentName]) {
+                data.components[componentName] = { all: false };
+              }
+              if (!data.components[componentName][componentRefType]) {
+                data.components[componentName][componentRefType] = [{ "id": componentRefValue }];
+              }
+              else {
+                data.components[componentName][componentRefType].push({ "id": componentRefValue});
+              }
+          }
+          else {
+              data.components[componentName] = { all: true };
+          }
+          break;
+        default: 
+          break;
+      }
+      return data;
+    }, {
+      fields: [],
+      datatypes: [],
+      categories: [],
+      sections: [],
+      codesets: {},
+      groups: [],
+      messages: {},
+      components: {}
+    });
+    return dataModel;
+  }
+  public static createInitialTree(data: { [key: string]: any }) {
+    const res: TreeControl = [];
+    const mappedKeys: { [key: string]: Array<string> } = {};
+    const {
+      categories,
+      messages,
+      components,
+      fields,
+      codesets,
+      datatypes,
+      groups,
+      fieldNames,
+      componentNames,
+      groupNames
+    } = data;
 
     const getReferencesNames = (referenceType: string, referenceId: string) => {
       switch(referenceType) {
@@ -105,146 +232,203 @@ export default class Utility {
           break;
       }
     }
-  
-    // MAP SECTIONS
-    if (sections && sections.elements) {
-      const sectionsIndexes: SectionIndexes = {};
-      const categoriesIndexes: CategoryIndexes = {};
-      const sectionsObject: FourChildrenTC = {
-        value: 'sections',
-        label: 'Sections',
+
+    // MAP CATEGORIES
+    if (categories && categories.elements) {
+      const categoriesObject: ThreeChildrenTC = {
+        value: 'Categories',
+        label: 'CATEGORIES',
         children: []
       };
-      sections.elements.forEach((section, index) => {
-        const { name } = section.attributes;
-        const sectionKey = `section:${name}`;
-        sectionsIndexes[name.toLowerCase()] = { value: index, categories: {}, modelKey: sectionKey };
-        sectionsObject.children.push({
-          value: sectionKey,
-          label: name,
-          children: []
-        });
+      const categoriesIndexes: any = {};
+      categories.elements.forEach((category: any) => {
+        const { name, section } = category.attributes;
+        if (name !== 'Common' && name !== 'Fields' && name !== 'ImplFields') {
+          const categoryKey = `section:${section}->category:${name}`;
+          const categoryName = `${name} - Section ${section}`;
+          categoriesIndexes[name] = { index: categoriesObject.children.length, key: categoryKey };
+          categoriesObject.children.push({
+            value: categoryKey,
+            label: categoryName,
+            children: []
+          });
+        }
       });
 
-      // MAP CATEGORIES
-      if (categories && categories.elements) {
-        categories.elements.forEach((category) => {
-          const { name, section } = category.attributes;
-          if (section) {
-            const sectionName = section.toLowerCase();
-            const { value, modelKey } = sectionsIndexes[sectionName];
-            const newIndex = Object.keys(sectionsIndexes[sectionName].categories).length;
-            sectionsIndexes[sectionName].categories[name.toLowerCase()] = newIndex;
-            const categoryKey = `${modelKey}->category:${name}`;
-            categoriesIndexes[name.toLowerCase()] = {
-              sectionName,
-              sectionIndex: value,
-              modelKey: categoryKey
-            };
-            sectionsObject.children[value].children.push({
-              value: categoryKey,
-              label: `Category ${name}`,
-              children: []
-            });
-          }
-        });
+      // MAP MESSAGES
+      if (messages && messages.elements) {
+        messages.elements.forEach((message: any) => {
+          const { name, category, msgType } = message.attributes;
+          const { index, key } = categoriesIndexes[category];
+          const messageKey = `${key}->message:${name}`;
+          const messageName = `${name}(35=${msgType})`;
+          const messageStructure = message.elements.find((msg: any) => {
+            return msg.name === "fixr:structure"
+          });
 
-        // MAP MESSAGES
-        if (messages && messages.elements) {
-          messages.elements.forEach((message) => {
-            const { name, category, msgType } = message.attributes;
-            const { sectionIndex, sectionName, modelKey } = categoriesIndexes[category.toLowerCase()];
-            const categoryIndex = sectionsIndexes[sectionName].categories[category.toLowerCase()];
-            const messageKey = `${modelKey}->message:${name}`;
-            const messageStructure = message.elements.find((msg) => {
-              return msg.name === "fixr:structure"
+          if (messageStructure) {
+            const newMessageChildren = messageStructure.elements.filter((msgStc: any) => 
+              msgStc.name === "fixr:fieldRef" || msgStc.name === "fixr:groupRef" || msgStc.name === "fixr:componentRef"
+            ).map((ref: any) => {
+              const refName = ref.name.split(":")[1];
+              const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
+              const refValue = `${messageKey}-${refKey}->${refKey}`;
+              return {
+                value: refValue,
+                label: getReferencesNames(refName, ref.attributes.id || '')
+              }
             });
-            if (messageStructure) {
+            if (newMessageChildren.length > 0) {
               const newMessage: OneChildrenTC = {
                 value: messageKey,
-                label: `Message ${name}(35=${msgType})`,
-                children: messageStructure.elements.map((ref) => {
-                  const refName = ref.name.split(":")[1];
-                  const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
-                  return {
-                    value: `${messageKey}-${refKey}->${refKey}`,
-                    label: getReferencesNames(refName, ref.attributes.id || '')
-                  }
-                })
+                label: messageName,
+                children: newMessageChildren
               };
-              sectionsObject.children[sectionIndex].children[categoryIndex].children.push(newMessage);
+              categoriesObject.children[index].children.push(newMessage);
             }
-          });
-        }
-
-        // MAP COMPONENTS
-        if (components && components.elements) {
-          components.elements.forEach((component) => {
-            const { id, name, category } = component.attributes;
-            if (categoriesIndexes[category.toLowerCase()]) {
-              const { sectionIndex, sectionName, modelKey } = categoriesIndexes[category.toLowerCase()];
-              const categoryIndex = sectionsIndexes[sectionName].categories[category.toLowerCase()];
-              const componentKey = `${modelKey}->component:${id}`;
-              const newComponent: OneChildrenTC = {
-                value: componentKey,
-                label: `Component ${name}`,
-                children: component.elements.filter(({ name }) => {
-                  return name !== "fixr:annotation"
-                }).map((ref) => {
-                  const refName = ref.name.split(":")[1];
-                  const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
-                  return {
-                    value: `${componentKey}-${refKey}->${refKey}`,
-                    label: getReferencesNames(refName, ref.attributes && ref.attributes.id || '')
-                  }
-                })
-              }
-              sectionsObject.children[sectionIndex].children[
-                categoryIndex
-              ].children.push(newComponent);
-            }
-          });
-        }
+          }
+        });
       }
-      res.push(sectionsObject);
+
+      categoriesObject.children.forEach((category: any) => {
+        category.children.sort((a: any, b: any) => {
+          if (a.label > b.label) { return 1 };
+          if (a.label < b.label) { return -1 };
+          return 0;
+        });
+        category.children.forEach((message: any) => {
+          message.children.sort((a: any, b: any) => {
+            if (a.label > b.label) { return 1 };
+            if (a.label < b.label) { return -1 };
+            return 0;
+          })
+        })
+      });
+
+      res.push(categoriesObject);
+    }
+  
+    // MAP GROUPS
+    if (groups && groups.elements) {
+      const groupsObject: TwoChildrenTC = {
+        value: 'Groups',
+        label: 'GROUPS',
+        children: []
+      };
+      groups.elements.forEach((group: any) => {
+        const { id, name } = group.attributes;
+        const groupKey = `group:${id}`;
+        const newGroupChildren = group.elements.filter((grp: any) => 
+          grp.name === "fixr:fieldRef" || grp.name === "fixr:groupRef" || grp.name === "fixr:componentRef"
+        ).map((ref: any) => {
+          const refName = ref.name.split(":")[1];
+          const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
+          const refValue = `${groupKey}-${refKey}->${refKey}`;
+          if (mappedKeys[groupKey]) {
+            mappedKeys[groupKey].push(refKey, refValue);
+          } 
+          else {
+            mappedKeys[groupKey] = [refKey, refValue];
+          }
+          return {
+            value: refValue,
+            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : '')
+          }
+        });
+        if (newGroupChildren.length > 0) {
+          groupsObject.children.push({
+            value: groupKey,
+            label: name,
+            children: newGroupChildren
+          });
+        }
+      });
+
+      groupsObject.children.sort((a: any, b: any) => {
+        if (a.label > b.label) { return 1 };
+        if (a.label < b.label) { return -1 };
+        return 0;
+      });
+
+      res.push(groupsObject);
+    }
+
+    // MAP COMPONENTS
+    if (components && components.elements) {
+      const componentsObject: TwoChildrenTC = {
+        value: 'Components',
+        label: 'COMPONENTS',
+        children: []
+      };
+      components.elements.forEach((component: any) => {
+        const { id, name } = component.attributes;
+        const componentKey = `component:${id}`;
+        const newComponentChildren = component.elements.filter((cmp: any) => 
+          cmp.name === "fixr:fieldRef" || cmp.name === "fixr:groupRef" || cmp.name === "fixr:componentRef"
+        ).map((ref: any) => {
+          const refName = ref.name.split(":")[1];
+          const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
+          const refValue = `${componentKey}-${refKey}->${refKey}`;
+          if (mappedKeys[componentKey]) {
+            mappedKeys[componentKey].push(refKey, refValue);
+          } 
+          else {
+            mappedKeys[componentKey] = [refKey, refValue];
+          }
+          return {
+            value: refValue,
+            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : '')
+          }
+        });
+        if (newComponentChildren.length > 0) {
+          componentsObject.children.push({
+            value: componentKey,
+            label: name,
+            children: newComponentChildren
+          });
+        }
+      });
+
+      componentsObject.children.sort((a: any, b: any) => {
+        if (a.label > b.label) { return 1 };
+        if (a.label < b.label) { return -1 };
+        return 0;
+      });
+
+      res.push(componentsObject);
     }
 
     // MAP FIELDS
     if (fields && fields.elements) {
-      const fieldsObject: OneChildrenTC = {
-        value: 'fields',
-        label: 'Fields',
-        children: fields.elements.map((field) => {
-          const { id, name, type } = field.attributes;
-          const fieldName = `${name} - Type ${type}`;
-          return {
-            value: `field:${id}`,
-            label: fieldName,
-          };
-        })
-      };
+      const fieldsObject = this.createFieldNodes(fields, codesets, mappedKeys).fieldsOut;
       res.push(fieldsObject);
     }
 
     // MAP CODESETS
     if (codesets && codesets.elements) {
       const codesetsObject: TwoChildrenTC = {
-        value: 'codesets',
-        label: 'Codesets',
-        children: codesets.elements.map((codeset) => {
-          const { name } = codeset.attributes;
+        value: 'Codesets',
+        label: 'CODESETS',
+        children: codesets.elements.map((codeset: any) => {
+          const { name, type } = codeset.attributes;
           const codesetKey = `codeset:${name}`;
           return {
             value: codesetKey,
-            label: name,
+            label: `${name} - Type ${type}`,
             children: codeset.elements
-              .map((code) => {
+              .map((code: any) => {
                 if (code.attributes) {
                   const { name, value } = code.attributes;
                   const codeKey = `${codesetKey}-code:${name}`;
+                  if (mappedKeys[codesetKey]) {
+                    mappedKeys[codesetKey].push(codeKey);
+                  } 
+                  else {
+                    mappedKeys[codesetKey] = [codeKey];
+                  }
                   return {
                     value: codeKey,
-                    label: `${name} - Value: ${value}`
+                    label: `${value}=${name}`
                   };
                 } else {
                   return {
@@ -253,36 +437,190 @@ export default class Utility {
                   };
                 }
               })
-              .filter((data) => {
+              .filter((data: any) => {
                 return data.value !== '';
               })
           };
         })
       };
+
+      codesetsObject.children.sort((a: any, b: any) => {
+        if (a.label > b.label) { return 1 };
+        if (a.label < b.label) { return -1 };
+        return 0;
+      });
+      codesetsObject.children.forEach((codeset: any) => {
+        codeset.children.sort((a: any, b: any) => {
+          const rexSort1 = a.label.split('=')[0];
+          const rexSort2 = b.label.split('=')[0];
+          if (!isNaN(rexSort1) && !isNaN(rexSort2)) {
+            return rexSort1 - rexSort2;
+          }
+          else if (isNaN(rexSort1) && isNaN(rexSort2)) {
+            if (a.label > b.label) { return 1 };
+            if (a.label < b.label) { return -1 };
+          }
+          else if (!isNaN(rexSort1)) {
+            return -1;
+          }
+          else {
+            return 1;
+          }
+          return 0;
+        });
+      });
+
       res.push(codesetsObject);
     }
 
     // MAP DATATYPES
     if (datatypes && datatypes.elements) {
       const datatypesObject: OneChildrenTC = {
-        value: 'datatypes',
-        label: 'Datatypes',
-        children: datatypes.elements.map((datatype) => {
+        value: 'Datatypes',
+        label: 'DATATYPES',
+        showCheckbox: false,
+        children: datatypes.elements.map((datatype: any) => {
           const { name, baseType } = datatype.attributes;
           const datatypeName = baseType
-            ? `Datatype ${name} - Type ${baseType}`
-            : `Datatype ${name}`;
+            ? `${name} - Base Type ${baseType}`
+            : name;
           const datatypeKey = `datatype:${name}`;
           return {
             value: datatypeKey,
-            label: datatypeName
+            label: datatypeName,
+            disabled: true
           };
         })
       };
+
+      datatypesObject.children.sort((a: any, b: any) => {
+        if (a.label > b.label) { return 1 };
+        if (a.label < b.label) { return -1 };
+        return 0;
+      });
+
       res.push(datatypesObject);
     }
 
-    return res;
+    return {
+      initialTree: res,
+      mappedKeys
+    };
+  }
+
+  public static createFieldNodes = (fields: any, codesets: any, mappedKeys: any, checkedFields: any = []) => {
+    const fieldsOutList: TwoChildrenTC['children'] = [{
+      value: 'tags:1-999',
+      label: 'Tags 1-999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:1000-1999',
+      label: 'Tags 1000-1999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:2000-2999',
+      label: 'Tags 2000-2999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:3000-3999',
+      label: 'Tags 3000-3999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:4000-4999',
+      label: 'Tags 4000-4999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:5000-9999',
+      label: 'Tags 5000-9999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:10000-19999',
+      label: 'Tags 10000-19999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:20000-39999',
+      label: 'Tags 20000-39999',
+      showCheckbox: false,
+      children: []
+    }, {
+      value: 'tags:40000-49999',
+      label: 'Tags 40000-49999',
+      showCheckbox: false,
+      children: []
+    }];
+    const fieldsInList: any = [];
+
+    fields.elements.forEach((field: any) => {
+      const { id, name, type } = field.attributes;
+      const fieldKey = `field:${id}`;
+      let typeRef;
+      let mapKeys = [];
+      if (type.includes('CodeSet')) {
+        const codeset = codesets.elements.find((cset: any) => cset.attributes.name === type);
+        typeRef = `${codeset.attributes.name} - Type ${codeset.attributes.type}`;
+        mapKeys.push(`codeset:${type}`, `datatype:${codeset.attributes.type}`)
+      }
+      else {
+        typeRef = `Type ${type}`;
+        mapKeys.push(`datatype:${type}`);
+      }
+      if (mappedKeys[fieldKey]) {
+        mappedKeys[fieldKey].push(...mapKeys);
+      } 
+      else {
+        mappedKeys[fieldKey] = [...mapKeys];
+      }
+
+      const fieldName = `${name}(${id}) - ${typeRef}`;
+      const fieldNode = {
+        value: fieldKey,
+        label: fieldName,
+      };
+
+      if (checkedFields.length > 0 && checkedFields.includes(fieldKey)) {
+        fieldsInList.push(fieldNode);
+      }
+      else {
+        if (id >= 1 && id <= 999) fieldsOutList[0].children.push(fieldNode)
+        else if (id >= 1000 && id <= 1999) fieldsOutList[1].children.push(fieldNode)
+        else if (id >= 2000 && id <= 2999) fieldsOutList[2].children.push(fieldNode)
+        else if (id >= 3000 && id <= 3999) fieldsOutList[3].children.push(fieldNode)
+        else if (id >= 4000 && id <= 4999) fieldsOutList[4].children.push(fieldNode)
+        else if (id >= 5000 && id <= 5999) fieldsOutList[5].children.push(fieldNode)
+        else if (id >= 10000 && id <= 19999) fieldsOutList[6].children.push(fieldNode)
+        else if (id >= 20000 && id <= 39999) fieldsOutList[7].children.push(fieldNode)
+        else if (id >= 40000 && id <= 49999) fieldsOutList[8].children.push(fieldNode)
+      }
+    });
+
+    const fieldsOut: TwoChildrenTC = {
+      value: 'FieldsOut',
+      label: 'FIELDS-OUT',
+      showCheckbox: false,
+      children: fieldsOutList.filter((fieldNode: any) => (fieldNode.children.length > 0))
+    };
+    fieldsOut.children.forEach((fieldGroup: any) => {
+      fieldGroup.children.sort((a: any, b: any) => (
+        a.value.split(':')[1] - b.value.split(':')[1]
+      ));
+    })
+
+    const fieldsIn: OneChildrenTC = {
+      value: 'FieldsIn',
+      label: 'FIELDS-IN',
+      showCheckbox: false,
+      children: fieldsInList.sort((a: any, b: any) => (
+        a.value.split(':')[1] - b.value.split(':')[1]
+      ))
+    }
+    return { fieldsIn, fieldsOut };
   }
 
   public static capitalize = (word: string) => {

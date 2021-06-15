@@ -406,18 +406,28 @@ export type TreeControl = (FourChildrenTC | ThreeChildrenTC | TwoChildrenTC | On
 export interface FourChildrenTC {
   value: string;
   label: string;
+  disabled?: boolean;
+  showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
+    disabled?: boolean;
+    showCheckbox?: boolean;
     children: {
       value: string;
       label: string;
+      disabled?: boolean;
+      showCheckbox?: boolean;
       children: {
         value: string;
         label: string;
+        disabled?: boolean;
+        showCheckbox?: boolean;
         children: {
           value: string;
           label: string;
+          disabled?: boolean;
+          showCheckbox?: boolean;
         }[];
       }[];
     }[];
@@ -427,15 +437,23 @@ export interface FourChildrenTC {
 export interface ThreeChildrenTC {
   value: string;
   label: string;
+  disabled?: boolean;
+  showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
+    disabled?: boolean;
+    showCheckbox?: boolean;
     children: {
       value: string;
       label: string;
+      disabled?: boolean;
+      showCheckbox?: boolean;
       children: {
         value: string;
         label: string;
+        disabled?: boolean;
+        showCheckbox?: boolean;
       }[];
     }[];
   }[];
@@ -444,12 +462,18 @@ export interface ThreeChildrenTC {
 export interface TwoChildrenTC {
   value: string;
   label: string;
+  disabled?: boolean;
+  showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
+    disabled?: boolean;
+    showCheckbox?: boolean;
     children: {
       value: string;
       label: string;
+      disabled?: boolean;
+      showCheckbox?: boolean;
     }[];
   }[];
 }
@@ -457,9 +481,13 @@ export interface TwoChildrenTC {
 export interface OneChildrenTC {
   value: string;
   label: string;
+  disabled?: boolean;
+  showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
+    disabled?: boolean;
+    showCheckbox?: boolean;
   }[];
 }
 

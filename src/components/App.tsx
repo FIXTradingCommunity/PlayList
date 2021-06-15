@@ -1,5 +1,5 @@
 /*!
- * Copyright 2019, FIX Protocol Ltd.
+ * Copyright 2021, FIX Protocol Ltd.
  */
 
 import React, { Component } from 'react';
@@ -13,7 +13,6 @@ import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
-import convert from 'xml-js';
 import CheckboxTree from 'react-checkbox-tree';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
@@ -57,10 +56,27 @@ interface ErrorMsg {
   message: string
 }
 
+export interface State {
+  orchestraFileNameError: string,
+  referenceFileError: string,
+  showAlerts: boolean,
+  downloadHref: string,
+  downloadUrl: string,
+  readingFile: boolean,
+  creatingFile: boolean,
+  downloaded: boolean,
+  results: any,
+  showResults: boolean,
+  authVerified: boolean,
+  treeData: Array<any>,
+  checkedTreeState: Array<string>,
+  expandedTreeState: Array<string>
+}
+
 export default class App extends Component {
   public static readonly rightsMsg: string = `© Copyright ${currentYear}, FIX Protocol Ltd.`;
 
-  public state = {
+  public state: State = {
     orchestraFileNameError: '',
     referenceFileError: '',
     showAlerts: false,
@@ -149,6 +165,7 @@ export default class App extends Component {
               <div className="treeContainer">
                 <h2>Select Your Content</h2>
                 <CheckboxTree
+                  checkModel={'all'}
                   nodes={this.state.treeData}
                   icons={{
                     expandClose: <div className={'icon'}>+</div>,
@@ -157,10 +174,7 @@ export default class App extends Component {
                   iconsClass="fa5"
                   checked={this.state.checkedTreeState}
                   expanded={this.state.expandedTreeState}
-                  onCheck={(checked) => this.setState({
-                    ...this.state,
-                    checkedTreeState: checked
-                  })}
+                  onCheck={this.checkTreeNode}
                   onExpand={(expanded) => this.setState({
                     ...this.state,
                     expandedTreeState: expanded
@@ -333,9 +347,7 @@ export default class App extends Component {
       this.playlist = runner; 
       try {
         // read local reference Orchestra file
-        const inputDom = await runner.runReader();
-        const jsonDom = convert.xml2js(inputDom);
-        const tree = Utility.mapOrchestraDom(jsonDom.elements[0].elements);
+        const tree = await runner.runReader();
         this.setState({ treeData: tree });
       } catch (error) {
         if (error) {
@@ -351,6 +363,21 @@ export default class App extends Component {
       this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
     }
     this.setState({ readingFile: false });
+  }
+
+  private checkTreeNode = (checked: Array<string>) => {
+    const oldState = [...this.state.checkedTreeState];
+    const added = checked.filter((x: string) => (!oldState.includes(x)));
+    const removed = oldState.filter((y: string) => !checked.includes(y));
+    if (this.playlist) {
+      const runner = this.playlist;
+      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed);
+      this.setState({
+        ...this.state,
+        treeData: updatedValues.newTree,
+        checkedTreeState: [...updatedValues.newCheckedList]
+      });
+    }
   }
 
   // Uncomment this lines when adding content to Modal. Also add the missing values
