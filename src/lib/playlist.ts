@@ -110,11 +110,15 @@ export default class Playlist {
       switch (splittedKey.length) {
         case 1:
           const foundKeys = newChecked.filter((item) => item.endsWith(key));
+          newChecked = newChecked.filter((item) => !item.endsWith(key));
           if (key.startsWith('field')) {
-            newChecked = newChecked.filter((item) => !item.endsWith(key));
-          }
-          else {
-            newChecked = newChecked.filter((item) => !item.endsWith(key));
+            const fieldRefs = uniq(this.keys[key]);
+            const fields = newChecked.filter((value) => (value.startsWith('field')));
+            const refsToRemove = fields.reduce((refsToRemove: string[], field) => {
+              const fieldKeys = uniq(this.keys[field]);
+              return refsToRemove.filter((ref) => !fieldKeys.includes(ref));
+            }, [...fieldRefs]);
+            newChecked = this.removeCheckedReference(newChecked, [...refsToRemove]);
           }
           foundKeys.forEach((foundKey) => {
             if (foundKey.split('->').length > 1) {
@@ -128,7 +132,7 @@ export default class Playlist {
           });
           break;
         case 2:
-        const keyStart = key.split('-')[0];
+          const keyStart = key.split('-')[0];
           newChecked = newChecked.filter((item) => item !== key);
           const foundRefKeys = newChecked.filter((item) => item.startsWith(`${keyStart}-`));
           if (foundRefKeys.length === 0) {
@@ -153,7 +157,7 @@ export default class Playlist {
         // clones reference dom to output file
         output.dom = this.inputFile.cloneDom();
 
-        const dataModel = Utility.groupSelectedItems(selectedItems);
+        const dataModel = Utility.groupSelectedItems(selectedItems, this.mappedData.groups);
 
         output.updateDomFromModel(dataModel, this.outputProgress);
         if (this.onFinish) {

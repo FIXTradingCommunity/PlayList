@@ -499,7 +499,7 @@ export interface SelectionModel {
   categories: NameSelectionModel[];
   sections: NameSelectionModel[];
   codesets: CodesetSelectionModel;
-  groups: IdSelectionModel[];
+  groups: GroupSelectionModel;
   messages: MessageSelectionModel;
   components: ComponentSelectionModel;
 }
@@ -526,6 +526,10 @@ export interface MessageSelectionModel {
 
 interface MessageObject {
   [key: string]: IdSelectionModel[];
+}
+
+export interface GroupSelectionModel {
+  [key: string]: string[];
 }
 
 export interface ComponentSelectionModel {

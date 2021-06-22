@@ -44,15 +44,6 @@ body {
   box-sizing: border-box;
 }
 
-label {
-  font-family: sans-serif;
-  font-size: small;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  text-align: left;
-  color: #737373;
-}
-
 input[type=file] {
   margin-top: 2px;
   margin-bottom: 2px;

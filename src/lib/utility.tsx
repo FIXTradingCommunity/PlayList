@@ -106,7 +106,8 @@ export default class Utility {
       groupNames
     }
   }
-  public static groupSelectedItems(selectedItems: Array<string>) {
+
+  public static groupSelectedItems(selectedItems: Array<string>, groupList: any) {
     // parse selected keys into array of items
     const itemList: string[] = [];
     selectedItems.forEach((selectedItem) => {
@@ -147,7 +148,24 @@ export default class Utility {
           }
           break;
         case "group":
-          data.groups.push({ id: splittedItem[1] });
+          const splittedGroup = newItem.split('-');
+          const groupName = splittedGroup[0].split(':')[1];
+          if (!data.groups[groupName]) {
+            data.groups[groupName] = splittedGroup.length > 1 ? [splittedGroup[1]] : [];
+          }
+          else if (splittedGroup.length > 1) {
+            data.groups[groupName].push(splittedGroup[1]);
+          }
+          const foundGroup = groupList.elements.find((group: any) => (group.attributes.id === groupName));
+          if (foundGroup) {
+            const numInGroup = foundGroup.elements.find((ref: any) => (ref.name === "fixr:numInGroup"));
+            if (numInGroup) {
+              data.fields.push({ "id": numInGroup.attributes.id });
+              if (!data.datatypes.includes({ "name": "NumInGroup" })) {
+                data.datatypes.push({ "name": "NumInGroup" }, { "name": "int" });
+              }
+            }
+          }
           break;
         case "message":
           const splittedMessage = newItem.split('-');
@@ -198,12 +216,13 @@ export default class Utility {
       categories: [],
       sections: [],
       codesets: {},
-      groups: [],
+      groups: {},
       messages: {},
       components: {}
     });
     return dataModel;
   }
+
   public static createInitialTree(data: { [key: string]: any }) {
     const res: TreeControl = [];
     const mappedKeys: { [key: string]: Array<string> } = {};
@@ -222,7 +241,7 @@ export default class Utility {
 
     const getReferencesNames = (referenceType: string, referenceId: string) => {
       switch(referenceType) {
-        case 'fieldRef': 
+        case 'fieldRef':
           return fieldNames[referenceId];
         case 'componentRef':
           return componentNames[referenceId];
@@ -479,7 +498,9 @@ export default class Utility {
         value: 'Datatypes',
         label: 'DATATYPES',
         showCheckbox: false,
-        children: datatypes.elements.map((datatype: any) => {
+        children: datatypes.elements.filter((datatype: any) => (
+          datatype.attributes.name !== "NumInGroup"
+        )).map((datatype: any) => {
           const { name, baseType } = datatype.attributes;
           const datatypeName = baseType
             ? `${name} - Base Type ${baseType}`
@@ -559,44 +580,46 @@ export default class Utility {
 
     fields.elements.forEach((field: any) => {
       const { id, name, type } = field.attributes;
-      const fieldKey = `field:${id}`;
-      let typeRef;
-      let mapKeys = [];
-      if (type.includes('CodeSet')) {
-        const codeset = codesets.elements.find((cset: any) => cset.attributes.name === type);
-        typeRef = `${codeset.attributes.name} - Type ${codeset.attributes.type}`;
-        mapKeys.push(`codeset:${type}`, `datatype:${codeset.attributes.type}`)
-      }
-      else {
-        typeRef = `Type ${type}`;
-        mapKeys.push(`datatype:${type}`);
-      }
-      if (mappedKeys[fieldKey]) {
-        mappedKeys[fieldKey].push(...mapKeys);
-      } 
-      else {
-        mappedKeys[fieldKey] = [...mapKeys];
-      }
+      if (type !== 'NumInGroup') {
+        const fieldKey = `field:${id}`;
+        let typeRef;
+        let mapKeys = [];
+        if (type.includes('CodeSet')) {
+          const codeset = codesets.elements.find((cset: any) => cset.attributes.name === type);
+          typeRef = `${codeset.attributes.name} - Type ${codeset.attributes.type}`;
+          mapKeys.push(`codeset:${type}`, `datatype:${codeset.attributes.type}`)
+        }
+        else {
+          typeRef = `Type ${type}`;
+          mapKeys.push(`datatype:${type}`);
+        }
+        if (mappedKeys[fieldKey]) {
+          mappedKeys[fieldKey].push(...mapKeys);
+        } 
+        else {
+          mappedKeys[fieldKey] = [...mapKeys];
+        }
 
-      const fieldName = `${name}(${id}) - ${typeRef}`;
-      const fieldNode = {
-        value: fieldKey,
-        label: fieldName,
-      };
+        const fieldName = `${name}(${id}) - ${typeRef}`;
+        const fieldNode = {
+          value: fieldKey,
+          label: fieldName,
+        };
 
-      if (checkedFields.length > 0 && checkedFields.includes(fieldKey)) {
-        fieldsInList.push(fieldNode);
-      }
-      else {
-        if (id >= 1 && id <= 999) fieldsOutList[0].children.push(fieldNode)
-        else if (id >= 1000 && id <= 1999) fieldsOutList[1].children.push(fieldNode)
-        else if (id >= 2000 && id <= 2999) fieldsOutList[2].children.push(fieldNode)
-        else if (id >= 3000 && id <= 3999) fieldsOutList[3].children.push(fieldNode)
-        else if (id >= 4000 && id <= 4999) fieldsOutList[4].children.push(fieldNode)
-        else if (id >= 5000 && id <= 5999) fieldsOutList[5].children.push(fieldNode)
-        else if (id >= 10000 && id <= 19999) fieldsOutList[6].children.push(fieldNode)
-        else if (id >= 20000 && id <= 39999) fieldsOutList[7].children.push(fieldNode)
-        else if (id >= 40000 && id <= 49999) fieldsOutList[8].children.push(fieldNode)
+        if (checkedFields.length > 0 && checkedFields.includes(fieldKey)) {
+          fieldsInList.push(fieldNode);
+        }
+        else {
+          if (id >= 1 && id <= 999) fieldsOutList[0].children.push(fieldNode)
+          else if (id >= 1000 && id <= 1999) fieldsOutList[1].children.push(fieldNode)
+          else if (id >= 2000 && id <= 2999) fieldsOutList[2].children.push(fieldNode)
+          else if (id >= 3000 && id <= 3999) fieldsOutList[3].children.push(fieldNode)
+          else if (id >= 4000 && id <= 4999) fieldsOutList[4].children.push(fieldNode)
+          else if (id >= 5000 && id <= 5999) fieldsOutList[5].children.push(fieldNode)
+          else if (id >= 10000 && id <= 19999) fieldsOutList[6].children.push(fieldNode)
+          else if (id >= 20000 && id <= 39999) fieldsOutList[7].children.push(fieldNode)
+          else if (id >= 40000 && id <= 49999) fieldsOutList[8].children.push(fieldNode)
+        }
       }
     });
 

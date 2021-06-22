@@ -8,7 +8,7 @@ import OrchestraModel, { CodesetsModel, ComponentsModel, FieldsModel, GroupsMode
 import { IsSupportedfromString, Presence, PresencefromString, StructureModel } from "./StructureModel";
 import { KeyedCollection } from "./KeyedCollection";
 import { xml } from "vkbeautify";
-import { CodesetSelectionModel, ComponentSelectionModel, IdSelectionModel, MessageSelectionModel, NameSelectionModel, SelectionModel } from "./types";
+import { CodesetSelectionModel, ComponentSelectionModel, IdSelectionModel, MessageSelectionModel, NameSelectionModel, SelectionModel, GroupSelectionModel } from "./types";
 
 export default class OrchestraFile {
     static readonly MIME_TYPE: SupportedType = "application/xml";
@@ -231,6 +231,7 @@ export default class OrchestraFile {
                 }
               }
             }
+            [].slice.call(structureElement.children).sort(() => (-1)).forEach((val) => { structureElement.appendChild(val); });
             messageElement.appendChild(structureElement);
             countMessagesAdded++;
           }
@@ -610,6 +611,7 @@ export default class OrchestraFile {
                 countCodesAdded++;
               }
             }
+            [].slice.call(codesetElement.children).sort(() => (-1)).forEach((val) => { codesetElement.appendChild(val); });
             codesetsElement.appendChild(codesetElement);
             countCodesetsAdded++;
           }
@@ -652,7 +654,7 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Fields.Removed",countFieldsRemoved);
         this.repositoryStatistics.Add("Fields.Added",countFieldsAdded);
     }
-    private updateDomGroups(groupsModel: IdSelectionModel[]): void {
+    private updateDomGroups(groupsModel: GroupSelectionModel): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const groupsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
       const groupsElement: Element = groupsSnapshot.snapshotItem(0) as Element;
@@ -663,13 +665,31 @@ export default class OrchestraFile {
       for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
           const node: Element = nodesSnapshot.snapshotItem(i) as Element;
           const id: string | null = node.getAttribute("id");
-          const fieldFound = groupsModel.find((groupModel) => (groupModel.id === id));
-          if (!fieldFound) {
+          if (!id || !groupsModel[id]) {
             groupsElement.removeChild(node);
             countGroupsRemoved++;
           }
           else {
-            groupsElement.appendChild(node);
+            const refs = node.children;
+            if (refs.length > 0) {
+              for (let i = refs.length - 1; i >= 0; i--) {
+                const refName = refs[i].tagName.split(":")[1];
+                const refKey = refName.substring(0, refName.length-3);
+                if (refKey === "field" || refKey === "group" || refKey === "component") {
+                  const refId: string | null = refs[i].getAttribute("id");
+                  if (!groupsModel[id].includes(`${refKey}:${refId}`)) {
+                    node.removeChild(refs[i]);
+                  }
+                  else {
+                    node.appendChild(refs[i]);
+                  }
+                }
+                else {
+                  node.appendChild(refs[i]);
+                }
+              }
+            }
+            [].slice.call(node.children).sort(() => (-1)).forEach((val) => { node.appendChild(val); });
             countGroupsAdded++;
           }
       }
@@ -729,8 +749,8 @@ export default class OrchestraFile {
 
       for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
         const node: Element = nodesSnapshot.snapshotItem(i) as Element;
-        const id: string = node.getAttribute("id") || "not found";
-        if (!componentsModel[id]) {
+        const id: string | null = node.getAttribute("id");
+        if (!id || !componentsModel[id]) {
           componentsElement.removeChild(node);
           countComponentsRemoved++;
         }
@@ -758,6 +778,7 @@ export default class OrchestraFile {
                   componentElement.removeChild(refs[i]);
                 }
               }
+              [].slice.call(node.children).sort(() => (-1)).forEach((val) => { node.appendChild(val); });
             }
           }
           componentsElement.appendChild(componentElement);
