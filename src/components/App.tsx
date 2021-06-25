@@ -353,8 +353,8 @@ export default class App extends Component {
         if (error) {
           Sentry.captureException(error);
           this.alertMsg = {
-            title: this.getErrorName(error.name),
-            message: error.message || error
+            title: this.getErrorTitle(error.name),
+            message: this.setMessageError(error.message || error)
           };
         }
         this.setState({ showAlerts: true });
@@ -423,8 +423,8 @@ export default class App extends Component {
         if (error) {
           Sentry.captureException(error);
           this.alertMsg = {
-            title: this.getErrorName(error.name),
-            message: error.message || error
+            title: this.getErrorTitle(error.name),
+            message: this.setMessageError(error.message || error)
           };
         }
         this.setState({ showAlerts: true });
@@ -443,13 +443,21 @@ export default class App extends Component {
     this.setState({ creatingFile: false });
   }
 
-  private getErrorName(error: string): string {
+  private getErrorTitle(error: string): string {
     switch (error) {
       case 'Orchestra File':
-        return `There was an error reading your input ${error.toLowerCase()}, please reupload it`;
+        return `There was an error reading your ${error}, please upload it again`;
       default:
         return `Your input orchestra file ${this.referenceFile && `named '${this.referenceFile.name}'`} is invalid or empty`;
     }
+  }
+
+  private setMessageError(errorMsg: string): string {
+    const NotReadableErrorRes =
+      'The requested file could not be read, possibly due to a permission problem or because the file was changed';
+    return (
+      errorMsg.startsWith('NotReadableError') ? `NotReadableError: ${NotReadableErrorRes}` : errorMsg
+    );
   }
 
   private createLink(contents: Blob): void {
