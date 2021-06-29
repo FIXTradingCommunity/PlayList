@@ -149,16 +149,6 @@ export default class App extends Component {
                 ></textarea>
               </div>
             )}
-            <div className="buttonsContainer">
-              <button
-                type="button"
-                className="submitButton"
-                onClick={() => this.readOrchestra()}
-                disabled={!this.referenceFile || this.state.readingFile || this.state.showAlerts}
-              >
-                {this.state.readingFile ? 'Loading...' : 'Read Orchestra file'}
-              </button>
-            </div>
           </div>
           {this.state.treeData.length > 0 && (
             <> 
@@ -283,12 +273,14 @@ export default class App extends Component {
       this.inputProgress.clear();
     }
     this.setState({ showAlerts: false });
+    this.setState({ treeData: [] });
   };
 
   private inputOrchestra = (fileList: FileList | null): void => {
     if (fileList && fileList.length > 0) {
       this.referenceFile = fileList[0];
     }
+    this.readOrchestra();
   };
 
   private outputOrchestra = (fileName: string | undefined): void => {

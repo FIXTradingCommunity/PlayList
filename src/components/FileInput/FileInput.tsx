@@ -126,6 +126,7 @@ class FileInput extends Component<Props> {
   public clear = () => {
     this.setState({
       fileName: "",
+      pct: 0
     })
   }
 
