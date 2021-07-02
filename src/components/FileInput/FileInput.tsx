@@ -59,7 +59,7 @@ class FileInput extends Component<Props> {
                       <>
                         <ProgressCircle value={pct} />
                         <div className="inputContent">
-                          <p className="inputText">Drag file to upload or</p>
+                          <p className="inputText">Drag file to read or</p>
                           <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}
@@ -131,7 +131,6 @@ class FileInput extends Component<Props> {
   }
 
   private onDrop = (acceptedFiles: FileList) => {
-    
     this.handleChange(acceptedFiles)
   };
 }
