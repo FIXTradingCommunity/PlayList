@@ -138,6 +138,16 @@ export default class App extends Component {
               <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
                 Clear Field
               </button>
+              <div className="redirectButtonContainers">
+                <a
+                  className="redirectButton"
+                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                  >
+                  Terms of Service
+                </a>
+              </div>
             </div>
             {this.state.showAlerts && (
               <div className="errorContainer">
