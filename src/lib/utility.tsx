@@ -294,7 +294,8 @@ export default class Utility {
               const refValue = `${messageKey}-${refKey}->${refKey}`;
               return {
                 value: refValue,
-                label: getReferencesNames(refName, ref.attributes.id || '')
+                label: getReferencesNames(refName, ref.attributes.id || ''),
+                className: ref.attributes.deprecated && 'deprecatedItem'
               }
             });
             if (newMessageChildren.length > 0) {
@@ -335,7 +336,7 @@ export default class Utility {
         children: []
       };
       groups.elements.forEach((group: any) => {
-        const { id, name } = group.attributes;
+        const { id, name, deprecated } = group.attributes;
         const groupKey = `group:${id}`;
         const newGroupChildren = group.elements.filter((grp: any) => 
           grp.name === "fixr:fieldRef" || grp.name === "fixr:groupRef" || grp.name === "fixr:componentRef"
@@ -351,14 +352,16 @@ export default class Utility {
           }
           return {
             value: refValue,
-            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : '')
+            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
+            className: ref.attributes.deprecated && 'deprecatedItem'
           }
         });
         if (newGroupChildren.length > 0) {
           groupsObject.children.push({
             value: groupKey,
             label: name,
-            children: newGroupChildren
+            children: newGroupChildren,
+            className: deprecated && 'deprecatedItem'
           });
         }
       });
@@ -380,7 +383,7 @@ export default class Utility {
         children: []
       };
       components.elements.forEach((component: any) => {
-        const { id, name } = component.attributes;
+        const { id, name, deprecated } = component.attributes;
         const componentKey = `component:${id}`;
         const newComponentChildren = component.elements.filter((cmp: any) => 
           cmp.name === "fixr:fieldRef" || cmp.name === "fixr:groupRef" || cmp.name === "fixr:componentRef"
@@ -396,14 +399,16 @@ export default class Utility {
           }
           return {
             value: refValue,
-            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : '')
+            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
+            className: ref.attributes.deprecated && 'deprecatedItem'
           }
         });
         if (newComponentChildren.length > 0) {
           componentsObject.children.push({
             value: componentKey,
             label: name,
-            children: newComponentChildren
+            children: newComponentChildren,
+            className: deprecated && 'deprecatedItem'
           });
         }
       });
@@ -437,7 +442,7 @@ export default class Utility {
             children: codeset.elements
               .map((code: any) => {
                 if (code.attributes) {
-                  const { name, value } = code.attributes;
+                  const { name, value, deprecated } = code.attributes;
                   const codeKey = `${codesetKey}-code:${name}`;
                   if (mappedKeys[codesetKey]) {
                     mappedKeys[codesetKey].push(codeKey);
@@ -447,7 +452,8 @@ export default class Utility {
                   }
                   return {
                     value: codeKey,
-                    label: `${value}=${name}`
+                    label: `${value}=${name}`,
+                    className: deprecated && 'deprecatedItem'
                   };
                 } else {
                   return {
@@ -579,7 +585,7 @@ export default class Utility {
     const fieldsInList: any = [];
 
     fields.elements.forEach((field: any) => {
-      const { id, name, type } = field.attributes;
+      const { id, name, type, deprecated } = field.attributes;
       if (type !== 'NumInGroup') {
         const fieldKey = `field:${id}`;
         let typeRef;
@@ -604,6 +610,7 @@ export default class Utility {
         const fieldNode = {
           value: fieldKey,
           label: fieldName,
+          className: deprecated && 'deprecatedItem'
         };
 
         if (checkedFields.length > 0 && checkedFields.includes(fieldKey)) {

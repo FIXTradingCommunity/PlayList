@@ -170,6 +170,7 @@ export default class App extends Component {
                     expandedTreeState: expanded
                   })}
                 />
+                <h3 className="deprecatedItem treeReference">Greyed out items are deprecated</h3>
               </div>
               <div className="outputContainer">
                 <div className="field">

@@ -141,6 +141,16 @@ a {
   overflow-x: hidden;
 }
 
+.deprecatedItem {
+  color: #9D9D9D;
+}
+
+.treeReference {
+  align-self: flex-start;
+  padding-left: 40px;
+  font-size: 12px;
+}
+
 .outputContainer {
   justify-content: center;
   align-items: center;

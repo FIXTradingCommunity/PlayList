@@ -407,26 +407,31 @@ export interface FourChildrenTC {
   value: string;
   label: string;
   disabled?: boolean;
+  className?: string;
   showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
     disabled?: boolean;
+    className?: string;
     showCheckbox?: boolean;
     children: {
       value: string;
       label: string;
       disabled?: boolean;
+      className?: string;
       showCheckbox?: boolean;
       children: {
         value: string;
         label: string;
         disabled?: boolean;
+        className?: string;
         showCheckbox?: boolean;
         children: {
           value: string;
           label: string;
           disabled?: boolean;
+          className?: string;
           showCheckbox?: boolean;
         }[];
       }[];
@@ -438,21 +443,25 @@ export interface ThreeChildrenTC {
   value: string;
   label: string;
   disabled?: boolean;
+  className?: string;
   showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
     disabled?: boolean;
+    className?: string;
     showCheckbox?: boolean;
     children: {
       value: string;
       label: string;
       disabled?: boolean;
+      className?: string;
       showCheckbox?: boolean;
       children: {
         value: string;
         label: string;
         disabled?: boolean;
+        className?: string;
         showCheckbox?: boolean;
       }[];
     }[];
@@ -463,16 +472,19 @@ export interface TwoChildrenTC {
   value: string;
   label: string;
   disabled?: boolean;
+  className?: string;
   showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
     disabled?: boolean;
+    className?: string;
     showCheckbox?: boolean;
     children: {
       value: string;
       label: string;
       disabled?: boolean;
+      className?: string;
       showCheckbox?: boolean;
     }[];
   }[];
@@ -482,11 +494,13 @@ export interface OneChildrenTC {
   value: string;
   label: string;
   disabled?: boolean;
+  className?: string;
   showCheckbox?: boolean;
   children: {
     value: string;
     label: string;
     disabled?: boolean;
+    className?: string;
     showCheckbox?: boolean;
   }[];
 }
