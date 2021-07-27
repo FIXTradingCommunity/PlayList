@@ -126,7 +126,7 @@ a {
 .form, .treeContainer, .outputContainer {
   display: flex;
   flex-direction: column;
-  padding: 25px;
+  padding: 0 25px 25px 25px;
 }
 
 .form {
@@ -137,6 +137,9 @@ a {
 .treeContainer {
   height: 500px;
   min-width: 500px;
+}
+
+.tree {
   overflow-y: scroll;
   overflow-x: hidden;
 }
@@ -146,9 +149,9 @@ a {
 }
 
 .treeReference {
-  align-self: flex-start;
-  padding-left: 40px;
-  font-size: 12px;
+  align-self: center;
+  font-size: 10px;
+  margin: 0px;
 }
 
 .outputContainer {

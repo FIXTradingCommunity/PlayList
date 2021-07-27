@@ -164,23 +164,25 @@ export default class App extends Component {
             <> 
               <div className="treeContainer">
                 <h2>Select Your Content</h2>
-                <CheckboxTree
-                  checkModel={'all'}
-                  nodes={this.state.treeData}
-                  icons={{
-                    expandClose: <div className={'icon'}>+</div>,
-                    expandOpen: <div className={'icon'}>-</div>
-                  }}
-                  iconsClass="fa5"
-                  checked={this.state.checkedTreeState}
-                  expanded={this.state.expandedTreeState}
-                  onCheck={this.checkTreeNode}
-                  onExpand={(expanded) => this.setState({
-                    ...this.state,
-                    expandedTreeState: expanded
-                  })}
-                />
-                <h3 className="deprecatedItem treeReference">Greyed out items are deprecated</h3>
+                <h3 className="treeReference">(Greyed out items are deprecated)</h3>
+                <div className="tree">
+                  <CheckboxTree
+                    checkModel={'all'}
+                    nodes={this.state.treeData}
+                    icons={{
+                      expandClose: <div className={'icon'}>+</div>,
+                      expandOpen: <div className={'icon'}>-</div>
+                    }}
+                    iconsClass="fa5"
+                    checked={this.state.checkedTreeState}
+                    expanded={this.state.expandedTreeState}
+                    onCheck={this.checkTreeNode}
+                    onExpand={(expanded) => this.setState({
+                      ...this.state,
+                      expandedTreeState: expanded
+                    })}
+                  />
+                </div>
               </div>
               <div className="outputContainer">
                 <div className="field">
