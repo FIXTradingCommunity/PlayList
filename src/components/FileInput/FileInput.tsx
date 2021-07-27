@@ -27,7 +27,7 @@ class FileInput extends Component<Props> {
       <div className="fileInput">
         <p className="inputLabel">{label}</p>
   
-        <Dropzone onDrop={this.onDrop as () => {}}>
+        <Dropzone onDrop={this.onDrop as () => {}} multiple={multiple}>
           {({ getRootProps, getInputProps, isDragActive, draggedFiles }) => {
             
             const isValidFileType = this.isValidType(draggedFiles[0]);
@@ -80,7 +80,7 @@ class FileInput extends Component<Props> {
     const acceptedType = this.props.accept && this.props.accept.replace(".", "");
     const fileType = file && file.type.split("/")[1];
 
-    if (!acceptedType || (!fileType && !acceptedType)) { return true; }
+    if (!file || !acceptedType || (!fileType && !acceptedType)) { return true; }
     
     return acceptedType === fileType
   }
