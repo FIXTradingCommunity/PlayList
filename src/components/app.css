@@ -123,7 +123,7 @@ a {
   flex-grow: 1;
 }
 
-.form, .treeContainer, .outputContainer {
+.form, .treeContainer {
   display: flex;
   flex-direction: column;
   padding: 0 25px 25px 25px;
@@ -155,9 +155,12 @@ a {
 }
 
 .outputContainer {
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
   min-width: 350px;
+  padding: 120px 25px 25px 25px;
 }
 
 .rct-collapse-btn {
@@ -183,7 +186,6 @@ footer p {
 .field {
   border: none;
   margin-top: 10px;
-  width: 200px;
 }
 
 .inputsContainer {
@@ -224,7 +226,7 @@ footer p {
 
 .buttonsContainer {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   margin-top: 20px;
 }
 
@@ -308,11 +310,6 @@ footer p {
   color: red;
 }
 
-#output {
-  padding-top: 20px;
-  padding-bottom: 20px;
-}
-
 .fileReadyButton {
   padding: 10px 20px;
   border: 1px solid #009FE3;
@@ -350,6 +347,7 @@ footer p {
   border: none;
   border-color: white;
   font-size: 14px;
+  text-align: center;
 }
 
 .submitButton.closeResultsButton {

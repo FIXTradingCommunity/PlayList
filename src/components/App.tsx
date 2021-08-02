@@ -16,7 +16,7 @@ import Playlist from '../lib/playlist';
 import CheckboxTree from 'react-checkbox-tree';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
-import ResultsPage from './ResultsPage/ResultsPage';
+// import ResultsPage from './ResultsPage/ResultsPage';
 
 const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
 
@@ -208,34 +208,31 @@ export default class App extends Component {
                   />
                 </div>
                 <div className='buttonsContainer'>
-                  {
-                    !this.state.downloadHref
-                      ? <button
-                          type="button"
-                          className="submitButton"
-                          onClick={() => this.setState({ creatingFile: true }, () => this.createOrchestra())}
-                          disabled={
-                            this.state.showAlerts ||
-                            Boolean(this.state.orchestraFileNameError) ||
-                            Boolean(this.state.referenceFileError) ||
-                            this.state.checkedTreeState.length === 0
-                          }
-                        >
-                          {
-                            this.state.creatingFile ? "Loading..." : "Create Orchestra file"
-                          }
-                        </button>
-                      : <a
-                          className="submitButton downloadButton"
-                          href={this.state.downloadHref}
-                          download={this.orchestraFileName}
-                          data-downloadurl={this.state.downloadUrl}
-                          onClick={this.handleDownloadClick.bind(this)}
-                        >
-                          { this.state.downloaded ? "Downloaded" : "Download File"}
-                        </a>
+                  <button
+                    type="button"
+                    className="submitButton"
+                    onClick={() => this.setState({ creatingFile: true }, () => this.createOrchestra())}
+                    disabled={
+                      this.state.showAlerts ||
+                      Boolean(this.state.orchestraFileNameError) ||
+                      Boolean(this.state.referenceFileError) ||
+                      this.state.checkedTreeState.length === 0
+                    }
+                  >
+                    {
+                      this.state.creatingFile ? "Loading..." : "Create Orchestra file"
+                    }
+                  </button>
+                  { this.state.downloadHref && <a
+                      className="showResultsButton"
+                      href={this.state.downloadHref}
+                      download={this.orchestraFileName}
+                      data-downloadurl={this.state.downloadUrl}
+                      onClick={this.handleDownloadClick.bind(this)}
+                    >
+                      Download File
+                    </a>
                   }
-                { this.state.downloadHref && <button className="showResultsButton" onClick={this.openResults}>Show Results</button> }
                 </div>
               </div>
             </>
@@ -246,7 +243,7 @@ export default class App extends Component {
           <p>Version {version}</p>
           <p>{App.rightsMsg}</p>
         </footer>
-        {
+        {/* {
           this.state.showResults &&
           <ResultsPage
             results={this.state.results}
@@ -266,7 +263,7 @@ export default class App extends Component {
             </button>
             }
           />
-        }
+        } */}
       </div>
     );
   }
@@ -283,7 +280,16 @@ export default class App extends Component {
       this.inputProgress.clear();
     }
 
-    this.setState({ showAlerts: false, treeData: [] });
+    this.setState({
+      downloadHref: "",
+      downloadUrl: "",
+      results: undefined,
+      showResults: false,
+      showAlerts: false,
+      checkedTreeState: [],
+      expandedTreeState: [],
+      treeData: []
+    });
   };
 
   private inputOrchestra = (fileList: FileList | null): void => {
@@ -377,7 +383,11 @@ export default class App extends Component {
       this.setState({
         ...this.state,
         treeData: updatedValues.newTree,
-        checkedTreeState: [...updatedValues.newCheckedList]
+        checkedTreeState: [...updatedValues.newCheckedList],
+        downloadHref: "",
+        downloadUrl: "", 
+        results: undefined,
+        showResults: false
       });
     }
   }
@@ -408,7 +418,16 @@ export default class App extends Component {
   }
 
   private async createOrchestra(): Promise<void> {
-    this.setState({ creatingFile: true });
+    this.setState({
+      creatingFile: true, 
+      showAlerts: false,
+      readingFile: true,
+      downloadHref: "",
+      downloadUrl: "", 
+      downloaded: false,
+      results: undefined,
+      showResults: false
+    });
     if (this.playlist && this.orchestraFileName) {
       const runner = this.playlist;
       try {
@@ -469,7 +488,6 @@ export default class App extends Component {
       this.setState({
         downloadHref: url,
         downloadUrl: [OrchestraFile.MIME_TYPE, this.orchestraFileName, url].join(':'),
-        loading: true,
       });
     }
   }
@@ -483,7 +501,6 @@ export default class App extends Component {
         downloadHref: "",
         downloadUrl: "",
         downloaded: false,
-        loading: false,
       });
     }, 1500);
   }
