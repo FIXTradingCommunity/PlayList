@@ -95,11 +95,16 @@ export default class Playlist {
       const splittedKey = key.split('->');
       const newKey = splittedKey[splittedKey.length-1];
       checked.push(key, newKey);
+
       if (this.keys[key]) {
-        this.addCheckedReference(checked, this.keys[key].filter((k) => !checked.includes(k)))
+        this.addCheckedReference(checked, this.keys[key].filter((k) => 
+          (!checked.includes(k) && !(k.startsWith('codeset') && checked.find((checkedKey) => checkedKey.startsWith(k))))
+        ));
       }
       if (this.keys[newKey]) {
-        this.addCheckedReference(checked, this.keys[newKey].filter((k) => !checked.includes(k)))
+        this.addCheckedReference(checked, this.keys[newKey].filter((k) =>
+          (!checked.includes(k) && !(k.startsWith('codeset') && checked.find((checkedKey) => checkedKey.startsWith(k))))
+        ));
       }
     });
   }

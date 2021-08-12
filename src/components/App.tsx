@@ -134,10 +134,12 @@ export default class App extends Component {
                     this.setState({ referenceFileError: "", showAlerts: false })
                   }}
                 />
+                <div className="clearFieldsButtonContainers">
+                  <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
+                    Clear Input File
+                  </button>
+                </div>
               </div>
-              <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
-                Clear Input File
-              </button>
               <div className="redirectButtonContainers">
                 <a
                   className="redirectButton"

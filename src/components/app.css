@@ -191,7 +191,7 @@ footer p {
 .inputsContainer {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   height: 100%;
 }
 
@@ -264,11 +264,14 @@ footer p {
   background-color: #006c9a;
 }
 
-.redirectButtonContainers {
+.redirectButtonContainers, .clearFieldsButtonContainers {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: flex-end;
+}
+
+.redirectButtonContainers {
   margin-top: 50px;
 }
 
