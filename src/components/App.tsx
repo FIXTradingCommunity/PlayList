@@ -20,6 +20,9 @@ import TextField from '@material-ui/core/TextField';
 
 const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
 
+const splittedVersion = version.split('.');
+const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}`;
+
 const currentYear = new Date().getFullYear();
 
 interface IDecodedUserData {
@@ -242,7 +245,7 @@ export default class App extends Component {
         <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
         </div>
         <footer className="container">
-          <p>Version {version}</p>
+          <p>Version {appVersion}</p>
           <p>{App.rightsMsg}</p>
         </footer>
         {/* {
