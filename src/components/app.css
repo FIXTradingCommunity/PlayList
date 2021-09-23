@@ -140,6 +140,7 @@ a {
 }
 
 .tree {
+  margin-top: 15px;
   overflow-y: scroll;
   overflow-x: hidden;
 }
@@ -359,6 +360,7 @@ footer p {
 }
 
 ol {
+  margin-top: 0;
   padding: 0;
   overflow: hidden;
 }
