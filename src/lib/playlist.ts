@@ -23,12 +23,17 @@ export default class Playlist {
   private blob: Blob | undefined = undefined;
   public onFinish: undefined | ((output: OrchestraFile) => void);
 
-  constructor(referenceFile: File, inputProgress: HTMLElement | null, outputProgress: HTMLElement | null, progressFunc: (progressNode: HTMLElement, percent: number) => void) {
-    this.referenceFile = referenceFile;
-    this.inputProgress = inputProgress;
-    this.outputProgress = outputProgress;
-    this.progressFunc = progressFunc;
-  }
+  constructor(
+    referenceFile: File,
+    inputProgress: HTMLElement | null,
+    outputProgress: HTMLElement | null,
+    progressFunc: (progressNode: HTMLElement, percent: number) => void
+    ) {
+      this.referenceFile = referenceFile;
+      this.inputProgress = inputProgress;
+      this.outputProgress = outputProgress;
+      this.progressFunc = progressFunc;
+    }
   public async runReader(): Promise<TreeControl | string> {
     try {
       const input = new OrchestraFile(this.referenceFile, false, this.inputProgress, this.progressFunc);
@@ -49,7 +54,13 @@ export default class Playlist {
       )
     }
   }
-  public updateTree(checked: Array<string>, keysAdded: Array<string>, keysRemoved: Array<string>): { [key: string]: Array<string> | any} {
+  public updateTree(
+      checked: Array<string>,
+      keysAdded: Array<string>,
+      keysRemoved: Array<string>
+    ): {
+      [key: string]: Array<string> | any
+    } {
     let newChecked = [...checked];
     if (keysAdded.length > 0) {
       this.addCheckedReference(newChecked, keysAdded);
@@ -68,7 +79,11 @@ export default class Playlist {
   public updateFieldsNode(checkedFields: Array<string>) {
     const newTree = [...this.mainTreeNode ];
     if (this.mappedData.fields && this.mappedData.fields.elements) {
-      const fieldsObject = Utility.createFieldNodes(this.mappedData.fields, this.mappedData.codesets, this.keys, checkedFields);
+      const fieldsObject = Utility.createFieldNodes(
+        this.mappedData.fields,
+        this.mappedData.codesets,
+        this.keys, checkedFields
+      );
       const { fieldsIn, fieldsOut } = fieldsObject;
       const fieldsInIndex = newTree.findIndex((node) => node.value === 'FieldsIn');
       let treeIndex = -1;
@@ -90,64 +105,75 @@ export default class Playlist {
     }
     return newTree;
   }
+  
   public addCheckedReference(checked: Array<string>, keysToAdd: Array<string>) {
     keysToAdd.forEach((key) => {
       const splittedKey = key.split('->');
       const newKey = splittedKey[splittedKey.length-1];
-      checked.push(key, newKey);
-
-      if (this.keys[key]) {
-        this.addCheckedReference(checked, this.keys[key].filter((k) => 
-          (!checked.includes(k) && !(k.startsWith('codeset') && checked.find((checkedKey) => checkedKey.startsWith(k))))
-        ));
-      }
-      if (this.keys[newKey]) {
-        this.addCheckedReference(checked, this.keys[newKey].filter((k) =>
-          (!checked.includes(k) && !(k.startsWith('codeset') && checked.find((checkedKey) => checkedKey.startsWith(k))))
-        ));
-      }
+      checked.push(key)
+      this.checkKeys(checked, key);
+      if (key !== newKey) {
+        checked.push(newKey)
+        this.checkKeys(checked, newKey);
+      } 
     });
   }
-  public removeCheckedReference(checked: Array<string>, keysToRemove: Array<string>): Array<string> {
-    let newChecked = [...checked];
-    keysToRemove.forEach((key) => {
-      const splittedKey = key.split('->');
-      switch (splittedKey.length) {
-        case 1:
-          const foundKeys = newChecked.filter((item) => item.endsWith(key));
-          newChecked = newChecked.filter((item) => !item.endsWith(key));
-          if (key.startsWith('field')) {
-            const fieldRefs = uniq(this.keys[key]);
-            const fields = newChecked.filter((value) => (value.startsWith('field')));
-            const refsToRemove = fields.reduce((refsToRemove: string[], field) => {
-              const fieldKeys = uniq(this.keys[field]);
-              return refsToRemove.filter((ref) => !fieldKeys.includes(ref));
-            }, [...fieldRefs]);
-            newChecked = this.removeCheckedReference(newChecked, [...refsToRemove]);
-          }
-          foundKeys.forEach((foundKey) => {
-            if (foundKey.split('->').length > 1) {
-              const stringEnd = foundKey.length - key.length * 2 - 3;
-              const newKey = foundKey.substring(0, stringEnd);
-              const foundKeyRefs = newChecked.filter((item) => item.startsWith(`${newKey}-`));
-              if (foundKeyRefs.length === 1) {
-                newChecked = this.removeCheckedReference(newChecked, [newKey]);
-              }
+
+  private checkKeys(checked: Array<string>, key: string) {
+    if (this.keys[key]) {
+      if (this.keys[key].filter(x => checked.includes(x)).length === 0) {
+        const keysFilter = this.keys[key].filter((k) => (
+          !checked.includes(k) &&
+          !(k.startsWith('codeset') && checked.find((checkedKey) => checkedKey.startsWith(k)))
+        ));
+        this.addCheckedReference(checked, keysFilter);
+      }
+    }
+  }
+
+  public removeCheckedReference(
+    checked: Array<string>,
+    keysToRemove: Array<string>
+    ): Array<string> {
+      let newChecked = [...checked];
+      keysToRemove.forEach((key) => {
+        const splittedKey = key.split('->');
+        switch (splittedKey.length) {
+          case 1:
+            const foundKeys = newChecked.filter((item) => item.endsWith(key));
+            newChecked = newChecked.filter((item) => !item.endsWith(key));
+            if (key.startsWith('field')) {
+              const fieldRefs = uniq(this.keys[key]);
+              const fields = newChecked.filter((value) => (value.startsWith('field')));
+              const refsToRemove = fields.reduce((refsToRemove: string[], field) => {
+                const fieldKeys = uniq(this.keys[field]);
+                return refsToRemove.filter((ref) => !fieldKeys.includes(ref));
+              }, [...fieldRefs]);
+              newChecked = this.removeCheckedReference(newChecked, [...refsToRemove]);
             }
-          });
-          break;
-        case 2:
-          const keyStart = key.split('-')[0];
-          newChecked = newChecked.filter((item) => item !== key);
-          const foundRefKeys = newChecked.filter((item) => item.startsWith(`${keyStart}-`));
-          if (foundRefKeys.length === 0) {
-            newChecked = this.removeCheckedReference(newChecked, [keyStart]);
+            foundKeys.forEach((foundKey) => {
+              if (foundKey.split('->').length > 1) {
+                const stringEnd = foundKey.length - key.length * 2 - 3;
+                const newKey = foundKey.substring(0, stringEnd);
+                const foundKeyRefs = newChecked.filter((item) => item.startsWith(`${newKey}-`));
+                if (foundKeyRefs.length === 1) {
+                  newChecked = this.removeCheckedReference(newChecked, [newKey]);
+                }
+              }
+            });
+            break;
+          case 2:
+            const keyStart = key.split('-')[0];
+            newChecked = newChecked.filter((item) => item !== key);
+            const foundRefKeys = newChecked.filter((item) => item.startsWith(`${keyStart}-`));
+            if (foundRefKeys.length === 0) {
+              newChecked = this.removeCheckedReference(newChecked, [keyStart]);
+            }
+            break;
+          default:
+            newChecked = newChecked.filter((item) => item !== key);
+            break;
           }
-          break;
-        default:
-          newChecked = newChecked.filter((item) => item !== key);
-          break;
-        }
       });
       return newChecked;
   }
@@ -158,7 +184,12 @@ export default class Playlist {
         const referenceModel: OrchestraModel = new OrchestraModel();
         this.inputFile.populateOrchestraModelFromDom(referenceModel);
         // create new Orchestra file for output
-        const output = new OrchestraFile(new File([""], orchestraFileName), false, this.outputProgress, this.progressFunc);
+        const output = new OrchestraFile(
+          new File([""], orchestraFileName),
+          false,
+          this.outputProgress,
+          this.progressFunc
+        );
         // clones reference dom to output file
         output.dom = this.inputFile.cloneDom();
 

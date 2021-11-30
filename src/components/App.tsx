@@ -173,6 +173,7 @@ export default class App extends Component {
                 <div className="tree">
                   <CheckboxTree
                     checkModel={'all'}
+                    optimisticToggle={false}
                     nodes={this.state.treeData}
                     icons={{
                       expandClose: <div className={'icon'}>+</div>,
