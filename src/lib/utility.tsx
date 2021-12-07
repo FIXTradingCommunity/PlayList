@@ -255,8 +255,8 @@ export default class Utility {
     // MAP CATEGORIES
     if (categories && categories.elements) {
       const categoriesObject: ThreeChildrenTC = {
-        value: 'Categories',
-        label: 'CATEGORIES',
+        value: 'Messages',
+        label: 'MESSAGES',
         children: []
       };
       const categoriesIndexes: any = {};
@@ -264,21 +264,14 @@ export default class Utility {
         const { name, section } = category.attributes;
         if (name !== 'Common' && name !== 'Fields' && name !== 'ImplFields') {
           const categoryKey = `section:${section}->category:${name}`;
-          const categoryName = `${name} - Section ${section}`;
           categoriesIndexes[name] = { index: categoriesObject.children.length, key: categoryKey };
-          categoriesObject.children.push({
-            value: categoryKey,
-            label: categoryName,
-            children: []
-          });
         }
       });
-
       // MAP MESSAGES
       if (messages && messages.elements) {
         messages.elements.forEach((message: any) => {
           const { name, category, msgType } = message.attributes;
-          const { index, key } = categoriesIndexes[category];
+          const { key } = categoriesIndexes[category];
           const messageKey = `${key}->message:${name}`;
           const messageName = `${name}(35=${msgType})`;
           const messageStructure = message.elements.find((msg: any) => {
@@ -304,27 +297,16 @@ export default class Utility {
                 label: messageName,
                 children: newMessageChildren
               };
-              categoriesObject.children[index].children.push(newMessage);
+              categoriesObject.children.push(newMessage as any);
             }
           }
         });
       }
-
-      categoriesObject.children.forEach((category: any) => {
-        category.children.sort((a: any, b: any) => {
-          if (a.label > b.label) { return 1 };
-          if (a.label < b.label) { return -1 };
-          return 0;
-        });
-        category.children.forEach((message: any) => {
-          message.children.sort((a: any, b: any) => {
-            if (a.label > b.label) { return 1 };
-            if (a.label < b.label) { return -1 };
-            return 0;
-          })
-        })
-      });
-
+      
+      categoriesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      categoriesObject.children.forEach((message: any) => {
+        message.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
+      })
       res.push(categoriesObject);
     }
   
