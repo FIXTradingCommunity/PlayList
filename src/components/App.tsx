@@ -112,7 +112,6 @@ export default class App extends Component {
     if (!this.state.authVerified) {
       return null
     }
-
     return (
       <div className="App">
         <div className="App-header container">
@@ -273,6 +272,13 @@ export default class App extends Component {
       </div>
     );
   }
+
+  public componentDidUpdate(nextProps: any, nextState: any) {
+    if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
+      const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
+      for (let checkbox of allFirstCheckbox) { checkbox.disabled = true; }
+    }
+  };
 
   public componentDidMount() {
     this.CheckAuthenticated();
