@@ -7,7 +7,5 @@ import * as ReactDOM from "react-dom";
 
 import App from "./components/App";
 
-ReactDOM.render(
-    <App />,
-    document.getElementById('root') as HTMLElement
-);
+const rootNode = document.getElementById('root');
+ReactDOM.render(<App />, rootNode);

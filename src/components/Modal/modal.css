@@ -1,0 +1,11 @@
+.closeModalButton {
+  margin-top: 10px!important;
+  justify-content: center!important;
+  align-items: center!important;
+  height: 28px!important;
+  width: 100px!important;
+  background: #009FE3!important;
+  border-radius: 14px!important;
+  color: #FFF!important;
+  cursor: pointer!important;
+}
