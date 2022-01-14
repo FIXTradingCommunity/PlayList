@@ -485,7 +485,6 @@ export default class Utility {
       const datatypesObject: OneChildrenTC = {
         value: 'Datatypes',
         label: 'DATATYPES',
-        showCheckbox: false,
         children: datatypes.elements.filter((datatype: any) => (
           datatype.attributes.name !== "NumInGroup"
         )).map((datatype: any) => {
@@ -518,54 +517,53 @@ export default class Utility {
   }
 
   public static createFieldNodes = (fields: any, codesets: any, mappedKeys: any, checkedFields: any = []) => {
-    const fieldsOutList: TwoChildrenTC['children'] = [{
+    const fieldsList: TwoChildrenTC['children'] = [{
       value: 'tags:1-999',
       label: 'Tags 1-999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:1000-1999',
       label: 'Tags 1000-1999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:2000-2999',
       label: 'Tags 2000-2999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:3000-3999',
       label: 'Tags 3000-3999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:4000-4999',
       label: 'Tags 4000-4999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:5000-9999',
       label: 'Tags 5000-9999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:10000-19999',
       label: 'Tags 10000-19999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:20000-39999',
       label: 'Tags 20000-39999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:40000-49999',
       label: 'Tags 40000-49999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }];
-    const fieldsInList: any = [];
-
+    
     fields.elements.forEach((field: any) => {
       const { id, name, type, deprecated } = field.attributes;
       if (type !== 'NumInGroup') {
@@ -592,31 +590,28 @@ export default class Utility {
         const fieldNode = {
           value: fieldKey,
           label: fieldName,
+          disabled: true,
           className: deprecated && 'deprecatedItem'
         };
 
-        if (checkedFields.length > 0 && checkedFields.includes(fieldKey)) {
-          fieldsInList.push(fieldNode);
-        }
-        else {
-          if (id >= 1 && id <= 999) fieldsOutList[0].children.push(fieldNode)
-          else if (id >= 1000 && id <= 1999) fieldsOutList[1].children.push(fieldNode)
-          else if (id >= 2000 && id <= 2999) fieldsOutList[2].children.push(fieldNode)
-          else if (id >= 3000 && id <= 3999) fieldsOutList[3].children.push(fieldNode)
-          else if (id >= 4000 && id <= 4999) fieldsOutList[4].children.push(fieldNode)
-          else if (id >= 5000 && id <= 5999) fieldsOutList[5].children.push(fieldNode)
-          else if (id >= 10000 && id <= 19999) fieldsOutList[6].children.push(fieldNode)
-          else if (id >= 20000 && id <= 39999) fieldsOutList[7].children.push(fieldNode)
-          else if (id >= 40000 && id <= 49999) fieldsOutList[8].children.push(fieldNode)
-        }
+          if (id >= 1 && id <= 999) fieldsList[0].children.push(fieldNode)
+          else if (id >= 1000 && id <= 1999) fieldsList[1].children.push(fieldNode)
+          else if (id >= 2000 && id <= 2999) fieldsList[2].children.push(fieldNode)
+          else if (id >= 3000 && id <= 3999) fieldsList[3].children.push(fieldNode)
+          else if (id >= 4000 && id <= 4999) fieldsList[4].children.push(fieldNode)
+          else if (id >= 5000 && id <= 5999) fieldsList[5].children.push(fieldNode)
+          else if (id >= 10000 && id <= 19999) fieldsList[6].children.push(fieldNode)
+          else if (id >= 20000 && id <= 39999) fieldsList[7].children.push(fieldNode)
+          else if (id >= 40000 && id <= 49999) fieldsList[8].children.push(fieldNode)
+        // }
       }
     });
 
     const fieldsOut: TwoChildrenTC = {
       value: 'FieldsOut',
-      label: 'FIELDS-OUT',
+      label: 'FIELDS',
       showCheckbox: false,
-      children: fieldsOutList.filter((fieldNode: any) => (fieldNode.children.length > 0))
+      children: fieldsList.filter((fieldNode: any) => (fieldNode.children.length > 0))
     };
     fieldsOut.children.forEach((fieldGroup: any) => {
       fieldGroup.children.sort((a: any, b: any) => (
@@ -624,15 +619,7 @@ export default class Utility {
       ));
     })
 
-    const fieldsIn: OneChildrenTC = {
-      value: 'FieldsIn',
-      label: 'FIELDS-IN',
-      showCheckbox: false,
-      children: fieldsInList.sort((a: any, b: any) => (
-        a.value.split(':')[1] - b.value.split(':')[1]
-      ))
-    }
-    return { fieldsIn, fieldsOut };
+    return { fieldsOut };
   }
 
   public static capitalize = (word: string) => {

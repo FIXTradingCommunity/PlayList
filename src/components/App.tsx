@@ -16,6 +16,7 @@ import Playlist from '../lib/playlist';
 import CheckboxTree from 'react-checkbox-tree';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
+import BasicModal from './Modal/Modal';
 // import ResultsPage from './ResultsPage/ResultsPage';
 
 const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
@@ -73,7 +74,8 @@ export interface State {
   authVerified: boolean,
   treeData: Array<any>,
   checkedTreeState: Array<string>,
-  expandedTreeState: Array<string>
+  expandedTreeState: Array<string>,
+  showModal: boolean,
 }
 
 export default class App extends Component {
@@ -93,7 +95,8 @@ export default class App extends Component {
     authVerified: false,
     treeData: [],
     checkedTreeState: [],
-    expandedTreeState: []
+    expandedTreeState: ["FieldsOut"],
+    showModal: false
   };
   private referenceFile: File | undefined = undefined;
   private orchestraFileName: string | undefined = 'myorchestra.xml';
@@ -112,8 +115,13 @@ export default class App extends Component {
     if (!this.state.authVerified) {
       return null
     }
+    if (this.playlist && this.playlist.lastCodesetItem) {
+      this.setState({showModal: true});
+      this.playlist.updateLastCodesetItem();
+    } 
     return (
       <div className="App">
+        <BasicModal showModal={this.state.showModal} handleClose={() => this.setState({showModal: false})} />
         <div className="App-header container">
           <div className="titleContainer">
             <h1>FIX Playlist</h1>
@@ -274,6 +282,21 @@ export default class App extends Component {
   }
 
   public componentDidUpdate(nextProps: any, nextState: any) {
+      if (this.playlist && this.playlist.lastCodesetItem) {
+        this.setState({showModal: true});
+        this.playlist.updateLastCodesetItem();
+      } 
+      const nodes: any = document.querySelectorAll(".rct-node-expanded");  
+      for(let i = 0; i < nodes.length; i++) {
+        if (nodes[i]) {       
+          const doc2: any = nodes[i].querySelector(".rct-title")
+          if (doc2 && doc2.innerText === 'CODESETS') {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+            for (let checkbox of allFirstCheckbox) { checkbox.disabled = true; }
+          }
+        }
+      }
+      
     if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
       const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
       for (let checkbox of allFirstCheckbox) { checkbox.disabled = true; }
@@ -299,7 +322,7 @@ export default class App extends Component {
       showResults: false,
       showAlerts: false,
       checkedTreeState: [],
-      expandedTreeState: [],
+      expandedTreeState: ["FieldsOut"],
       treeData: []
     });
   };
@@ -355,7 +378,8 @@ export default class App extends Component {
         results: undefined,
         showResults: false,
         checkedTreeState: [],
-        expandedTreeState: []
+        expandedTreeState: ["FieldsOut"],
+        showModal: false
       });
 
       const runner: Playlist = new Playlist(
