@@ -91,7 +91,7 @@ export default class Utility {
       groups[id] = `${name} - Group`;
       return groups;
     }, {});
-
+    
     return {
       sections,
       categories,
