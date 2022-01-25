@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 2rem;
+  padding-top: 1rem;
 }
 
 .titleContainer {
@@ -30,6 +30,7 @@
 .subTitle {
   color: #9D9D9D;
   text-align: left;
+  margin-bottom: 0;
 }
 
 body {
@@ -53,7 +54,7 @@ input[type=file] {
 input[type=text] {
   margin-top: 2px;
   margin-bottom: 2px;
-  min-width: 250px;
+  min-width: 200px;
 }
 
 input[type=checkbox] {
@@ -126,17 +127,21 @@ a {
 .form, .treeContainer {
   display: flex;
   flex-direction: column;
-  padding: 0 25px 25px 25px;
 }
 
 .form {
   align-items: flex-start;
-  min-width: 350px;
+  width: 265px;
+  padding: 0;
 }
 
 .treeContainer {
-  height: 500px;
-  min-width: 500px;
+  height: 82vh;
+  width: 70%;
+}
+
+.treeTitle {
+  margin-bottom: 5px!important;
 }
 
 .tree {
@@ -160,8 +165,7 @@ a {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  min-width: 350px;
-  padding: 120px 25px 25px 25px;
+  width: 100%;
 }
 
 .rct-collapse-btn {
@@ -175,7 +179,7 @@ a {
 }
 
 footer {
-  padding-bottom: 40px;
+  padding-bottom: 10px;
 }
 
 footer p {
@@ -186,7 +190,6 @@ footer p {
 
 .field {
   border: none;
-  margin-top: 10px;
 }
 
 .inputsContainer {
@@ -194,6 +197,7 @@ footer p {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
+  width: 100%;
 }
 
 .bar {
@@ -239,7 +243,7 @@ footer p {
   min-width: 210px;
   background-color: #64C97C;
   border-radius: 23px;
-  padding: 15px 40px;
+  padding: 15px 30px;
   color: #FFFFFF;
   font-weight: 500;
   font-size: 14px;
@@ -273,7 +277,8 @@ footer p {
 }
 
 .redirectButtonContainers {
-  margin-top: 50px;
+  width: 100%;
+  margin: 40px 0 10px 0;
 }
 
 .redirectButton {
