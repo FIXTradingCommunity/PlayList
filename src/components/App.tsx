@@ -150,53 +150,8 @@ export default class App extends Component {
                   </button>
                 </div>
               </div>
-              <div className="redirectButtonContainers">
-                <a
-                  className="redirectButton"
-                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
-                  rel="noreferrer noopener"
-                  target="_blank"
-                  >
-                  Terms of Service
-                </a>
               </div>
-            </div>
-            {this.state.showAlerts && (
-              <div className="errorContainer">
-                <h4>{this.alertMsg.title}</h4>
-                <textarea
-                  readOnly={true}
-                  className="errorMessage"
-                  value={this.alertMsg.message}
-                ></textarea>
-              </div>
-            )}
-          </div>
-          {this.state.treeData.length > 0 && (
-            <> 
-              <div className="treeContainer">
-                <h2>Select Your Content</h2>
-                <h3 className="treeReference">(Greyed out items are deprecated)</h3>
-                <div className="tree">
-                  <CheckboxTree
-                    checkModel={'all'}
-                    optimisticToggle={false}
-                    nodes={this.state.treeData}
-                    icons={{
-                      expandClose: <div className={'icon'}>+</div>,
-                      expandOpen: <div className={'icon'}>-</div>
-                    }}
-                    iconsClass="fa5"
-                    checked={this.state.checkedTreeState}
-                    expanded={this.state.expandedTreeState}
-                    onCheck={this.checkTreeNode}
-                    onExpand={(expanded) => this.setState({
-                      ...this.state,
-                      expandedTreeState: expanded
-                    })}
-                  />
-                </div>
-              </div>
+              <h2>Output</h2>
               <div className="outputContainer">
                 <div className="field">
                   <TextField
@@ -246,6 +201,53 @@ export default class App extends Component {
                       Download File
                     </a>
                   }
+                </div>
+              </div>
+           
+              <div className="redirectButtonContainers">
+                <a
+                  className="redirectButton"
+                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                  >
+                  Terms of Service
+                </a>
+              </div>
+            {this.state.showAlerts && (
+              <div className="errorContainer">
+                <h4>{this.alertMsg.title}</h4>
+                <textarea
+                  readOnly={true}
+                  className="errorMessage"
+                  value={this.alertMsg.message}
+                ></textarea>
+              </div>
+            )}
+          </div>
+          {this.state.treeData.length > 0 && (
+            <> 
+              <div className="treeContainer">
+                <h2 className="treeTitle" >Select Your Content</h2>
+                <h3 className="treeReference">(Greyed out items are deprecated)</h3>
+                <div className="tree">
+                  <CheckboxTree
+                    checkModel={'all'}
+                    optimisticToggle={false}
+                    nodes={this.state.treeData}
+                    icons={{
+                      expandClose: <div className={'icon'}>+</div>,
+                      expandOpen: <div className={'icon'}>-</div>
+                    }}
+                    iconsClass="fa5"
+                    checked={this.state.checkedTreeState}
+                    expanded={this.state.expandedTreeState}
+                    onCheck={this.checkTreeNode}
+                    onExpand={(expanded) => this.setState({
+                      ...this.state,
+                      expandedTreeState: expanded
+                    })}
+                  />
                 </div>
               </div>
             </>
