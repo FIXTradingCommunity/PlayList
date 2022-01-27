@@ -229,7 +229,7 @@ export default class App extends Component {
             <> 
               <div className="treeContainer">
                 <h2 className="treeTitle" >Select Your Content</h2>
-                <h3 className="treeReference">(Greyed out items are deprecated)</h3>
+                <h3 className="treeReference">(All elements sorted alphabetically. Greyed out items are deprecated)</h3>
                 <div className="tree">
                   <CheckboxTree
                     checkModel={'all'}
