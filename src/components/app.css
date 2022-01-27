@@ -373,21 +373,3 @@ ol {
 ol li {
   padding-left: 45px;
 }
-
-@media (min-width: 576px) {
-  .container {
-    max-width: 540px;
-  }
-}
-
-@media (min-width: 992px) {
-  .container {
-    max-width: 1080px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .container {
-    max-width: 1360px;
-  }
-}
