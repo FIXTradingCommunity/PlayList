@@ -40,6 +40,26 @@ export default class Playlist {
     this.lastCodesetItem = !this.lastCodesetItem;
   }
 
+  private sortTree(tree: any) {
+    const sortedTree = tree.map((node: any) => {
+      return {
+        ...node,
+        children: this.sortChildren(node.children),
+      }
+    })
+    return sortedTree;
+  }
+
+  private sortChildren(children: any) {
+    const sortedChildren = children.map((node: any) => {
+      if (node.children) {
+        return {...node, children: this.sortChildren(node.children)}
+      };
+      return node;
+    });
+    return sortedChildren.sort((a: any, b: any) => (a.label > b.label) ? 1 : ((b.label > a.label) ? -1 : 0))
+  }
+
   public async runReader(): Promise<TreeControl | string> {
     try {
       
@@ -51,9 +71,10 @@ export default class Playlist {
       this.mappedData = Utility.mapOrchestraDom(jsonDom.elements[0].elements)
       const tree = Utility.createInitialTree(this.mappedData);      
       this.keys = tree.mappedKeys;
-      this.mainTreeNode = tree.initialTree;
+      const sortedTree = this.sortTree(tree.initialTree)
+      this.mainTreeNode = sortedTree;
       return new Promise<TreeControl>(resolve =>
-        resolve(tree.initialTree)
+        resolve(sortedTree)
       );
     } catch (e) {
       return new Promise<string>((resolve, reject) =>
