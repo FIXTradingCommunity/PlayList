@@ -379,7 +379,15 @@ export default class App extends Component {
         downloaded: false,
         results: undefined,
         showResults: false,
-        checkedTreeState: [],
+        checkedTreeState: [
+          "component:1024-field:8->field:8",
+          "component:1024-field:9->field:9",
+          "component:1024-field:35->field:35",
+          "component:1024-field:49->field:49",
+          "component:1024-field:56->field:56",
+          "component:1024-field:34->field:34",
+          "component:1024-field:52->field:52",
+        ],
         expandedTreeState: ["FieldsOut"],
         showModal: false
       });
