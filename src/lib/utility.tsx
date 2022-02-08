@@ -239,6 +239,16 @@ export default class Utility {
       groupNames
     } = data;
 
+    const standardHeaderPreSelected = [
+      "component:1024-field:8->field:8",
+      "component:1024-field:9->field:9",
+      "component:1024-field:35->field:35",
+      "component:1024-field:49->field:49",
+      "component:1024-field:56->field:56",
+      "component:1024-field:34->field:34",
+      "component:1024-field:52->field:52",
+    ];
+
     const getReferencesNames = (referenceType: string, referenceId: string) => {
       switch(referenceType) {
         case 'fieldRef':
@@ -279,17 +289,22 @@ export default class Utility {
           });
 
           if (messageStructure) {
-            const newMessageChildren = messageStructure.elements.filter((msgStc: any) => 
+            const newMessageChildren: any = [];
+            messageStructure.elements.filter((msgStc: any) => 
               msgStc.name === "fixr:fieldRef" || msgStc.name === "fixr:groupRef" || msgStc.name === "fixr:componentRef"
             ).map((ref: any) => {
               const refName = ref.name.split(":")[1];
               const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
               const refValue = `${messageKey}-${refKey}->${refKey}`;
-              return {
+              if (refValue.includes("component:1024->component:1024") || refValue.includes("component:1025->component:1025")) {
+               return ref; 
+              }
+              newMessageChildren.push({
                 value: refValue,
                 label: getReferencesNames(refName, ref.attributes.id || ''),
                 className: ref.attributes.deprecated && 'deprecatedItem'
-              }
+              })
+              return ref;
             });
             if (newMessageChildren.length > 0) {
               const newMessage: OneChildrenTC = {
@@ -373,6 +388,7 @@ export default class Utility {
           const refName = ref.name.split(":")[1];
           const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
           const refValue = `${componentKey}-${refKey}->${refKey}`;
+          const disabledCheckbox = standardHeaderPreSelected.includes(refValue)
           if (mappedKeys[componentKey]) {
             mappedKeys[componentKey].push(refKey, refValue);
           } 
@@ -381,6 +397,7 @@ export default class Utility {
           }
           return {
             value: refValue,
+            disabled: disabledCheckbox,
             label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
             className: ref.attributes.deprecated && 'deprecatedItem'
           }

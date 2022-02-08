@@ -24,7 +24,6 @@ export default class Playlist {
   private firstKeyIsCodeset: boolean = false;
   public onFinish: undefined | ((output: OrchestraFile) => void);
   public lastCodesetItem: boolean = false;
-
   constructor(
     referenceFile: File,
     inputProgress: HTMLElement | null,
@@ -72,6 +71,7 @@ export default class Playlist {
       const tree = Utility.createInitialTree(this.mappedData);      
       this.keys = tree.mappedKeys;
       const sortedTree = this.sortTree(tree.initialTree)
+      
       this.mainTreeNode = sortedTree;
       return new Promise<TreeControl>(resolve =>
         resolve(sortedTree)
@@ -88,19 +88,58 @@ export default class Playlist {
       keysRemoved: Array<string>
     ): {
       [key: string]: Array<string> | any
-    } {
-    this.firstKeyIsCodeset = keysRemoved.length > 0 && keysRemoved[0].startsWith("codeset")
+    } {   
+    let filteredKeyRemoved: any = [];
+    // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
+    // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
+    // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
+    const headerTrailer: any = [
+      "component:1024",
+      ...this.keys["component:1024"],
+      "component:1025",
+      ...this.keys["component:1025"]
+    ]
+    if (keysRemoved.length > 0) {
+      filteredKeyRemoved = keysRemoved.filter(key => (!key.includes("component:1024") && !key.includes("component:1025")) || key.startsWith("component:1024") || key.startsWith("component:1025"))
+      if (filteredKeyRemoved.length === 3 &&
+        (filteredKeyRemoved[0].startsWith("component:1024") || filteredKeyRemoved[0].startsWith("component:1025")) 
+       ) {
+          filteredKeyRemoved.pop();
+      }
+    }
+  
     let newChecked = [...checked];
     if (keysAdded.length > 0) {
-      this.addCheckedReference(newChecked, keysAdded);
-    }
-    if (keysRemoved.length > 0) {
-      const preKeysRemoved: any = [];
-      if (keysRemoved.length > 2) {
-        this.preRemoveCheckedReference(preKeysRemoved, keysRemoved)
-        newChecked = this.removeCheckedReference(newChecked, preKeysRemoved);
+      const messegesKey = keysAdded.find(key => key.includes("message:"))  
+      if (messegesKey && messegesKey.length > 0) {
+        const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
+        this.addCheckedReference(newChecked, [
+          ...keysAdded,
+          ...headerTrailer,
+          `${messageHeaderTrailer}-component:1024->component:1024`,
+          `${messageHeaderTrailer}-component:1025->component:1025`,
+        ]);
       } else {
-        newChecked = this.removeCheckedReference(newChecked, keysRemoved);
+        this.addCheckedReference(newChecked, keysAdded);
+      }
+    }
+    if (filteredKeyRemoved.length > 0) {
+      const headerTrailerFiterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"))
+      
+      this.firstKeyIsCodeset = filteredKeyRemoved.length > 0 && filteredKeyRemoved[0].startsWith("codeset")
+      const preKeysRemoved: any = [];
+      if (filteredKeyRemoved.length > 2) {
+        this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved)
+        newChecked = this.removeCheckedReference(newChecked, uniq(preKeysRemoved));
+      } else {
+        newChecked = this.removeCheckedReference(newChecked, filteredKeyRemoved);
+      }
+      const checkedMessegeKey = uniq(newChecked).find(key => key.includes("message:") && !key.includes("component:1024") && !key.includes("component:1025"))  
+      if (!checkedMessegeKey) {
+        newChecked = this.removeCheckedReference(newChecked, headerTrailer)
+      }
+      if (headerTrailerFiterKeyRemoved && headerTrailerFiterKeyRemoved.length > 0) {
+        newChecked = newChecked.filter(key => !headerTrailerFiterKeyRemoved.includes(key))
       }
     }
     const newCheckedList = uniq(newChecked);
@@ -152,7 +191,8 @@ export default class Playlist {
       if (this.keys[key].filter(x => checked.includes(x)).length === 0) {
         const keysFilter = this.keys[key].filter((k) => (
           !checked.includes(k) &&
-          !(k.startsWith('codeset') && checked.find((checkedKey) => checkedKey.startsWith(k)))
+          !(k.startsWith('codeset') && 
+          checked.find((checkedKey) => checkedKey.startsWith(k)))
         ));
         this.addCheckedReference(checked, keysFilter);
       } else if (key.startsWith('field')) {
@@ -179,7 +219,8 @@ export default class Playlist {
       if (this.keys[key].filter(x => checked.includes(x)).length === 0) {
         const keysFilter = this.keys[key].filter((k) => (
           !checked.includes(k) &&
-          !(k.startsWith('codeset') && checked.find((checkedKey) => checkedKey.startsWith(k)))
+          !(k.startsWith('codeset') && 
+          checked.find((checkedKey) => checkedKey.startsWith(k)))
         ));
         this.preRemoveCheckedReference(checked, keysFilter);
       }
@@ -275,6 +316,16 @@ export default class Playlist {
 }
   
   public async runCreator(orchestraFileName: string, selectedItems: Array<string>): Promise<Blob> {
+    const headerTrailer: any = [
+      "component:1024",
+      ...this.keys["component:1024"],
+      "component:1025",
+      ...this.keys["component:1025"]
+    ]
+    const checkedMessegeKey = uniq(selectedItems).find(key => key.includes("message:") && !key.includes("component:1024") && !key.includes("component:1025"))  
+      if (!checkedMessegeKey) {
+        selectedItems = this.removeCheckedReference(selectedItems, headerTrailer)
+      }      
     try {
       if (this.inputFile && selectedItems.length > 0) {
         // populate model from reference Orchestra file
