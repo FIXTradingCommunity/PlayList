@@ -95,10 +95,18 @@ export default class Playlist {
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
     const headerTrailer: any = [
       "component:1024",
-      ...this.keys["component:1024"],
       "component:1025",
-      ...this.keys["component:1025"]
     ]
+    const standardHeaderTrailerPreSelected = [
+      "component:1024-field:8->field:8",
+      "component:1024-field:9->field:9",
+      "component:1024-field:35->field:35",
+      "component:1024-field:49->field:49",
+      "component:1024-field:56->field:56",
+      "component:1024-field:34->field:34",
+      "component:1024-field:52->field:52",
+      "component:1025-field:10->field:10",
+    ];
 
     if (keysRemoved.length > 0) {
       filteredKeyRemoved = keysRemoved.filter(key => (!key.includes("component:1024") && !key.includes("component:1025")) || key.startsWith("component:1024") || key.startsWith("component:1025"))
@@ -116,12 +124,9 @@ export default class Playlist {
     if (keysAdded.length > 0) {
       const messegesKey = keysAdded.find(key => key.includes("message:"))  
       if (messegesKey && messegesKey.length > 0) {
-        const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
         this.addCheckedReference(newChecked, [
           ...keysAdded,
-          ...headerTrailer,
-          `${messageHeaderTrailer}-component:1024->component:1024`,
-          `${messageHeaderTrailer}-component:1025->component:1025`,
+          ...standardHeaderTrailerPreSelected,
         ]);
       } else {
         this.addCheckedReference(newChecked, keysAdded);
@@ -140,7 +145,7 @@ export default class Playlist {
       const checkedMessegeKey = uniq(newChecked).find(key => key.includes("message:") && !key.includes("component:1024") && !key.includes("component:1025"))
       if (!checkedMessegeKey) {
         const preHeaderTrailer: any = [];
-        this.preRemoveCheckedReference(preHeaderTrailer, headerTrailer)
+        this.preRemoveCheckedReference(preHeaderTrailer, headerTrailer)        
         newChecked = this.removeCheckedReference(newChecked, preHeaderTrailer)
       }
       if (headerTrailerFilterKeyRemoved && headerTrailerFilterKeyRemoved.length > 0) {
@@ -152,8 +157,7 @@ export default class Playlist {
       return item.split('->').length === 1 && item.includes('field:');
     });
     const newTree = this.updateFieldsNode(checkedFields);
-    this.mainTreeNode = newTree;
-        
+    this.mainTreeNode = newTree;    
     return { newCheckedList, newTree };
   }
 

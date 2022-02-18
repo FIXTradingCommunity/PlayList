@@ -370,6 +370,17 @@ export default class App extends Component {
   };
 
   private async readOrchestra(): Promise<void> {
+     const standardHeaderTrailerPreSelected = [
+      "component:1024-field:8->field:8",
+      "component:1024-field:9->field:9",
+      "component:1024-field:35->field:35",
+      "component:1024-field:49->field:49",
+      "component:1024-field:56->field:56",
+      "component:1024-field:34->field:34",
+      "component:1024-field:52->field:52",
+      "component:1025-field:10->field:10",
+    ];
+    
     if (this.referenceFile && this.inputProgress && this.outputProgress) {
       this.setState({
         showAlerts: false,
@@ -379,25 +390,16 @@ export default class App extends Component {
         downloaded: false,
         results: undefined,
         showResults: false,
-        checkedTreeState: [
-          "component:1024-field:8->field:8",
-          "component:1024-field:9->field:9",
-          "component:1024-field:35->field:35",
-          "component:1024-field:49->field:49",
-          "component:1024-field:56->field:56",
-          "component:1024-field:34->field:34",
-          "component:1024-field:52->field:52",
-        ],
+        checkedTreeState: [],
         expandedTreeState: ["FieldsOut"],
         showModal: false
       });
-
       const runner: Playlist = new Playlist(
         this.referenceFile,
         this.inputProgress,
         this.outputProgress,
         this.showProgress
-      );
+        );
       this.playlist = runner; 
       try {
         // read local reference Orchestra file
@@ -416,7 +418,8 @@ export default class App extends Component {
     } else if (!this.referenceFile) {
       this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
     }
-    this.setState({ readingFile: false });
+    const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);    
+    this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
   }
 
   private checkTreeNode = (checked: Array<string>) => {

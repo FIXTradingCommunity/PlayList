@@ -239,16 +239,6 @@ export default class Utility {
       groupNames
     } = data;
 
-    const standardHeaderPreSelected = [
-      "component:1024-field:8->field:8",
-      "component:1024-field:9->field:9",
-      "component:1024-field:35->field:35",
-      "component:1024-field:49->field:49",
-      "component:1024-field:56->field:56",
-      "component:1024-field:34->field:34",
-      "component:1024-field:52->field:52",
-    ];
-
     const getReferencesNames = (referenceType: string, referenceId: string) => {
       switch(referenceType) {
         case 'fieldRef':
@@ -388,7 +378,6 @@ export default class Utility {
           const refName = ref.name.split(":")[1];
           const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
           const refValue = `${componentKey}-${refKey}->${refKey}`;
-          const disabledCheckbox = standardHeaderPreSelected.includes(refValue)
           if (mappedKeys[componentKey]) {
             mappedKeys[componentKey].push(refKey, refValue);
           } 
@@ -397,7 +386,6 @@ export default class Utility {
           }
           return {
             value: refValue,
-            disabled: disabledCheckbox,
             label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
             className: ref.attributes.deprecated && 'deprecatedItem'
           }
