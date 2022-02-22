@@ -93,10 +93,6 @@ export default class Playlist {
     // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
-    const headerTrailer: any = [
-      "component:1024",
-      "component:1025",
-    ]
     const standardHeaderTrailerPreSelected = [
       "component:1024-field:8->field:8",
       "component:1024-field:9->field:9",
@@ -141,12 +137,6 @@ export default class Playlist {
         newChecked = this.removeCheckedReference(newChecked, uniq(preKeysRemoved));
       } else {
         newChecked = this.removeCheckedReference(newChecked, filteredKeyRemoved);
-      }
-      const checkedMessegeKey = uniq(newChecked).find(key => key.includes("message:") && !key.includes("component:1024") && !key.includes("component:1025"))
-      if (!checkedMessegeKey) {
-        const preHeaderTrailer: any = [];
-        this.preRemoveCheckedReference(preHeaderTrailer, headerTrailer)        
-        newChecked = this.removeCheckedReference(newChecked, preHeaderTrailer)
       }
       if (headerTrailerFilterKeyRemoved && headerTrailerFilterKeyRemoved.length > 0) {
         newChecked = newChecked.filter(key => !headerTrailerFilterKeyRemoved.includes(key))
@@ -330,13 +320,13 @@ export default class Playlist {
   public async runCreator(orchestraFileName: string, selectedItems: Array<string>): Promise<Blob> {
     const headerTrailer: any = [
       "component:1024",
-      ...this.keys["component:1024"],
       "component:1025",
-      ...this.keys["component:1025"]
     ]
     const checkedMessegeKey = uniq(selectedItems).find(key => key.includes("message:") && !key.includes("component:1024") && !key.includes("component:1025"))  
       if (!checkedMessegeKey) {
-        selectedItems = this.removeCheckedReference(selectedItems, headerTrailer)
+        const preHeaderTrailer: any = [];
+        this.preRemoveCheckedReference(preHeaderTrailer, headerTrailer)        
+        selectedItems = this.removeCheckedReference(selectedItems, preHeaderTrailer)
       }      
     try {
       if (this.inputFile && selectedItems.length > 0) {
