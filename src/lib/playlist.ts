@@ -88,7 +88,7 @@ export default class Playlist {
       keysRemoved: Array<string>
     ): {
       [key: string]: Array<string> | any
-    } {   
+    } {
     let filteredKeyRemoved: any = [];
     // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
@@ -132,11 +132,11 @@ export default class Playlist {
       const headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"))
       this.firstKeyIsCodeset = filteredKeyRemoved.length > 0 && filteredKeyRemoved[0].startsWith("codeset")
       const preKeysRemoved: any = [];
-      if (keysRemoved.length > 2) {
-        this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved)
-        newChecked = this.removeCheckedReference(newChecked, uniq(preKeysRemoved));
+      if (keysRemoved.length > 2 || keysRemoved.filter(e => e.startsWith("section:")).length > 0) {
+        this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved) 
+        newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
       } else {
-        newChecked = this.removeCheckedReference(newChecked, filteredKeyRemoved);
+        newChecked = this.removeCheckedReference(checked, newChecked, filteredKeyRemoved);
       }
       if (headerTrailerFilterKeyRemoved && headerTrailerFilterKeyRemoved.length > 0) {
         newChecked = newChecked.filter(key => !headerTrailerFilterKeyRemoved.includes(key))
@@ -227,7 +227,7 @@ export default class Playlist {
     }
   }
 
-  public removeCheckedReference(checked: Array<string>, keysToRemove: Array<string>) { 
+  public removeCheckedReference(mainKeysChecked: Array<string>, checked: Array<string>, keysToRemove: Array<string>) {
     let newChecked = [...checked];
     let breakProcess = false;
     if (this.firstKeyIsCodeset && keysToRemove.length > 0 && keysToRemove[0].startsWith("codeset")) {
@@ -243,18 +243,17 @@ export default class Playlist {
       const preSplitedKey = keysToRemove[0].split('->');
       const key = preSplitedKey[preSplitedKey.length - 1];
       if (key.startsWith("field")) {
-        newChecked.map(e => {
+        newChecked.forEach(e => {
           if (e.startsWith('component') || e.startsWith('group') || e.startsWith('section')) {  
             if (e.indexOf(key) !== -1 && e !== keysToRemove[0]) {
               newChecked = newChecked.filter(e => e !== keysToRemove[0]);
               breakProcess = true;
             }
           }
-          return true;
         })
       }
       else if (key.startsWith("group") && this.keys[key]) {
-        newChecked = this.removeCheckedReference(newChecked, [key, ...this.keys[key]]);
+        newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [key, ...this.keys[key]]);
         breakProcess = true;
       }
     }
@@ -262,57 +261,68 @@ export default class Playlist {
     !breakProcess &&
     keysToRemove.forEach((key) => {
       const splittedKey = key.split('->');
-      switch (splittedKey.length) {
-        case 1:
-          const foundKeys = newChecked.filter((item) => item.endsWith(key));            
-          newChecked = newChecked.filter((item) => !item.endsWith(key));
-          if (key.startsWith('field')) {
-            const result = newChecked.filter(e => {
-              if (e.startsWith('field')) {
-                return this.keys[e][0] === this.keys[key][0]
-              } else {
-                return false
+      let checkKeys: any = [];
+      if ((key.startsWith("field:") || key.startsWith("group:")) && splittedKey.length === 1) {
+        checkKeys = mainKeysChecked.filter((item) => 
+            item.startsWith("section:") && item.endsWith(key) && item !== key);
+      } else if (key.startsWith("section:") && (key.includes("field:") || key.includes("group:"))) {
+          checkKeys = mainKeysChecked.filter((item) => 
+            item.endsWith(splittedKey[splittedKey.length - 1]) && splittedKey[splittedKey.length - 1] !== item);
+      }
+      if (checkKeys.length <= 1) {    
+        switch (splittedKey.length) {
+          case 1:
+            const foundKeys = newChecked.filter((item) => item.endsWith(key));   
+            newChecked = newChecked.filter((item) => !item.endsWith(key));
+            if (key.startsWith('field')) {
+              const result = newChecked.filter(e => {
+                if (e.startsWith('field')) {
+                  return this.keys[e][0] === this.keys[key][0]
+                } else {
+                  return false
+                }
+              }) 
+              if (result.length === 0) {
+                const keysToDelete = uniq(this.keys[this.keys[key][0]] || this.keys[key] || []);
+                newChecked = newChecked.filter((item) => !keysToDelete.find(e => item === e));
+                const fieldRefs = uniq(this.keys[key]);
+                const fields = newChecked.filter((value) => (value.startsWith('field')));
+                
+                const refsToRemove = fields.reduce((refsToRemove: string[], field) => {
+                  const fieldKeys = uniq(this.keys[field]);
+                  return refsToRemove.filter((ref) => !fieldKeys.includes(ref));
+                }, [...fieldRefs]);
+                newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [...refsToRemove]);
               }
-            })
-            if (result.length === 0) {
-              const keysToDelete = uniq(this.keys[this.keys[key][0]] || this.keys[key] || []);
-              newChecked = newChecked.filter((item) => !keysToDelete.find(e => item === e));
-              const fieldRefs = uniq(this.keys[key]);
-              const fields = newChecked.filter((value) => (value.startsWith('field')));
-              
-              const refsToRemove = fields.reduce((refsToRemove: string[], field) => {
-                const fieldKeys = uniq(this.keys[field]);
-                return refsToRemove.filter((ref) => !fieldKeys.includes(ref));
-              }, [...fieldRefs]);
-              newChecked = this.removeCheckedReference(newChecked, [...refsToRemove]);
             }
-          }
-          foundKeys.forEach((foundKey) => {
-            if (foundKey.split('->').length > 1) {
-              const stringEnd = foundKey.length - key.length * 2 - 3;
-              const newKey = foundKey.substring(0, stringEnd);
-              const foundKeyRefs = newChecked.filter((item) => item.startsWith(`${newKey}-`));
-              if (foundKeyRefs.length === 1) {
-                newChecked = this.removeCheckedReference(newChecked, [newKey]);
+            foundKeys.forEach((foundKey) => {
+              if (foundKey.split('->').length > 1) {
+                const stringEnd = foundKey.length - key.length * 2 - 3;
+                const newKey = foundKey.substring(0, stringEnd);
+                const foundKeyRefs = newChecked.filter((item) => item.startsWith(`${newKey}-`));
+                if (foundKeyRefs.length === 1) {
+                  newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [newKey]);
+                }
               }
+            });
+            break;
+          case 2:
+            const keyStart = key.split('-')[0];
+            newChecked = newChecked.filter((item) => item !== key);
+            const foundRefKeys = newChecked.filter((item) => item.startsWith(`${keyStart}-`));
+            if (foundRefKeys.length === 0) {
+              newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [keyStart, splittedKey[1]]);
+            } else {
+              newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [splittedKey[1]]);
             }
-          });
-          
-          break;
-        case 2:
-          const keyStart = key.split('-')[0];
-          newChecked = newChecked.filter((item) => item !== key);
-          const foundRefKeys = newChecked.filter((item) => item.startsWith(`${keyStart}-`));
-          if (foundRefKeys.length === 0) {
-            newChecked = this.removeCheckedReference(newChecked, [keyStart, splittedKey[1]]);
-          } else {
-            newChecked = this.removeCheckedReference(newChecked, [splittedKey[1]]);
+            break;
+          default:
+            newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [...splittedKey]);
+            break;
           }
-          break;
-        default:
-          newChecked = this.removeCheckedReference(newChecked, [...splittedKey]);
-          break;
-        }
+      } else {
+        newChecked = newChecked.filter(e => e !== key);
+      }
     });  
     return newChecked;
 }
@@ -326,7 +336,7 @@ export default class Playlist {
       if (!checkedMessegeKey) {
         const preHeaderTrailer: any = [];
         this.preRemoveCheckedReference(preHeaderTrailer, headerTrailer)        
-        selectedItems = this.removeCheckedReference(selectedItems, preHeaderTrailer)
+        selectedItems = this.removeCheckedReference([...selectedItems], selectedItems, preHeaderTrailer)
       }      
     try {
       if (this.inputFile && selectedItems.length > 0) {
