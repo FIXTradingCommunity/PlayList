@@ -56,7 +56,15 @@ export default class Playlist {
       };
       return node;
     });
-    return sortedChildren.sort((a: any, b: any) => (a.label > b.label) ? 1 : ((b.label > a.label) ? -1 : 0))
+    return sortedChildren.sort((a: any, b: any) => {
+      const labelA = Number.parseInt(a.label.split("-")[0]);
+          const labelB = Number.parseInt(b.label.split("-")[0]);
+           if (isNaN(labelA) && isNaN(labelB)) {
+             return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
+           } else if (!isNaN(labelA) && !isNaN(labelB)){
+            return labelA-labelB
+           } else {return 0}
+    })
   }
 
   public async runReader(): Promise<TreeControl | string> {
