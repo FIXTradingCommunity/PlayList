@@ -309,8 +309,8 @@ export default class Utility {
       }
       
       categoriesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
-      categoriesObject.children.forEach((message: any) => {
-        message.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
+      categoriesObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
       })
       res.push(categoriesObject);
     }
@@ -352,12 +352,11 @@ export default class Utility {
           });
         }
       });
-
-      groupsObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      
+      groupsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      groupsObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
 
       res.push(groupsObject);
     }
@@ -400,11 +399,10 @@ export default class Utility {
         }
       });
 
-      componentsObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      componentsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      componentsObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
 
       res.push(componentsObject);
     }
@@ -456,11 +454,11 @@ export default class Utility {
         })
       };
 
-      codesetsObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      codesetsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      codesetsObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
+
       codesetsObject.children.forEach((codeset: any) => {
         codeset.children.sort((a: any, b: any) => {
           const rexSort1 = a.label.split('=')[0];
@@ -506,11 +504,10 @@ export default class Utility {
         })
       };
 
-      datatypesObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      datatypesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      datatypesObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
 
       res.push(datatypesObject);
     }
@@ -591,7 +588,7 @@ export default class Utility {
           mappedKeys[fieldKey] = [...mapKeys];
         }
 
-        const fieldName = `${name}(${id}) - ${typeRef}`;
+        const fieldName = `${id} - ${name} - ${typeRef}`;
         const fieldNode = {
           value: fieldKey,
           label: fieldName,
