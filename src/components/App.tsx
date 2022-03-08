@@ -7,13 +7,13 @@ import { version } from '../../package.json';
 import * as Sentry from '@sentry/browser';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
+import CheckboxTree from 'react-checkbox-tree';
 import logo from '../assets/FIXorchestraLogo.png';
 import './app.css';
 import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
-import CheckboxTree from 'react-checkbox-tree';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import BasicModal from './Modal/Modal';
@@ -237,7 +237,8 @@ export default class App extends Component {
                     nodes={this.state.treeData}
                     icons={{
                       expandClose: <div className={'icon'}>+</div>,
-                      expandOpen: <div className={'icon'}>-</div>
+                      expandOpen: <div className={'icon'}>-</div>,
+                      check: <span className="rct-icon rct-icon-check" />,
                     }}
                     iconsClass="fa5"
                     checked={this.state.checkedTreeState}
@@ -294,14 +295,34 @@ export default class App extends Component {
           const doc2: any = nodes[i].querySelector(".rct-title")
           if (doc2 && doc2.innerText === 'CODESETS') {
             const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
-            for (let checkbox of allFirstCheckbox) { checkbox.disabled = true; }
+            for (let checkbox of allFirstCheckbox) { 
+              checkbox.disabled = true;
+              checkbox.className="disabledCheckbox";
+            }
+          }
+          if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+            for (let checkbox of allFirstCheckbox) { 
+              console.log("checkbox", checkbox);
+              
+              checkbox.className="disabledCheckbox";
+            }
+          }
+          if (doc2 && doc2.innerText === 'FIELDS') {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");      
+            for (let checkbox of allFirstCheckbox) {  
+              checkbox.className="disabledCheckbox";
+            }
           }
         }
       }
       
     if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
       const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
-      for (let checkbox of allFirstCheckbox) { checkbox.disabled = true; }
+      for (let checkbox of allFirstCheckbox) { 
+        checkbox.disabled = true;   
+        checkbox.className="disabledCheckbox";   
+      }
     }
   };
 

@@ -499,7 +499,7 @@ export default class Utility {
           return {
             value: datatypeKey,
             label: datatypeName,
-            disabled: true
+            disabled: true,
           };
         })
       };
