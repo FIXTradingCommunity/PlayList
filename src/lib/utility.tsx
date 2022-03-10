@@ -202,9 +202,6 @@ export default class Utility {
                 data.components[componentName][componentRefType].push({ "id": componentRefValue});
               }
           }
-          else {
-              data.components[componentName] = { all: true };
-          }
           break;
         default: 
           break;
