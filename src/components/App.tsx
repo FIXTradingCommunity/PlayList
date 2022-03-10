@@ -303,8 +303,6 @@ export default class App extends Component {
           if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
             const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
             for (let checkbox of allFirstCheckbox) { 
-              console.log("checkbox", checkbox);
-              
               checkbox.className="disabledCheckbox";
             }
           }
