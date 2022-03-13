@@ -17,6 +17,7 @@ import Playlist from '../lib/playlist';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import BasicModal from './Modal/Modal';
+import CircularIndeterminate from './CircularProgress';
 // import ResultsPage from './ResultsPage/ResultsPage';
 
 const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
@@ -76,6 +77,8 @@ export interface State {
   checkedTreeState: Array<string>,
   expandedTreeState: Array<string>,
   showModal: boolean,
+  showCircularProgress: boolean,
+  checked: Array<string>,
 }
 
 export default class App extends Component {
@@ -96,7 +99,9 @@ export default class App extends Component {
     treeData: [],
     checkedTreeState: [],
     expandedTreeState: ["FieldsOut"],
-    showModal: false
+    showModal: false,
+    showCircularProgress: false,
+    checked: [],
   };
   private referenceFile: File | undefined = undefined;
   private orchestraFileName: string | undefined = 'myorchestra.xml';
@@ -111,6 +116,29 @@ export default class App extends Component {
     Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
+  checkTreeNodeStart(checked: Array<string>) {
+    this.setState({ showCircularProgress: true, checked });
+  }
+  
+  checkTreeNode = (checked: Array<string>) => {
+    const oldState = [...this.state.checkedTreeState];
+    const added = checked.filter((x: string) => (!oldState.includes(x)));
+    const removed = oldState.filter((y: string) => !checked.includes(y));
+    if (this.playlist) {
+      const runner = this.playlist;
+      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed); 
+      this.setState({
+        showCircularProgress: false,
+        treeData: updatedValues.newTree,
+        checkedTreeState: [...updatedValues.newCheckedList],
+        downloadHref: "",
+        downloadUrl: "", 
+        results: undefined,
+        showResults: false
+      });
+    }
+  }
+
   public render() {
     if (!this.state.authVerified) {
       return null
@@ -121,6 +149,7 @@ export default class App extends Component {
     } 
     return (
       <div className="App">
+        {this.state.showCircularProgress && CircularIndeterminate()}
         <BasicModal showModal={this.state.showModal} handleClose={() => this.setState({showModal: false})} />
         <div className="App-header container">
           <div className="titleContainer">
@@ -243,9 +272,10 @@ export default class App extends Component {
                     iconsClass="fa5"
                     checked={this.state.checkedTreeState}
                     expanded={this.state.expandedTreeState}
-                    onCheck={this.checkTreeNode}
+                    onCheck={(checked) => {
+                      this.checkTreeNodeStart(checked)
+                    }}
                     onExpand={(expanded) => this.setState({
-                      ...this.state,
                       expandedTreeState: expanded
                     })}
                   />
@@ -259,32 +289,16 @@ export default class App extends Component {
           <p>Version {appVersion}</p>
           <p>{App.rightsMsg}</p>
         </footer>
-        {/* {
-          this.state.showResults &&
-          <ResultsPage
-            results={this.state.results}
-            onClose={this.closeResults}
-            downloadButton={
-              this.state.downloadHref ? <a
-              className="submitButton downloadButton"
-              href={this.state.downloadHref}
-              download={this.orchestraFileName}
-              data-downloadurl={this.state.downloadUrl}
-              onClick={this.handleDownloadClick.bind(this)}
-            >
-              { this.state.downloaded ? "Downloaded" : "Download File"}
-            </a> : 
-            <button className="submitButton closeResultsButton" onClick={this.closeResults}>
-              Close Results
-            </button>
-            }
-          />
-        } */}
       </div>
     );
   }
 
   public componentDidUpdate(nextProps: any, nextState: any) {
+    if (this.state.showCircularProgress) { 
+      setTimeout(() => {
+        this.checkTreeNode(this.state.checked);
+      }, 100)
+    } 
       if (this.playlist && this.playlist.lastCodesetItem) {
         this.setState({showModal: true});
         this.playlist.updateLastCodesetItem();
@@ -344,7 +358,7 @@ export default class App extends Component {
       showAlerts: false,
       checkedTreeState: [],
       expandedTreeState: ["FieldsOut"],
-      treeData: []
+      treeData: [],
     });
   };
 
@@ -411,7 +425,7 @@ export default class App extends Component {
         showResults: false,
         checkedTreeState: [],
         expandedTreeState: ["FieldsOut"],
-        showModal: false
+        showModal: false,
       });
       const runner: Playlist = new Playlist(
         this.referenceFile,
@@ -439,25 +453,6 @@ export default class App extends Component {
     }
     const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);    
     this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
-  }
-
-  private checkTreeNode = (checked: Array<string>) => {
-    const oldState = [...this.state.checkedTreeState];
-    const added = checked.filter((x: string) => (!oldState.includes(x)));
-    const removed = oldState.filter((y: string) => !checked.includes(y));
-    if (this.playlist) {
-      const runner = this.playlist;
-      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed);
-      this.setState({
-        ...this.state,
-        treeData: updatedValues.newTree,
-        checkedTreeState: [...updatedValues.newCheckedList],
-        downloadHref: "",
-        downloadUrl: "", 
-        results: undefined,
-        showResults: false
-      });
-    }
   }
 
   // Uncomment this lines when adding content to Modal. Also add the missing values

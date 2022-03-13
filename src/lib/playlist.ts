@@ -155,7 +155,7 @@ export default class Playlist {
       return item.split('->').length === 1 && item.includes('field:');
     });
     const newTree = this.updateFieldsNode(checkedFields);
-    this.mainTreeNode = newTree;    
+    this.mainTreeNode = newTree;
     return { newCheckedList, newTree };
   }
 
@@ -182,16 +182,20 @@ export default class Playlist {
   }
   
   public addCheckedReference(checked: Array<string>, keysToAdd: Array<string>) {
-    keysToAdd.forEach((key) => {
-      const splittedKey = key.split('->');
-      const newKey = splittedKey[splittedKey.length-1];
-      checked.push(key)
-      this.checkKeys(checked, key);
-      if (key !== newKey) {
-        checked.push(newKey)
-        this.checkKeys(checked, newKey);
-      } 
-    });
+    if (Object.keys(this.keys).length > 0) {
+      keysToAdd.forEach((key) => {
+        if (!checked.includes(key) || key.includes("components") || key.includes("field")) {
+          const splittedKey = key.split('->');
+          const newKey = splittedKey[splittedKey.length-1];
+          checked.push(key)
+          this.checkKeys(checked, key);
+          if (key !== newKey) {
+            checked.push(newKey)
+            this.checkKeys(checked, newKey);
+          }
+        }
+      });
+    }
   }
 
   private checkKeys(checked: Array<string>, key: string) {
@@ -211,14 +215,16 @@ export default class Playlist {
 
   public preRemoveCheckedReference(preKeysRemoved: Array<string>, keysToRemove: Array<string>) {
     keysToRemove.forEach((key) => {
-      const splittedKey = key.split('->');
-      const newKey = splittedKey[splittedKey.length-1];
-      preKeysRemoved.push(key)
-      this.removeCheckKeys(preKeysRemoved, key);
-      if (key !== newKey) {
-        preKeysRemoved.push(newKey)
-        this.removeCheckKeys(preKeysRemoved, newKey);
-      } 
+      if (!preKeysRemoved.includes(key)) {
+        const splittedKey = key.split('->');
+        const newKey = splittedKey[splittedKey.length-1];
+        preKeysRemoved.push(key)
+        this.removeCheckKeys(preKeysRemoved, key);
+        if (key !== newKey) {
+          preKeysRemoved.push(newKey)
+          this.removeCheckKeys(preKeysRemoved, newKey);
+        }
+      }
     });
   }
 
