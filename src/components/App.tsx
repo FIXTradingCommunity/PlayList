@@ -7,15 +7,17 @@ import { version } from '../../package.json';
 import * as Sentry from '@sentry/browser';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
+import CheckboxTree from 'react-checkbox-tree';
 import logo from '../assets/FIXorchestraLogo.png';
 import './app.css';
 import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
-import CheckboxTree from 'react-checkbox-tree';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
+import BasicModal from './Modal/Modal';
+import CircularIndeterminate from './CircularProgress';
 // import ResultsPage from './ResultsPage/ResultsPage';
 
 const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
@@ -73,7 +75,10 @@ export interface State {
   authVerified: boolean,
   treeData: Array<any>,
   checkedTreeState: Array<string>,
-  expandedTreeState: Array<string>
+  expandedTreeState: Array<string>,
+  showModal: boolean,
+  showCircularProgress: boolean,
+  checked: Array<string>,
 }
 
 export default class App extends Component {
@@ -93,7 +98,10 @@ export default class App extends Component {
     authVerified: false,
     treeData: [],
     checkedTreeState: [],
-    expandedTreeState: []
+    expandedTreeState: ["FieldsOut"],
+    showModal: false,
+    showCircularProgress: false,
+    checked: [],
   };
   private referenceFile: File | undefined = undefined;
   private orchestraFileName: string | undefined = 'myorchestra.xml';
@@ -108,13 +116,41 @@ export default class App extends Component {
     Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
+  checkTreeNodeStart(checked: Array<string>) {
+    this.setState({ showCircularProgress: true, checked });
+  }
+  
+  checkTreeNode = (checked: Array<string>) => {
+    const oldState = [...this.state.checkedTreeState];
+    const added = checked.filter((x: string) => (!oldState.includes(x)));
+    const removed = oldState.filter((y: string) => !checked.includes(y));
+    if (this.playlist) {
+      const runner = this.playlist;
+      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed); 
+      this.setState({
+        showCircularProgress: false,
+        treeData: updatedValues.newTree,
+        checkedTreeState: [...updatedValues.newCheckedList],
+        downloadHref: "",
+        downloadUrl: "", 
+        results: undefined,
+        showResults: false
+      });
+    }
+  }
+
   public render() {
     if (!this.state.authVerified) {
       return null
     }
-
+    if (this.playlist && this.playlist.lastCodesetItem) {
+      this.setState({showModal: true});
+      this.playlist.updateLastCodesetItem();
+    } 
     return (
       <div className="App">
+        {this.state.showCircularProgress && CircularIndeterminate()}
+        <BasicModal showModal={this.state.showModal} handleClose={() => this.setState({showModal: false})} />
         <div className="App-header container">
           <div className="titleContainer">
             <h1>FIX Playlist</h1>
@@ -143,52 +179,8 @@ export default class App extends Component {
                   </button>
                 </div>
               </div>
-              <div className="redirectButtonContainers">
-                <a
-                  className="redirectButton"
-                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
-                  rel="noreferrer noopener"
-                  target="_blank"
-                  >
-                  Terms of Service
-                </a>
               </div>
-            </div>
-            {this.state.showAlerts && (
-              <div className="errorContainer">
-                <h4>{this.alertMsg.title}</h4>
-                <textarea
-                  readOnly={true}
-                  className="errorMessage"
-                  value={this.alertMsg.message}
-                ></textarea>
-              </div>
-            )}
-          </div>
-          {this.state.treeData.length > 0 && (
-            <> 
-              <div className="treeContainer">
-                <h2>Select Your Content</h2>
-                <h3 className="treeReference">(Greyed out items are deprecated)</h3>
-                <div className="tree">
-                  <CheckboxTree
-                    checkModel={'all'}
-                    nodes={this.state.treeData}
-                    icons={{
-                      expandClose: <div className={'icon'}>+</div>,
-                      expandOpen: <div className={'icon'}>-</div>
-                    }}
-                    iconsClass="fa5"
-                    checked={this.state.checkedTreeState}
-                    expanded={this.state.expandedTreeState}
-                    onCheck={this.checkTreeNode}
-                    onExpand={(expanded) => this.setState({
-                      ...this.state,
-                      expandedTreeState: expanded
-                    })}
-                  />
-                </div>
-              </div>
+              <h2>Output</h2>
               <div className="outputContainer">
                 <div className="field">
                   <TextField
@@ -240,6 +232,55 @@ export default class App extends Component {
                   }
                 </div>
               </div>
+           
+              <div className="redirectButtonContainers">
+                <a
+                  className="redirectButton"
+                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                  >
+                  Terms of Service
+                </a>
+              </div>
+            {this.state.showAlerts && (
+              <div className="errorContainer">
+                <h4>{this.alertMsg.title}</h4>
+                <textarea
+                  readOnly={true}
+                  className="errorMessage"
+                  value={this.alertMsg.message}
+                ></textarea>
+              </div>
+            )}
+          </div>
+          {this.state.treeData.length > 0 && (
+            <> 
+              <div className="treeContainer">
+                <h2 className="treeTitle" >Select Your Content</h2>
+                <h3 className="treeReference">(All elements sorted alphabetically. Greyed out items are deprecated)</h3>
+                <div className="tree">
+                  <CheckboxTree
+                    checkModel={'all'}
+                    optimisticToggle={false}
+                    nodes={this.state.treeData}
+                    icons={{
+                      expandClose: <div className={'icon'}>+</div>,
+                      expandOpen: <div className={'icon'}>-</div>,
+                      check: <span className="rct-icon rct-icon-check" />,
+                    }}
+                    iconsClass="fa5"
+                    checked={this.state.checkedTreeState}
+                    expanded={this.state.expandedTreeState}
+                    onCheck={(checked) => {
+                      this.checkTreeNodeStart(checked)
+                    }}
+                    onExpand={(expanded) => this.setState({
+                      expandedTreeState: expanded
+                    })}
+                  />
+                </div>
+              </div>
             </>
           )}
         <ProgressBar ref={this.setOutputFileBarRef as () => {}} />
@@ -248,30 +289,54 @@ export default class App extends Component {
           <p>Version {appVersion}</p>
           <p>{App.rightsMsg}</p>
         </footer>
-        {/* {
-          this.state.showResults &&
-          <ResultsPage
-            results={this.state.results}
-            onClose={this.closeResults}
-            downloadButton={
-              this.state.downloadHref ? <a
-              className="submitButton downloadButton"
-              href={this.state.downloadHref}
-              download={this.orchestraFileName}
-              data-downloadurl={this.state.downloadUrl}
-              onClick={this.handleDownloadClick.bind(this)}
-            >
-              { this.state.downloaded ? "Downloaded" : "Download File"}
-            </a> : 
-            <button className="submitButton closeResultsButton" onClick={this.closeResults}>
-              Close Results
-            </button>
-            }
-          />
-        } */}
       </div>
     );
   }
+
+  public componentDidUpdate(nextProps: any, nextState: any) {
+    if (this.state.showCircularProgress) { 
+      setTimeout(() => {
+        this.checkTreeNode(this.state.checked);
+      }, 100)
+    } 
+      if (this.playlist && this.playlist.lastCodesetItem) {
+        this.setState({showModal: true});
+        this.playlist.updateLastCodesetItem();
+      } 
+      const nodes: any = document.querySelectorAll(".rct-node-expanded");  
+      for(let i = 0; i < nodes.length; i++) {
+        if (nodes[i]) {       
+          const doc2: any = nodes[i].querySelector(".rct-title")
+          if (doc2 && doc2.innerText === 'CODESETS') {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+            for (let checkbox of allFirstCheckbox) { 
+              checkbox.disabled = true;
+              checkbox.className="disabledCheckbox";
+            }
+          }
+          if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+            for (let checkbox of allFirstCheckbox) { 
+              checkbox.className="disabledCheckbox";
+            }
+          }
+          if (doc2 && doc2.innerText === 'FIELDS') {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");      
+            for (let checkbox of allFirstCheckbox) {  
+              checkbox.className="disabledCheckbox";
+            }
+          }
+        }
+      }
+      
+    if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
+      const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
+      for (let checkbox of allFirstCheckbox) { 
+        checkbox.disabled = true;   
+        checkbox.className="disabledCheckbox";   
+      }
+    }
+  };
 
   public componentDidMount() {
     this.CheckAuthenticated();
@@ -292,8 +357,8 @@ export default class App extends Component {
       showResults: false,
       showAlerts: false,
       checkedTreeState: [],
-      expandedTreeState: [],
-      treeData: []
+      expandedTreeState: ["FieldsOut"],
+      treeData: [],
     });
   };
 
@@ -338,6 +403,17 @@ export default class App extends Component {
   };
 
   private async readOrchestra(): Promise<void> {
+     const standardHeaderTrailerPreSelected = [
+      "component:1024-field:8->field:8",
+      "component:1024-field:9->field:9",
+      "component:1024-field:35->field:35",
+      "component:1024-field:49->field:49",
+      "component:1024-field:56->field:56",
+      "component:1024-field:34->field:34",
+      "component:1024-field:52->field:52",
+      "component:1025-field:10->field:10",
+    ];
+    
     if (this.referenceFile && this.inputProgress && this.outputProgress) {
       this.setState({
         showAlerts: false,
@@ -348,15 +424,15 @@ export default class App extends Component {
         results: undefined,
         showResults: false,
         checkedTreeState: [],
-        expandedTreeState: []
+        expandedTreeState: ["FieldsOut"],
+        showModal: false,
       });
-
       const runner: Playlist = new Playlist(
         this.referenceFile,
         this.inputProgress,
         this.outputProgress,
         this.showProgress
-      );
+        );
       this.playlist = runner; 
       try {
         // read local reference Orchestra file
@@ -375,26 +451,8 @@ export default class App extends Component {
     } else if (!this.referenceFile) {
       this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
     }
-    this.setState({ readingFile: false });
-  }
-
-  private checkTreeNode = (checked: Array<string>) => {
-    const oldState = [...this.state.checkedTreeState];
-    const added = checked.filter((x: string) => (!oldState.includes(x)));
-    const removed = oldState.filter((y: string) => !checked.includes(y));
-    if (this.playlist) {
-      const runner = this.playlist;
-      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed);
-      this.setState({
-        ...this.state,
-        treeData: updatedValues.newTree,
-        checkedTreeState: [...updatedValues.newCheckedList],
-        downloadHref: "",
-        downloadUrl: "", 
-        results: undefined,
-        showResults: false
-      });
-    }
+    const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);    
+    this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
   }
 
   // Uncomment this lines when adding content to Modal. Also add the missing values

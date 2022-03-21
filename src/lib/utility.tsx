@@ -91,7 +91,7 @@ export default class Utility {
       groups[id] = `${name} - Group`;
       return groups;
     }, {});
-
+    
     return {
       sections,
       categories,
@@ -202,9 +202,6 @@ export default class Utility {
                 data.components[componentName][componentRefType].push({ "id": componentRefValue});
               }
           }
-          else {
-              data.components[componentName] = { all: true };
-          }
           break;
         default: 
           break;
@@ -255,8 +252,8 @@ export default class Utility {
     // MAP CATEGORIES
     if (categories && categories.elements) {
       const categoriesObject: ThreeChildrenTC = {
-        value: 'Categories',
-        label: 'CATEGORIES',
+        value: 'Messages',
+        label: 'MESSAGES',
         children: []
       };
       const categoriesIndexes: any = {};
@@ -264,21 +261,14 @@ export default class Utility {
         const { name, section } = category.attributes;
         if (name !== 'Common' && name !== 'Fields' && name !== 'ImplFields') {
           const categoryKey = `section:${section}->category:${name}`;
-          const categoryName = `${name} - Section ${section}`;
           categoriesIndexes[name] = { index: categoriesObject.children.length, key: categoryKey };
-          categoriesObject.children.push({
-            value: categoryKey,
-            label: categoryName,
-            children: []
-          });
         }
       });
-
       // MAP MESSAGES
       if (messages && messages.elements) {
         messages.elements.forEach((message: any) => {
           const { name, category, msgType } = message.attributes;
-          const { index, key } = categoriesIndexes[category];
+          const { key } = categoriesIndexes[category];
           const messageKey = `${key}->message:${name}`;
           const messageName = `${name}(35=${msgType})`;
           const messageStructure = message.elements.find((msg: any) => {
@@ -286,17 +276,22 @@ export default class Utility {
           });
 
           if (messageStructure) {
-            const newMessageChildren = messageStructure.elements.filter((msgStc: any) => 
+            const newMessageChildren: any = [];
+            messageStructure.elements.filter((msgStc: any) => 
               msgStc.name === "fixr:fieldRef" || msgStc.name === "fixr:groupRef" || msgStc.name === "fixr:componentRef"
             ).map((ref: any) => {
               const refName = ref.name.split(":")[1];
               const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
               const refValue = `${messageKey}-${refKey}->${refKey}`;
-              return {
+              if (refValue.includes("component:1024->component:1024") || refValue.includes("component:1025->component:1025")) {
+               return ref; 
+              }
+              newMessageChildren.push({
                 value: refValue,
                 label: getReferencesNames(refName, ref.attributes.id || ''),
                 className: ref.attributes.deprecated && 'deprecatedItem'
-              }
+              })
+              return ref;
             });
             if (newMessageChildren.length > 0) {
               const newMessage: OneChildrenTC = {
@@ -304,27 +299,16 @@ export default class Utility {
                 label: messageName,
                 children: newMessageChildren
               };
-              categoriesObject.children[index].children.push(newMessage);
+              categoriesObject.children.push(newMessage as any);
             }
           }
         });
       }
-
-      categoriesObject.children.forEach((category: any) => {
-        category.children.sort((a: any, b: any) => {
-          if (a.label > b.label) { return 1 };
-          if (a.label < b.label) { return -1 };
-          return 0;
-        });
-        category.children.forEach((message: any) => {
-          message.children.sort((a: any, b: any) => {
-            if (a.label > b.label) { return 1 };
-            if (a.label < b.label) { return -1 };
-            return 0;
-          })
-        })
-      });
-
+      
+      categoriesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      categoriesObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
       res.push(categoriesObject);
     }
   
@@ -365,12 +349,11 @@ export default class Utility {
           });
         }
       });
-
-      groupsObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      
+      groupsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      groupsObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
 
       res.push(groupsObject);
     }
@@ -413,11 +396,10 @@ export default class Utility {
         }
       });
 
-      componentsObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      componentsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      componentsObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
 
       res.push(componentsObject);
     }
@@ -469,11 +451,11 @@ export default class Utility {
         })
       };
 
-      codesetsObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      codesetsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      codesetsObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
+
       codesetsObject.children.forEach((codeset: any) => {
         codeset.children.sort((a: any, b: any) => {
           const rexSort1 = a.label.split('=')[0];
@@ -503,7 +485,6 @@ export default class Utility {
       const datatypesObject: OneChildrenTC = {
         value: 'Datatypes',
         label: 'DATATYPES',
-        showCheckbox: false,
         children: datatypes.elements.filter((datatype: any) => (
           datatype.attributes.name !== "NumInGroup"
         )).map((datatype: any) => {
@@ -515,16 +496,15 @@ export default class Utility {
           return {
             value: datatypeKey,
             label: datatypeName,
-            disabled: true
+            disabled: true,
           };
         })
       };
 
-      datatypesObject.children.sort((a: any, b: any) => {
-        if (a.label > b.label) { return 1 };
-        if (a.label < b.label) { return -1 };
-        return 0;
-      });
+      datatypesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      datatypesObject.children.forEach((e: any) => {
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+      })
 
       res.push(datatypesObject);
     }
@@ -536,54 +516,53 @@ export default class Utility {
   }
 
   public static createFieldNodes = (fields: any, codesets: any, mappedKeys: any, checkedFields: any = []) => {
-    const fieldsOutList: TwoChildrenTC['children'] = [{
+    const fieldsList: TwoChildrenTC['children'] = [{
       value: 'tags:1-999',
       label: 'Tags 1-999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:1000-1999',
       label: 'Tags 1000-1999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:2000-2999',
       label: 'Tags 2000-2999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:3000-3999',
       label: 'Tags 3000-3999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:4000-4999',
       label: 'Tags 4000-4999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:5000-9999',
       label: 'Tags 5000-9999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:10000-19999',
       label: 'Tags 10000-19999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:20000-39999',
       label: 'Tags 20000-39999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }, {
       value: 'tags:40000-49999',
       label: 'Tags 40000-49999',
-      showCheckbox: false,
+      disabled: true,
       children: []
     }];
-    const fieldsInList: any = [];
-
+    
     fields.elements.forEach((field: any) => {
       const { id, name, type, deprecated } = field.attributes;
       if (type !== 'NumInGroup') {
@@ -606,35 +585,32 @@ export default class Utility {
           mappedKeys[fieldKey] = [...mapKeys];
         }
 
-        const fieldName = `${name}(${id}) - ${typeRef}`;
+        const fieldName = `${id} - ${name} - ${typeRef}`;
         const fieldNode = {
           value: fieldKey,
           label: fieldName,
+          disabled: true,
           className: deprecated && 'deprecatedItem'
         };
 
-        if (checkedFields.length > 0 && checkedFields.includes(fieldKey)) {
-          fieldsInList.push(fieldNode);
-        }
-        else {
-          if (id >= 1 && id <= 999) fieldsOutList[0].children.push(fieldNode)
-          else if (id >= 1000 && id <= 1999) fieldsOutList[1].children.push(fieldNode)
-          else if (id >= 2000 && id <= 2999) fieldsOutList[2].children.push(fieldNode)
-          else if (id >= 3000 && id <= 3999) fieldsOutList[3].children.push(fieldNode)
-          else if (id >= 4000 && id <= 4999) fieldsOutList[4].children.push(fieldNode)
-          else if (id >= 5000 && id <= 5999) fieldsOutList[5].children.push(fieldNode)
-          else if (id >= 10000 && id <= 19999) fieldsOutList[6].children.push(fieldNode)
-          else if (id >= 20000 && id <= 39999) fieldsOutList[7].children.push(fieldNode)
-          else if (id >= 40000 && id <= 49999) fieldsOutList[8].children.push(fieldNode)
-        }
+          if (id >= 1 && id <= 999) fieldsList[0].children.push(fieldNode)
+          else if (id >= 1000 && id <= 1999) fieldsList[1].children.push(fieldNode)
+          else if (id >= 2000 && id <= 2999) fieldsList[2].children.push(fieldNode)
+          else if (id >= 3000 && id <= 3999) fieldsList[3].children.push(fieldNode)
+          else if (id >= 4000 && id <= 4999) fieldsList[4].children.push(fieldNode)
+          else if (id >= 5000 && id <= 5999) fieldsList[5].children.push(fieldNode)
+          else if (id >= 10000 && id <= 19999) fieldsList[6].children.push(fieldNode)
+          else if (id >= 20000 && id <= 39999) fieldsList[7].children.push(fieldNode)
+          else if (id >= 40000 && id <= 49999) fieldsList[8].children.push(fieldNode)
+        // }
       }
     });
 
     const fieldsOut: TwoChildrenTC = {
       value: 'FieldsOut',
-      label: 'FIELDS-OUT',
+      label: 'FIELDS',
       showCheckbox: false,
-      children: fieldsOutList.filter((fieldNode: any) => (fieldNode.children.length > 0))
+      children: fieldsList.filter((fieldNode: any) => (fieldNode.children.length > 0))
     };
     fieldsOut.children.forEach((fieldGroup: any) => {
       fieldGroup.children.sort((a: any, b: any) => (
@@ -642,15 +618,7 @@ export default class Utility {
       ));
     })
 
-    const fieldsIn: OneChildrenTC = {
-      value: 'FieldsIn',
-      label: 'FIELDS-IN',
-      showCheckbox: false,
-      children: fieldsInList.sort((a: any, b: any) => (
-        a.value.split(':')[1] - b.value.split(':')[1]
-      ))
-    }
-    return { fieldsIn, fieldsOut };
+    return { fieldsOut };
   }
 
   public static capitalize = (word: string) => {
