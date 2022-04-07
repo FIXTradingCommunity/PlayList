@@ -290,13 +290,13 @@ export default class Playlist {
             newChecked = newChecked.filter((item) => !item.endsWith(key));
             if (key.startsWith('field')) {
               const result = newChecked.filter(e => {
-                if (e.startsWith('field')) {
+                if (e.startsWith('field') && this.keys[e] && this.keys[key]) {
                   return this.keys[e][0] === this.keys[key][0]
                 } else {
                   return false
                 }
               }) 
-              if (result.length === 0) {
+              if (result.length === 0 && this.keys[key]) {
                 const keysToDelete = uniq(this.keys[this.keys[key][0]] || this.keys[key] || []);
                 newChecked = newChecked.filter((item) => !keysToDelete.find(e => item === e));
                 const fieldRefs = uniq(this.keys[key]);
@@ -337,7 +337,7 @@ export default class Playlist {
       } else {
         newChecked = newChecked.filter(e => e !== key);
       }
-    });  
+    });
     return newChecked;
 }
   

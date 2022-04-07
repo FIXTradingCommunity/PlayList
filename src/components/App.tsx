@@ -123,7 +123,7 @@ export default class App extends Component {
   checkTreeNode = (checked: Array<string>) => {
     const oldState = [...this.state.checkedTreeState];
     const added = checked.filter((x: string) => (!oldState.includes(x)));
-    const removed = oldState.filter((y: string) => !checked.includes(y));
+    const removed = oldState.filter((y: string) => (!checked.includes(y)));
     if (this.playlist) {
       const runner = this.playlist;
       const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed); 
