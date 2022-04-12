@@ -128,9 +128,12 @@ export default class Playlist {
     if (keysAdded.length > 0) {
       const messegesKey = keysAdded.find(key => key.includes("message:"))  
       if (messegesKey && messegesKey.length > 0) {
+        const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
         this.addCheckedReference(newChecked, [
           ...keysAdded,
           ...standardHeaderTrailerPreSelected,
+          `${messageHeaderTrailer}-component:1024->component:1024`,
+          `${messageHeaderTrailer}-component:1025->component:1025`,
         ]);
       } else {
         this.addCheckedReference(newChecked, keysAdded);
