@@ -23,7 +23,7 @@ import CircularIndeterminate from './CircularProgress';
 const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
 
 const splittedVersion = version.split('.');
-const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}`;
+const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}${splittedVersion[2] ? `.${splittedVersion[2]}` : ""}`;
 
 const currentYear = new Date().getFullYear();
 
