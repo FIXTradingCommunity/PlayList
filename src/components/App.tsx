@@ -126,7 +126,7 @@ export default class App extends Component {
     const removed = oldState.filter((y: string) => (!checked.includes(y)));
     if (this.playlist) {
       const runner = this.playlist;
-      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed); 
+      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, added.length === 0 ? removed : []); 
       this.setState({
         showCircularProgress: false,
         treeData: updatedValues.newTree,

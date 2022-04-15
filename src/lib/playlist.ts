@@ -140,10 +140,10 @@ export default class Playlist {
       }
     }
     if (filteredKeyRemoved.length > 0) {
-      const headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"))
-      this.firstKeyIsCodeset = filteredKeyRemoved.length > 0 && filteredKeyRemoved[0].startsWith("codeset")
+      const headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"));
+      this.firstKeyIsCodeset = filteredKeyRemoved.length > 0 && filteredKeyRemoved[0].startsWith("codeset");
       const preKeysRemoved: any = [];
-      if (keysRemoved.length > 2 || keysRemoved.filter(e => e.startsWith("section:")).length > 0) {
+      if (!this.firstKeyIsCodeset && (keysRemoved.length > 2 || keysRemoved.filter(e => e.startsWith("section:")).length > 0)) {
         this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved) 
         newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
       } else {
