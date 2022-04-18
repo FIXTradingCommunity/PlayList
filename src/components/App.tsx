@@ -79,6 +79,7 @@ export interface State {
   showModal: boolean,
   showCircularProgress: boolean,
   checked: Array<string>,
+  targetNode: any,
 }
 
 export default class App extends Component {
@@ -102,6 +103,7 @@ export default class App extends Component {
     showModal: false,
     showCircularProgress: false,
     checked: [],
+    targetNode: "",
   };
   private referenceFile: File | undefined = undefined;
   private orchestraFileName: string | undefined = 'myorchestra.xml';
@@ -116,17 +118,30 @@ export default class App extends Component {
     Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
-  checkTreeNodeStart(checked: Array<string>) {
-    this.setState({ showCircularProgress: true, checked });
+  checkTreeNodeStart(checked: Array<string>, targetNode: any) {
+    this.setState({ showCircularProgress: true, checked, targetNode });
   }
   
-  checkTreeNode = (checked: Array<string>) => {
+  checkTreeNode = (checked: Array<string>, targetNode: any) => {
     const oldState = [...this.state.checkedTreeState];
-    const added = checked.filter((x: string) => (!oldState.includes(x)));
-    const removed = oldState.filter((y: string) => (!checked.includes(y)));
+    let added: any[] = [];
+    let removed: any[] = [];
+    if (targetNode.parent.className === "lastLeaf") {
+      if (targetNode.checked) {
+        added = [targetNode.value];
+      } else {
+        removed = [targetNode.value];
+      }
+    } else {
+      if (targetNode.checked) {
+      added = checked.filter((x: string) => (!oldState.includes(x)));
+      } else {
+        removed = oldState.filter((y: string) => (!checked.includes(y)));
+      } 
+    }
     if (this.playlist) {
       const runner = this.playlist;
-      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, added.length === 0 ? removed : []); 
+      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed); 
       this.setState({
         showCircularProgress: false,
         treeData: updatedValues.newTree,
@@ -272,8 +287,8 @@ export default class App extends Component {
                     iconsClass="fa5"
                     checked={this.state.checkedTreeState}
                     expanded={this.state.expandedTreeState}
-                    onCheck={(checked) => {
-                      this.checkTreeNodeStart(checked)
+                    onCheck={(checked: Array<string>, targetNode: any) => {
+                      this.checkTreeNodeStart(checked, targetNode)
                     }}
                     onExpand={(expanded) => this.setState({
                       expandedTreeState: expanded
@@ -296,7 +311,7 @@ export default class App extends Component {
   public componentDidUpdate(nextProps: any, nextState: any) {
     if (this.state.showCircularProgress) { 
       setTimeout(() => {
-        this.checkTreeNode(this.state.checked);
+        this.checkTreeNode(this.state.checked, this.state.targetNode);
       }, 100)
     } 
       if (this.playlist && this.playlist.lastCodesetItem) {

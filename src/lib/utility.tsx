@@ -294,7 +294,7 @@ export default class Utility {
               newMessageChildren.push({
                 value: refValue,
                 label: getReferencesNames(refName, ref.attributes.id || ''),
-                className: ref.attributes.deprecated && 'deprecatedItem'
+                className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
               })
               return ref;
             });
@@ -340,7 +340,7 @@ export default class Utility {
           return {
             value: refValue,
             label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
-            className: ref.attributes.deprecated && 'deprecatedItem'
+            className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
           }
         });
         if (newGroupChildren.length > 0) {
@@ -348,7 +348,7 @@ export default class Utility {
             value: groupKey,
             label: name,
             children: newGroupChildren,
-            className: deprecated && 'deprecatedItem'
+            className: deprecated ? 'deprecatedItem' : 'lastLeaf'
           });
         }
       });
@@ -386,7 +386,7 @@ export default class Utility {
           return {
             value: refValue,
             label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
-            className: ref.attributes.deprecated && 'deprecatedItem'
+            className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
           }
         });
         if (newComponentChildren.length > 0) {
@@ -394,7 +394,7 @@ export default class Utility {
             value: componentKey,
             label: name,
             children: newComponentChildren,
-            className: deprecated && 'deprecatedItem'
+            className: deprecated ? 'deprecatedItem' : 'lastLeaf'
           });
         }
       });
@@ -438,7 +438,7 @@ export default class Utility {
                   return {
                     value: codeKey,
                     label: `${value}=${name}`,
-                    className: deprecated && 'deprecatedItem'
+                    className: deprecated ? 'deprecatedItem' : 'lastLeaf'
                   };
                 } else {
                   return {
@@ -593,7 +593,7 @@ export default class Utility {
           value: fieldKey,
           label: fieldName,
           disabled: true,
-          className: deprecated && 'deprecatedItem'
+          className: deprecated ? 'deprecatedItem' : 'lastLeaf'
         };
 
           if (id >= 1 && id <= 999) fieldsList[0].children.push(fieldNode)
