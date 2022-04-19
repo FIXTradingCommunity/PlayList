@@ -345,16 +345,6 @@ export default class Playlist {
 }
   
   public async runCreator(orchestraFileName: string, selectedItems: Array<string>): Promise<Blob> {
-    const headerTrailer: any = [
-      "component:1024",
-      "component:1025",
-    ]
-    const checkedMessegeKey = uniq(selectedItems).find(key => key.includes("message:") && !key.includes("component:1024") && !key.includes("component:1025"))  
-      if (!checkedMessegeKey) {
-        const preHeaderTrailer: any = [];
-        this.preRemoveCheckedReference(preHeaderTrailer, headerTrailer)        
-        selectedItems = this.removeCheckedReference([...selectedItems], selectedItems, preHeaderTrailer)
-      }      
     try {
       if (this.inputFile && selectedItems.length > 0) {
         // populate model from reference Orchestra file
