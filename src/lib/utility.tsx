@@ -91,7 +91,7 @@ export default class Utility {
       groups[id] = `${name} - Group`;
       return groups;
     }, {});
-    
+
     return {
       sections,
       categories,
@@ -427,7 +427,7 @@ export default class Utility {
             children: codeset.elements
               .map((code: any) => {
                 if (code.attributes) {
-                  const { name, value, deprecated } = code.attributes;
+                  const { name, value, group, deprecated } = code.attributes;
                   const codeKey = `${codesetKey}-code:${name}`;
                   if (mappedKeys[codesetKey]) {
                     mappedKeys[codesetKey].push(codeKey);
@@ -437,7 +437,7 @@ export default class Utility {
                   }
                   return {
                     value: codeKey,
-                    label: `${value}=${name}`,
+                    label: `${value}=${name}${group ? ` (${group})` : ''}`,
                     className: deprecated ? 'deprecatedItem' : 'lastLeaf'
                   };
                 } else {
