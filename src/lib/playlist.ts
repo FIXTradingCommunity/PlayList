@@ -101,16 +101,6 @@ export default class Playlist {
     // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
-    const standardHeaderTrailerPreSelected = [
-      "component:1024-field:8->field:8",
-      "component:1024-field:9->field:9",
-      "component:1024-field:35->field:35",
-      "component:1024-field:49->field:49",
-      "component:1024-field:56->field:56",
-      "component:1024-field:34->field:34",
-      "component:1024-field:52->field:52",
-      "component:1025-field:10->field:10",
-    ];
 
     if (keysRemoved.length > 0) {
       filteredKeyRemoved = keysRemoved.filter(key => (!key.includes("component:1024") && !key.includes("component:1025")) || key.startsWith("component:1024") || key.startsWith("component:1025"))
@@ -131,7 +121,6 @@ export default class Playlist {
         const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
         this.addCheckedReference(newChecked, [
           ...keysAdded,
-          ...standardHeaderTrailerPreSelected,
           `${messageHeaderTrailer}-component:1024->component:1024`,
           `${messageHeaderTrailer}-component:1025->component:1025`,
         ]);
