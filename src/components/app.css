@@ -313,10 +313,10 @@ footer p {
 
 .redirectButton {
   background: none;
-  margin: 0 10px;
+  margin: 0px 8px 0px 0px;
   padding-top: 8px;
   height: 36px;
-  width: 150px;
+  width: 130px;
   border: 2px solid #c7c7c7;
   border-radius: 23px;
   color: #009FE3;
@@ -402,4 +402,8 @@ ol {
 
 ol li {
   padding-left: 45px;
+}
+
+.buttonsWrapper {
+  display: flex;
 }
