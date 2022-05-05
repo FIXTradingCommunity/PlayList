@@ -247,16 +247,27 @@ export default class App extends Component {
                   }
                 </div>
               </div>
-           
-              <div className="redirectButtonContainers">
-                <a
-                  className="redirectButton"
-                  href="http://fixprotocol.io/orchestratools/termsofservice.html"
-                  rel="noreferrer noopener"
-                  target="_blank"
-                  >
-                  Terms of Service
-                </a>
+              <div className="buttonsWrapper">
+                <div className="redirectButtonContainers">
+                  <a
+                    className="redirectButton"
+                    href="https://www.fixtrading.org/standards/fix-orchestra/playlist-user-guide/"
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    >
+                    User Guide
+                  </a>
+                </div>
+                <div className="redirectButtonContainers">
+                  <a
+                    className="redirectButton"
+                    href="http://fixprotocol.io/orchestratools/termsofservice.html"
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    >
+                    Terms of Service
+                  </a>
+                </div>
               </div>
             {this.state.showAlerts && (
               <div className="errorContainer">
