@@ -101,16 +101,6 @@ export default class Playlist {
     // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
-    const standardHeaderTrailerPreSelected = [
-      "component:1024-field:8->field:8",
-      "component:1024-field:9->field:9",
-      "component:1024-field:35->field:35",
-      "component:1024-field:49->field:49",
-      "component:1024-field:56->field:56",
-      "component:1024-field:34->field:34",
-      "component:1024-field:52->field:52",
-      "component:1025-field:10->field:10",
-    ];
 
     if (keysRemoved.length > 0) {
       filteredKeyRemoved = keysRemoved.filter(key => (!key.includes("component:1024") && !key.includes("component:1025")) || key.startsWith("component:1024") || key.startsWith("component:1025"))
@@ -128,19 +118,21 @@ export default class Playlist {
     if (keysAdded.length > 0) {
       const messegesKey = keysAdded.find(key => key.includes("message:"))  
       if (messegesKey && messegesKey.length > 0) {
+        const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
         this.addCheckedReference(newChecked, [
           ...keysAdded,
-          ...standardHeaderTrailerPreSelected,
+          `${messageHeaderTrailer}-component:1024->component:1024`,
+          `${messageHeaderTrailer}-component:1025->component:1025`,
         ]);
       } else {
         this.addCheckedReference(newChecked, keysAdded);
       }
     }
     if (filteredKeyRemoved.length > 0) {
-      const headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"))
-      this.firstKeyIsCodeset = filteredKeyRemoved.length > 0 && filteredKeyRemoved[0].startsWith("codeset")
+      const headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"));
+      this.firstKeyIsCodeset = filteredKeyRemoved.length > 0 && filteredKeyRemoved[0].startsWith("codeset");
       const preKeysRemoved: any = [];
-      if (keysRemoved.length > 2 || keysRemoved.filter(e => e.startsWith("section:")).length > 0) {
+      if (!this.firstKeyIsCodeset && (keysRemoved.length > 2 || keysRemoved.filter(e => e.startsWith("section:")).length > 0)) {
         this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved) 
         newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
       } else {
@@ -290,13 +282,13 @@ export default class Playlist {
             newChecked = newChecked.filter((item) => !item.endsWith(key));
             if (key.startsWith('field')) {
               const result = newChecked.filter(e => {
-                if (e.startsWith('field')) {
+                if (e.startsWith('field') && this.keys[e] && this.keys[key]) {
                   return this.keys[e][0] === this.keys[key][0]
                 } else {
                   return false
                 }
               }) 
-              if (result.length === 0) {
+              if (result.length === 0 && this.keys[key]) {
                 const keysToDelete = uniq(this.keys[this.keys[key][0]] || this.keys[key] || []);
                 newChecked = newChecked.filter((item) => !keysToDelete.find(e => item === e));
                 const fieldRefs = uniq(this.keys[key]);
@@ -337,21 +329,11 @@ export default class Playlist {
       } else {
         newChecked = newChecked.filter(e => e !== key);
       }
-    });  
+    });
     return newChecked;
 }
   
   public async runCreator(orchestraFileName: string, selectedItems: Array<string>): Promise<Blob> {
-    const headerTrailer: any = [
-      "component:1024",
-      "component:1025",
-    ]
-    const checkedMessegeKey = uniq(selectedItems).find(key => key.includes("message:") && !key.includes("component:1024") && !key.includes("component:1025"))  
-      if (!checkedMessegeKey) {
-        const preHeaderTrailer: any = [];
-        this.preRemoveCheckedReference(preHeaderTrailer, headerTrailer)        
-        selectedItems = this.removeCheckedReference([...selectedItems], selectedItems, preHeaderTrailer)
-      }      
     try {
       if (this.inputFile && selectedItems.length > 0) {
         // populate model from reference Orchestra file

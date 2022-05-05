@@ -91,7 +91,7 @@ export default class Utility {
       groups[id] = `${name} - Group`;
       return groups;
     }, {});
-    
+
     return {
       sections,
       categories,
@@ -249,27 +249,32 @@ export default class Utility {
       }
     }
 
-    // MAP CATEGORIES
-    if (categories && categories.elements) {
-      const categoriesObject: ThreeChildrenTC = {
+     // MAP MESSAGES
+     if (messages && messages.elements) {
+      const messagesObject: ThreeChildrenTC = {
         value: 'Messages',
         label: 'MESSAGES',
         children: []
       };
-      const categoriesIndexes: any = {};
-      categories.elements.forEach((category: any) => {
-        const { name, section } = category.attributes;
-        if (name !== 'Common' && name !== 'Fields' && name !== 'ImplFields') {
-          const categoryKey = `section:${section}->category:${name}`;
-          categoriesIndexes[name] = { index: categoriesObject.children.length, key: categoryKey };
-        }
-      });
-      // MAP MESSAGES
-      if (messages && messages.elements) {
-        messages.elements.forEach((message: any) => {
+      let categoriesIndexes: any = null;
+      if (categories && categories.elements) {
+        categoriesIndexes = {};
+        categories?.elements?.forEach((category: any) => {
+          const { name, section } = category.attributes;
+          if (name !== 'Common' && name !== 'Fields' && name !== 'ImplFields') {
+            const categoryKey = `section:${section}->category:${name}`;
+            categoriesIndexes[name] = { index: messagesObject.children.length, key: categoryKey };
+          }
+        });
+      }
+     
+        messages.elements.forEach((message: any) => {  
           const { name, category, msgType } = message.attributes;
-          const { key } = categoriesIndexes[category];
-          const messageKey = `${key}->message:${name}`;
+          let messageKey = `message:${name}`;
+          if (category && categoriesIndexes && categoriesIndexes[category]) {
+            const { key } = categoriesIndexes[category];
+            messageKey = `${key}->${messageKey}`;
+          }
           const messageName = `${name}(35=${msgType})`;
           const messageStructure = message.elements.find((msg: any) => {
             return msg.name === "fixr:structure"
@@ -289,7 +294,7 @@ export default class Utility {
               newMessageChildren.push({
                 value: refValue,
                 label: getReferencesNames(refName, ref.attributes.id || ''),
-                className: ref.attributes.deprecated && 'deprecatedItem'
+                className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
               })
               return ref;
             });
@@ -299,17 +304,15 @@ export default class Utility {
                 label: messageName,
                 children: newMessageChildren
               };
-              categoriesObject.children.push(newMessage as any);
+              messagesObject.children.push(newMessage as any);
             }
           }
         });
-      }
-      
-      categoriesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
-      categoriesObject.children.forEach((e: any) => {
+      messagesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
+      messagesObject.children.forEach((e: any) => {
         e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
       })
-      res.push(categoriesObject);
+      res.push(messagesObject);
     }
   
     // MAP GROUPS
@@ -337,7 +340,7 @@ export default class Utility {
           return {
             value: refValue,
             label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
-            className: ref.attributes.deprecated && 'deprecatedItem'
+            className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
           }
         });
         if (newGroupChildren.length > 0) {
@@ -345,7 +348,7 @@ export default class Utility {
             value: groupKey,
             label: name,
             children: newGroupChildren,
-            className: deprecated && 'deprecatedItem'
+            className: deprecated ? 'deprecatedItem' : 'lastLeaf'
           });
         }
       });
@@ -383,7 +386,7 @@ export default class Utility {
           return {
             value: refValue,
             label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
-            className: ref.attributes.deprecated && 'deprecatedItem'
+            className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
           }
         });
         if (newComponentChildren.length > 0) {
@@ -391,7 +394,7 @@ export default class Utility {
             value: componentKey,
             label: name,
             children: newComponentChildren,
-            className: deprecated && 'deprecatedItem'
+            className: deprecated ? 'deprecatedItem' : 'lastLeaf'
           });
         }
       });
@@ -424,7 +427,7 @@ export default class Utility {
             children: codeset.elements
               .map((code: any) => {
                 if (code.attributes) {
-                  const { name, value, deprecated } = code.attributes;
+                  const { name, value, group, deprecated } = code.attributes;
                   const codeKey = `${codesetKey}-code:${name}`;
                   if (mappedKeys[codesetKey]) {
                     mappedKeys[codesetKey].push(codeKey);
@@ -434,8 +437,8 @@ export default class Utility {
                   }
                   return {
                     value: codeKey,
-                    label: `${value}=${name}`,
-                    className: deprecated && 'deprecatedItem'
+                    label: `${value}=${name}${group ? ` (${group})` : ''}`,
+                    className: deprecated ? 'deprecatedItem' : 'lastLeaf'
                   };
                 } else {
                   return {
@@ -590,7 +593,7 @@ export default class Utility {
           value: fieldKey,
           label: fieldName,
           disabled: true,
-          className: deprecated && 'deprecatedItem'
+          className: deprecated ? 'deprecatedItem' : 'lastLeaf'
         };
 
           if (id >= 1 && id <= 999) fieldsList[0].children.push(fieldNode)
