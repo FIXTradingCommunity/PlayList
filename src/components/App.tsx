@@ -466,6 +466,8 @@ export default class App extends Component {
         this.setState({ treeData: tree });
       } catch (error) {
         if (error) {
+          console.log("error", error);
+          
           Sentry.captureException(error);
           this.alertMsg = {
             title: this.getErrorTitle(error.name),

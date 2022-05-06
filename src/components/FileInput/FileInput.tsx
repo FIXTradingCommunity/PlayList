@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import ProgressCircle from "../ProgressCircle/ProgressCircle";
+import StandardFileButton from '../StandardFilesButton';
 import "./fileInput.css";
 
 interface Props {
@@ -61,6 +62,7 @@ class FileInput extends Component<Props> {
                         <div className="inputContent">
                           <p className="inputText">Drag file to read or</p>
                           <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
+                          <StandardFileButton onChange={this.handleChange}/>
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}
                         { error && <p className="fileName inputTextError">{error}</p> }
