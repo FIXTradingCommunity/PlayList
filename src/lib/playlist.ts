@@ -243,7 +243,7 @@ export default class Playlist {
     if (this.firstKeyIsCodeset && keysToRemove.length > 0 && keysToRemove[0].startsWith("codeset")) {
       this.firstKeyIsCodeset = false;
       const splittedCodesetKey = keysToRemove[0].split('-');
-      const totalCodeset = checked.filter(c => c.startsWith(splittedCodesetKey[0]))
+      const totalCodeset = checked.filter(c => c.startsWith(splittedCodesetKey[0]) && c.includes("-"))
       if (totalCodeset.length === 1) {
         breakProcess = true;
         this.updateLastCodesetItem();
