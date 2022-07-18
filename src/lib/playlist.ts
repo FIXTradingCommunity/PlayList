@@ -57,10 +57,6 @@ export default class Playlist {
       return node;
     });
     return sortedChildren.sort((a: any, b: any) => {
-      if (!a.label) { 
-        console.log("a", a);
-      }
-      
       const labelA = Number.parseInt(a.label.split("-")[0]);
           const labelB = Number.parseInt(b.label.split("-")[0]);
            if (isNaN(labelA) && isNaN(labelB)) {

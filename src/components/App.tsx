@@ -14,6 +14,7 @@ import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
+import ConfigFile from '../lib/configFile';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import BasicModal from './Modal/Modal';
@@ -111,6 +112,10 @@ export default class App extends Component {
   private outputProgress: HTMLElement | undefined = undefined;
   private alertMsg: ErrorMsg = { title: "", message: "" };
   private playlist: Playlist | undefined = undefined;
+
+  private configFile: ConfigFile | undefined = undefined;
+  private referenceConfigFile: File | undefined = undefined;
+  private inputConfigProgress: HTMLElement | undefined = undefined;
   
   constructor(props: {}) {
     super(props);
@@ -158,6 +163,10 @@ export default class App extends Component {
     if (!this.state.authVerified) {
       return null
     }
+    if (this.configFile && this.configFile.lastCodesetItem) {
+      this.setState({showModal: true});
+      this.configFile.updateLastCodesetItem();
+    }
     if (this.playlist && this.playlist.lastCodesetItem) {
       this.setState({showModal: true});
       this.playlist.updateLastCodesetItem();
@@ -182,13 +191,14 @@ export default class App extends Component {
                   label="Reference Orchestra file"
                   accept=".xml"
                   onChange={this.inputOrchestra}
+                  disableButton={this.state.checkedTreeState.length === 0}
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
                   clearError={() => {
                     this.setState({ referenceFileError: "", showAlerts: false })
                   }}
                 />
-                <div className="clearFieldsButtonContainers">
+                <div className="fieldsButtonContainers">
                   <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
                     Clear Input File
                   </button>
@@ -388,11 +398,15 @@ export default class App extends Component {
     });
   };
 
-  private inputOrchestra = (fileList: FileList | null): void => {
+  private inputOrchestra = (fileList: FileList | null, isConfigFile: boolean): void => {
     if (fileList && fileList.length > 0) {
-      this.referenceFile = fileList[0];
+      if (isConfigFile) {
+        this.referenceConfigFile = fileList[0];
+      } else {
+        this.referenceFile = fileList[0];
+      }
     }
-    this.readOrchestra();
+    isConfigFile ? this.readConfigFileOrchestra() : this.readOrchestra();
   };
 
   private outputOrchestra = (fileName: string | undefined): void => {
@@ -406,6 +420,7 @@ export default class App extends Component {
 
   private setInputFileBarRef = (instance: HTMLDivElement): void => {
     this.inputProgress = instance;
+    this.inputConfigProgress = instance;
   };
 
   private setOutputFileBarRef = (instance: HTMLDivElement): void => {
@@ -439,7 +454,6 @@ export default class App extends Component {
       "component:1024-field:52->field:52",
       "component:1025-field:10->field:10",
     ];
-    
     if (this.referenceFile && this.inputProgress && this.outputProgress) {
       this.setState({
         showAlerts: false,
@@ -459,15 +473,13 @@ export default class App extends Component {
         this.outputProgress,
         this.showProgress
         );
-      this.playlist = runner; 
+      this.playlist = runner;
       try {
         // read local reference Orchestra file
         const tree = await runner.runReader();
         this.setState({ treeData: tree });
       } catch (error) {
         if (error) {
-          console.log("error", error);
-          
           Sentry.captureException(error);
           this.alertMsg = {
             title: this.getErrorTitle(error.name),
@@ -482,6 +494,32 @@ export default class App extends Component {
     const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);    
     this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
   }
+
+  private async readConfigFileOrchestra(): Promise<void> {
+   if (this.referenceConfigFile && this.inputConfigProgress && this.outputProgress) {
+     const runner: ConfigFile = new ConfigFile(
+       this.referenceConfigFile,
+       this.inputConfigProgress,
+       this.outputProgress,
+       this.showProgress
+       );
+     this.configFile = runner;
+     try {
+       // read local config file
+       const newCheckedConfigFileKeys = await runner.runReader();
+       this.setState({checkedTreeState: [...this.state.checkedTreeState, ...newCheckedConfigFileKeys]})
+     } catch (error) {
+       if (error) {   
+         Sentry.captureException(error);
+         this.alertMsg = {
+           title: this.getErrorTitle(error.name),
+           message: this.setMessageError(error.message || error)
+         };
+       }
+      this.setState({ showAlerts: true });
+     }
+   }
+ }
 
   // Uncomment this lines when adding content to Modal. Also add the missing values
   // private handleReaderFinish = (output: OrchestraFile) => {
