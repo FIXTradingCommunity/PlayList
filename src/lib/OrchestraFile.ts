@@ -43,7 +43,17 @@ export default class OrchestraFile {
             return doc;
         }
     }
+    static removeDocumentNodes = (document: Document): void => {
+      const listElements = ["fixr:categories"]
+      listElements.forEach(e => {
+        const node = document.getElementsByTagName(e)[0];
+        if (node) {
+            node.remove();
+        }
+      })
+    }
     static serialize(document: Document): string {
+        this.removeDocumentNodes(document);
         const serializer = new XMLSerializer();
         const text = serializer.serializeToString(document);
         return xml(text, 2);
@@ -132,7 +142,6 @@ export default class OrchestraFile {
     updateDomFromModel(dataModel: SelectionModel, progressNode: HTMLElement | null): void {
         this.updateDomMetadata();
         this.updateDomSections(dataModel.sections);
-        this.updateDomCategories(dataModel.categories);
         this.updateDomMessages(dataModel.messages);
         this.updateDomComponents(dataModel.components);
         this.updateDomGroups(dataModel.groups);
@@ -889,31 +898,6 @@ export default class OrchestraFile {
 
       this.repositoryStatistics.Add("Sections.Removed", countSectionsRemoved);
       this.repositoryStatistics.Add("Sections.Added", countSectionsAdded);
-    }
-    private updateDomCategories(categoriesModel: NameSelectionModel[]): void {
-      const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-      const categoriesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:categories", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-      const categoriesElement: Element = categoriesSnapshot.snapshotItem(0) as Element;
-      const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:categories/fixr:category", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-      let countCategoriesRemoved : number = 0;
-      let countCategoriesAdded : number = 0;
-
-      for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
-          const node: Element = nodesSnapshot.snapshotItem(i) as Element;
-          const name: string | null = node.getAttribute("name");
-          const categoryFound = categoriesModel.find((categoryModel) => (categoryModel.name === name));
-          if (!categoryFound) {
-            categoriesElement.removeChild(node);
-            countCategoriesRemoved++;
-          }
-          else {
-            categoriesElement.appendChild(node);
-            countCategoriesAdded++;
-          }
-      }
-
-      this.repositoryStatistics.Add("Categories.Removed", countCategoriesRemoved);
-      this.repositoryStatistics.Add("Categories.Added", countCategoriesAdded);
     }
     private removeUnusedComponentMembers(componentsModel: ComponentsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
