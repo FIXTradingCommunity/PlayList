@@ -197,6 +197,7 @@ export default class App extends Component {
                   clearError={() => {
                     this.setState({ referenceFileError: "", showAlerts: false })
                   }}
+                  clearFields={this.handleClearFields.bind(this)}
                 />
                 <div className="fieldsButtonContainers">
                   <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
@@ -378,7 +379,7 @@ export default class App extends Component {
     this.CheckAuthenticated();
   }
 
-  private handleClearFields() {
+  public handleClearFields() {
     if (this.referenceFile) {
       this.referenceFile = undefined;
     }

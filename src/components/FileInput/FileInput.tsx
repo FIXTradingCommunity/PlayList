@@ -13,6 +13,7 @@ interface Props {
   onChange: (files: FileList, isConfigFile: boolean) => void;
   error?: string;
   clearError?: () => void;
+  clearFields: () => void;
 }
 
 class FileInput extends Component<Props> {
@@ -106,6 +107,7 @@ class FileInput extends Component<Props> {
   }
 
   public standardFileChange = (files: FileList) => {
+    this.props.clearFields();
     this.setState({
       isConfigFile: false,
     })
@@ -126,6 +128,9 @@ class FileInput extends Component<Props> {
 
     if (this.props.clearError) {
       this.props.clearError();
+    }
+    if (!this.state.isConfigFile) {
+      this.props.clearFields();
     }
     this.handleChange(files as FileList);
   };
