@@ -1,5 +1,4 @@
 import {
-  CategoryData,
   CodesetData,
   ComponentData,
   DatatypeData,
@@ -54,9 +53,6 @@ export default class Utility {
     const sections: SectionData | undefined = data.find(
       (data: DomData) => data.name === 'fixr:sections'
     );
-    const categories: CategoryData | undefined = data.find(
-      (data: DomData) => data.name === 'fixr:categories'
-    );
     const messages: MessageData | undefined = data.find(
       (data: DomData) => data.name === 'fixr:messages'
     );
@@ -94,7 +90,6 @@ export default class Utility {
 
     return {
       sections,
-      categories,
       messages,
       components,
       fields,
@@ -130,9 +125,6 @@ export default class Utility {
           break;
         case "section":
           data.sections.push({ "name": splittedItem[1] });
-          break;
-        case "category":
-          data.categories.push({ "name": splittedItem[1] });
           break;
         case "codeset":
           const splittedCodeset = newItem.split('-');
@@ -210,7 +202,6 @@ export default class Utility {
     }, {
       fields: [],
       datatypes: [],
-      categories: [],
       sections: [],
       codesets: {},
       groups: {},
@@ -224,7 +215,6 @@ export default class Utility {
     const res: TreeControl = [];
     const mappedKeys: { [key: string]: Array<string> } = {};
     const {
-      categories,
       messages,
       components,
       fields,
@@ -255,26 +245,10 @@ export default class Utility {
         value: 'Messages',
         label: 'MESSAGES',
         children: []
-      };
-      let categoriesIndexes: any = null;
-      if (categories && categories.elements) {
-        categoriesIndexes = {};
-        categories?.elements?.forEach((category: any) => {
-          const { name, section } = category.attributes;
-          if (name !== 'Common' && name !== 'Fields' && name !== 'ImplFields') {
-            const categoryKey = `section:${section}->category:${name}`;
-            categoriesIndexes[name] = { index: messagesObject.children.length, key: categoryKey };
-          }
-        });
-      }
-     
+      };     
         messages.elements.forEach((message: any) => {  
-          const { name, category, msgType } = message.attributes;
+          const { name, msgType } = message.attributes;
           let messageKey = `message:${name}`;
-          if (category && categoriesIndexes && categoriesIndexes[category]) {
-            const { key } = categoriesIndexes[category];
-            messageKey = `${key}->${messageKey}`;
-          }
           const messageName = `${name}(35=${msgType})`;
           const messageStructure = message.elements.find((msg: any) => {
             return msg.name === "fixr:structure"
