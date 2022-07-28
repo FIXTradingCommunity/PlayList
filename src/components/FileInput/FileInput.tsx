@@ -71,13 +71,15 @@ class FileInput extends Component<Props> {
                             disableButton={false}
                             buttonStyle={"chooseGenericFileButton"}
                             buttonTitle={`Choose File${multiple ? "s" : ""}`}
+                            titleAttributes={"Orchestra file required as source of messages and elements to be selected"}
                           />
                           <StandardFileButton onChange={this.standardFileChange}/>
                           <InputButton 
                             onChange={this.changeConfigFile}
                             disableButton={disableButton}
                             buttonStyle={"configFileFieldsButton"}
-                            buttonTitle={"Use Config File"}
+                            buttonTitle={"Use Selector File"}
+                            titleAttributes={"Optional Orchestra file to pre-select a subset of the source file, subject to subsequent changes"}
                           />
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}

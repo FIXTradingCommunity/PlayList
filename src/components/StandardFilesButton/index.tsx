@@ -96,7 +96,7 @@ export default function StandardFileButton(props: any) {
   }
   
   return (
-    <div onClick={handleClickOpen} className="chooseFileButton fixFileButton">
+    <div onClick={handleClickOpen} title="Choose required source file from standard Orchestra files in GitHub" className="chooseFileButton fixFileButton">
         FIX Standard
       <StandardFile selectedValue={""} open={open} handleCancel={handleCancel} onClose={handleClose} fixStandardFiles={fixStandardFiles} />
     </div>

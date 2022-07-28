@@ -188,7 +188,7 @@ export default class App extends Component {
             <div className="inputsContainer">
               <div className="field">
                 <FileInput
-                  label="Reference Orchestra file"
+                  label="Source Orchestra file"
                   accept=".xml"
                   onChange={this.inputOrchestra}
                   disableButton={this.state.checkedTreeState.length === 0}
