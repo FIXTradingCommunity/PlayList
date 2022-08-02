@@ -20,7 +20,7 @@ const style = {
   alignItems: "center!important",
 };
 
-export default function BasicModal({ showModal, handleClose }: any) {
+export default function BasicModal({ showModal, handleClose, title, message, cleanApp }: any) {
   return (
       <Modal
         open={showModal}
@@ -30,12 +30,16 @@ export default function BasicModal({ showModal, handleClose }: any) {
       >
         <Box sx={style}>
           <Typography id="modal-modal-title" variant="h6" component="h2">
-            Warning
+            {title}
           </Typography>
-          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components.
+          <Typography id="modal-modal-description" style={{textAlign: "center"}} sx={{ mt: 2 }}>
+            {message}
           </Typography>
-          <Button className="closeModalButton" onClick={handleClose}>Ok</Button>
+          <Button className="closeModalButton" onClick={() => {
+              handleClose();
+              title === "Bad XML File" && cleanApp();
+            }
+          }>Ok</Button>
         </Box>
       </Modal>
   );

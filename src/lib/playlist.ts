@@ -24,6 +24,7 @@ export default class Playlist {
   private firstKeyIsCodeset: boolean = false;
   public onFinish: undefined | ((output: OrchestraFile) => void);
   public lastCodesetItem: boolean = false;
+  public parseXMLError: string | null = null;
   constructor(
     referenceFile: File,
     inputProgress: HTMLElement | null,
@@ -37,6 +38,10 @@ export default class Playlist {
     }
   public updateLastCodesetItem() {
     this.lastCodesetItem = !this.lastCodesetItem;
+  }
+
+  public cleanParseXMLError() {
+    this.parseXMLError = null;
   }
 
   private sortTree(tree: Array<any>) {
@@ -69,7 +74,6 @@ export default class Playlist {
 
   public async runReader(): Promise<TreeControl | string> {
     try {
-      
       const input = new OrchestraFile(this.referenceFile, false, this.inputProgress, this.progressFunc);
       // read local reference Orchestra file
       const inputDom = await input.readFile();
@@ -85,6 +89,10 @@ export default class Playlist {
         resolve(sortedTree)
       );
     } catch (e) {
+      if (String(e).includes("tag mismatch")) {
+        this.parseXMLError = String(e).replace("Error:", "XML");
+        return "";
+      }
       return new Promise<string>((resolve, reject) =>
         reject(e)
       )

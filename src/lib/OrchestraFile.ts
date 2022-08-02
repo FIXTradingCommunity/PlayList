@@ -21,6 +21,7 @@ export default class OrchestraFile {
     private progressNode: HTMLElement | null;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
     private appendOnly: boolean;
+    static errorDescription: any;
 
     constructor(file: File, appendOnly: boolean = false, progressNode: HTMLElement | null, progressFunc: (progressNode: HTMLElement, percent: number) => void) {
         this.file = file;
@@ -34,8 +35,8 @@ export default class OrchestraFile {
         let parsererrorNS: string | null = parser.parseFromString('INVALID', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
         let doc: Document = parser.parseFromString(xml, OrchestraFile.MIME_TYPE);
         if (parsererrorNS && doc.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0) {
-            const errors = doc.getElementsByTagNameNS(parsererrorNS, 'parsererror');
-            return new Error(OrchestraFile.getErrorMessage(errors[0].textContent));
+            const errors: any = doc.getElementsByTagNameNS(parsererrorNS, 'parsererror');
+            return new Error(OrchestraFile.getErrorMessage(errors[0].getElementsByTagName('div')[0].textContent), );
         } else if (!parsererrorNS && doc.getElementsByTagName('parsererror').length > 0) {
             const errors = doc.getElementsByTagName('parsererror');
             return new Error(OrchestraFile.getErrorMessage(errors[0].textContent));

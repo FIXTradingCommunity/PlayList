@@ -540,16 +540,16 @@ export default class Utility {
       children: []
     }];
     
-    fields.elements.forEach((field: any) => {
-      const { id, name, type, deprecated } = field.attributes;
+    fields?.elements?.forEach((field: any) => {
+      const { id, name, type, deprecated } = field?.attributes;
       if (type !== 'NumInGroup') {
         const fieldKey = `field:${id}`;
         let typeRef;
         let mapKeys = [];
         if (type.includes('CodeSet')) {
-          const codeset = codesets.elements.find((cset: any) => cset.attributes.name === type);
-          typeRef = `${codeset.attributes.name} - Type ${codeset.attributes.type}`;
-          mapKeys.push(`codeset:${type}`, `datatype:${codeset.attributes.type}`)
+          const codeset = codesets?.elements?.find((cset: any) => cset?.attributes?.name === type);
+          typeRef = `${codeset?.attributes?.name} - Type ${codeset?.attributes?.type}`;
+          mapKeys.push(`codeset:${type}`, `datatype:${codeset?.attributes?.type}`)
         }
         else {
           typeRef = `Type ${type}`;
