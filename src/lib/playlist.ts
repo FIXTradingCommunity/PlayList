@@ -249,9 +249,10 @@ export default class Playlist {
       const preSplitedKey = keysToRemove[0].split('->');
       const key = preSplitedKey[preSplitedKey.length - 1];
       if (key.startsWith("field")) {
-        newChecked.forEach(e => {
-          if (e.startsWith('component') || e.startsWith('group') || e.startsWith('section')) {  
-            if (e.indexOf(key) !== -1 && e !== keysToRemove[0]) {
+        newChecked.forEach(checkedElement => {
+          if (checkedElement.startsWith('component') || checkedElement.startsWith('group') || checkedElement.startsWith('section')) {  
+            const keyMatched = checkedElement.split(/->|-/).filter(e => e === key).length > 0;
+            if (keyMatched && checkedElement !== keysToRemove[0]) {
               newChecked = newChecked.filter(e => e !== keysToRemove[0]);
               breakProcess = true;
             }

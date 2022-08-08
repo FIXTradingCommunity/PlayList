@@ -146,7 +146,10 @@ export default class App extends Component {
     }
     if (this.playlist) {
       const runner = this.playlist;
-      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed); 
+      let updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed);
+      if (removed.length > 0 ) {
+        updatedValues = runner.updateTree([...updatedValues.newCheckedList], [...updatedValues.newCheckedList], []);
+      }
       this.setState({
         showCircularProgress: false,
         treeData: updatedValues.newTree,
@@ -191,7 +194,7 @@ export default class App extends Component {
                   label="Source Orchestra file"
                   accept=".xml"
                   onChange={this.inputOrchestra}
-                  disableButton={this.state.checkedTreeState.length === 0}
+                  disableButton={this.state.treeData.length === 0}
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
                   clearError={() => {
@@ -492,7 +495,7 @@ export default class App extends Component {
     } else if (!this.referenceFile) {
       this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
     }
-    const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);    
+    const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);
     this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
   }
 
@@ -508,7 +511,8 @@ export default class App extends Component {
      try {
        // read local config file
        const newCheckedConfigFileKeys = await runner.runReader();
-       this.setState({checkedTreeState: [...this.state.checkedTreeState, ...newCheckedConfigFileKeys]})
+       const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, newCheckedConfigFileKeys, [] as Array<string>);  
+       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
      } catch (error) {
        if (error) {   
          Sentry.captureException(error);
