@@ -65,7 +65,6 @@ class FileInput extends Component<Props> {
                         <ProgressCircle value={pct} />
                         <div className="inputContent">
                           <p className="inputText">Drag file to read or</p>
-                          {/* <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div> */}
                           <InputButton 
                             onChange={this.changeReferenceFile}
                             disableButton={false}

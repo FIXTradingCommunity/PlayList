@@ -78,6 +78,8 @@ export interface State {
   checkedTreeState: Array<string>,
   expandedTreeState: Array<string>,
   showModal: boolean,
+  modalTitle: string,
+  modalMessage: string,
   showCircularProgress: boolean,
   checked: Array<string>,
   targetNode: any,
@@ -102,6 +104,8 @@ export default class App extends Component {
     checkedTreeState: [],
     expandedTreeState: ["FieldsOut"],
     showModal: false,
+    modalTitle: "",
+    modalMessage: "",
     showCircularProgress: false,
     checked: [],
     targetNode: "",
@@ -119,7 +123,6 @@ export default class App extends Component {
   
   constructor(props: {}) {
     super(props);
-
     Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
@@ -166,18 +169,35 @@ export default class App extends Component {
     if (!this.state.authVerified) {
       return null
     }
-    if (this.configFile && this.configFile.lastCodesetItem) {
-      this.setState({showModal: true});
+    if (this.playlist?.parseXMLError && !this.state.showModal && this.playlist.parseXMLError) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Bad XML File",
+        modalMessage: this.playlist.parseXMLError,
+      });
+      this.playlist.cleanParseXMLError();
+    }
+    if (this.configFile?.lastCodesetItem) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Warning",
+        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+      });
       this.configFile.updateLastCodesetItem();
     }
-    if (this.playlist && this.playlist.lastCodesetItem) {
+    if (this.playlist?.lastCodesetItem) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Warning",
+        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+      });
       this.setState({showModal: true});
       this.playlist.updateLastCodesetItem();
     } 
     return (
       <div className="App">
         {this.state.showCircularProgress && CircularIndeterminate()}
-        <BasicModal showModal={this.state.showModal} handleClose={() => this.setState({showModal: false})} />
+        <BasicModal title={this.state.modalTitle} message={this.state.modalMessage} showModal={this.state.showModal} handleClose={() => this.setState({showModal: false})} cleanApp={this.handleClearFields.bind(this)} />
         <div className="App-header container">
           <div className="titleContainer">
             <h1>FIX Playlist</h1>
@@ -515,11 +535,11 @@ export default class App extends Component {
        this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
      } catch (error) {
        if (error) {   
-         Sentry.captureException(error);
-         this.alertMsg = {
-           title: this.getErrorTitle(error.name),
-           message: this.setMessageError(error.message || error)
-         };
+        Sentry.captureException(error);
+        this.alertMsg = {
+          title: this.getErrorTitle(error.name),
+          message: this.setMessageError(error.message || error)
+        };
        }
       this.setState({ showAlerts: true });
      }
