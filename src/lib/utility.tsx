@@ -225,7 +225,7 @@ export default class Utility {
       componentNames,
       groupNames
     } = data;
-
+    
     const getReferencesNames = (referenceType: string, referenceId: string) => {
       switch(referenceType) {
         case 'fieldRef':
@@ -262,6 +262,12 @@ export default class Utility {
               const refName = ref.name.split(":")[1];
               const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
               const refValue = `${messageKey}-${refKey}->${refKey}`;
+              if (mappedKeys[messageKey]) {
+                mappedKeys[messageKey].push(refKey, refValue);
+              } 
+              else {
+                mappedKeys[messageKey] = [refKey, refValue];
+              }
               if (refValue.includes("component:1024->component:1024") || refValue.includes("component:1025->component:1025")) {
                return ref; 
               }
