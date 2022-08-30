@@ -134,14 +134,14 @@ export default class App extends Component {
     const oldState = [...this.state.checkedTreeState];
     let added: any[] = [];
     let removed: any[] = [];
-    if (targetNode.parent.className === "lastLeaf") {
-      if (targetNode.checked) {
+    if (targetNode?.parent?.className === "lastLeaf") {
+      if (targetNode?.checked) {
         added = [targetNode.value];
       } else {
         removed = [targetNode.value];
       }
     } else {
-      if (targetNode.checked) {
+      if (targetNode?.checked) {
       added = checked.filter((x: string) => (!oldState.includes(x)));
       } else {
         removed = oldState.filter((y: string) => (!checked.includes(y)));
@@ -489,7 +489,7 @@ export default class App extends Component {
         showResults: false,
         checkedTreeState: [],
         expandedTreeState: ["FieldsOut"],
-        showModal: false,
+        showModal: false
       });
       const runner: Playlist = new Playlist(
         this.referenceFile,
@@ -521,6 +521,7 @@ export default class App extends Component {
 
   private async readConfigFileOrchestra(): Promise<void> {
    if (this.referenceConfigFile && this.inputConfigProgress && this.outputProgress) {
+    this.setState({ showCircularProgress: true })
      const runner: ConfigFile = new ConfigFile(
        this.referenceConfigFile,
        this.inputConfigProgress,
@@ -532,8 +533,9 @@ export default class App extends Component {
        // read local config file
        const newCheckedConfigFileKeys = await runner.runReader();
        const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, newCheckedConfigFileKeys, [] as Array<string>);  
-       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
+       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [], showCircularProgress: false });
      } catch (error) {
+      this.setState({ showCircularProgress: false })
        if (error) {   
         Sentry.captureException(error);
         this.alertMsg = {

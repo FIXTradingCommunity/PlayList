@@ -1,5 +1,5 @@
 .circularWrapper {
-  position: absolute;
+  position: fixed;
   background: white;
   opacity: 0.7;
   width: 100%;
