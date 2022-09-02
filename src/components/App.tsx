@@ -81,6 +81,7 @@ export interface State {
   modalTitle: string,
   modalMessage: string,
   showCircularProgress: boolean,
+  isConfigFile: boolean,
   checked: Array<string>,
   targetNode: any,
 }
@@ -107,6 +108,7 @@ export default class App extends Component {
     modalTitle: "",
     modalMessage: "",
     showCircularProgress: false,
+    isConfigFile: false,
     checked: [],
     targetNode: "",
   };
@@ -354,40 +356,40 @@ export default class App extends Component {
   }
 
   public componentDidUpdate(nextProps: any, nextState: any) {
-    if (this.state.showCircularProgress) { 
+    if (this.state.showCircularProgress && !this.state.isConfigFile) { 
       setTimeout(() => {
         this.checkTreeNode(this.state.checked, this.state.targetNode);
       }, 100)
     } 
-      if (this.playlist && this.playlist.lastCodesetItem) {
-        this.setState({showModal: true});
-        this.playlist.updateLastCodesetItem();
-      } 
-      const nodes: any = document.querySelectorAll(".rct-node-expanded");  
-      for(let i = 0; i < nodes.length; i++) {
-        if (nodes[i]) {       
-          const doc2: any = nodes[i].querySelector(".rct-title")
-          if (doc2 && doc2.innerText === 'CODESETS') {
-            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
-            for (let checkbox of allFirstCheckbox) { 
-              checkbox.disabled = true;
-              checkbox.className="disabledCheckbox";
-            }
+    if (this.playlist && this.playlist.lastCodesetItem) {
+      this.setState({showModal: true});
+      this.playlist.updateLastCodesetItem();
+    } 
+    const nodes: any = document.querySelectorAll(".rct-node-expanded");  
+    for(let i = 0; i < nodes.length; i++) {
+      if (nodes[i]) {       
+        const doc2: any = nodes[i].querySelector(".rct-title")
+        if (doc2 && doc2.innerText === 'CODESETS') {
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+          for (let checkbox of allFirstCheckbox) { 
+            checkbox.disabled = true;
+            checkbox.className="disabledCheckbox";
           }
-          if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
-            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
-            for (let checkbox of allFirstCheckbox) { 
-              checkbox.className="disabledCheckbox";
-            }
+        }
+        if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+          for (let checkbox of allFirstCheckbox) { 
+            checkbox.className="disabledCheckbox";
           }
-          if (doc2 && doc2.innerText === 'FIELDS') {
-            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");      
-            for (let checkbox of allFirstCheckbox) {  
-              checkbox.className="disabledCheckbox";
-            }
+        }
+        if (doc2 && doc2.innerText === 'FIELDS') {
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");      
+          for (let checkbox of allFirstCheckbox) {  
+            checkbox.className="disabledCheckbox";
           }
         }
       }
+    }
       
     if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
       const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
@@ -409,7 +411,6 @@ export default class App extends Component {
     if (this.inputProgress instanceof FileInput) {
       this.inputProgress.clear();
     }
-
     this.setState({
       downloadHref: "",
       downloadUrl: "",
@@ -425,6 +426,7 @@ export default class App extends Component {
   private inputOrchestra = (fileList: FileList | null, isConfigFile: boolean): void => {
     if (fileList && fileList.length > 0) {
       if (isConfigFile) {
+        this.setState({ showCircularProgress: true, isConfigFile: true })
         this.referenceConfigFile = fileList[0];
       } else {
         this.referenceFile = fileList[0];
@@ -521,7 +523,6 @@ export default class App extends Component {
 
   private async readConfigFileOrchestra(): Promise<void> {
    if (this.referenceConfigFile && this.inputConfigProgress && this.outputProgress) {
-    this.setState({ showCircularProgress: true })
      const runner: ConfigFile = new ConfigFile(
        this.referenceConfigFile,
        this.inputConfigProgress,
@@ -533,9 +534,9 @@ export default class App extends Component {
        // read local config file
        const newCheckedConfigFileKeys = await runner.runReader();
        const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, newCheckedConfigFileKeys, [] as Array<string>);  
-       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [], showCircularProgress: false });
+       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [], showCircularProgress: false, isConfigFile: false });
      } catch (error) {
-      this.setState({ showCircularProgress: false })
+      this.setState({ showCircularProgress: false, isConfigFile: false })
        if (error) {   
         Sentry.captureException(error);
         this.alertMsg = {
