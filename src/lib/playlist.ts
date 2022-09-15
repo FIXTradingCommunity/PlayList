@@ -25,6 +25,7 @@ export default class Playlist {
   public onFinish: undefined | ((output: OrchestraFile) => void);
   public lastCodesetItem: boolean = false;
   public parseXMLError: string | null = null;
+  public duplicateValuesError: string[] | null = null;
   constructor(
     referenceFile: File,
     inputProgress: HTMLElement | null,
@@ -42,6 +43,10 @@ export default class Playlist {
 
   public cleanParseXMLError() {
     this.parseXMLError = null;
+  }
+
+  public cleanDuplicateValuesError() {
+    this.duplicateValuesError = null;
   }
 
   private sortTree(tree: Array<any>) {
@@ -83,7 +88,12 @@ export default class Playlist {
       const tree = Utility.createInitialTree(this.mappedData);      
       this.keys = tree.mappedKeys;
       const sortedTree = this.sortTree(tree.initialTree)
-      
+      if (!!tree.duplicateValues.length) {
+        this.duplicateValuesError = tree.duplicateValues;
+        return new Promise<string>((resolve, reject) =>
+        reject("")
+      )
+      }
       this.mainTreeNode = sortedTree;
       return new Promise<TreeControl>(resolve =>
         resolve(sortedTree)

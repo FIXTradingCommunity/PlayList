@@ -213,6 +213,7 @@ export default class Utility {
 
   public static createInitialTree(data: { [key: string]: any }) {
     const res: TreeControl = [];
+    const treeValues: string[] = [];
     const mappedKeys: { [key: string]: Array<string> } = {};
     const {
       messages,
@@ -247,8 +248,9 @@ export default class Utility {
         children: []
       };     
         messages.elements.forEach((message: any) => {  
-          const { name, msgType } = message.attributes;
+          const { name, msgType, scenario } = message.attributes;
           let messageKey = `message:${name}`;
+          treeValues.push(messageKey);
           const messageName = `${name}(35=${msgType})`;
           const messageStructure = message.elements.find((msg: any) => {
             return msg.name === "fixr:structure"
@@ -262,6 +264,7 @@ export default class Utility {
               const refName = ref.name.split(":")[1];
               const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes.id}`;
               const refValue = `${messageKey}-${refKey}->${refKey}`;
+              treeValues.push(`${messageKey}:${refName}:${scenario ?? ""}:${refKey}`)
               if (mappedKeys[messageKey]) {
                 mappedKeys[messageKey].push(refKey, refValue);
               } 
@@ -303,14 +306,16 @@ export default class Utility {
         children: []
       };
       groups.elements.forEach((group: any) => {
-        const { id, name, deprecated } = group.attributes;
+        const { id, name, deprecated, scenario } = group.attributes;
         const groupKey = `group:${id}`;
+        treeValues.push(`group:${name}`);
         const newGroupChildren = group.elements.filter((grp: any) => 
           grp.name === "fixr:fieldRef" || grp.name === "fixr:groupRef" || grp.name === "fixr:componentRef"
         ).map((ref: any) => {
           const refName = ref.name.split(":")[1];
           const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
           const refValue = `${groupKey}-${refKey}->${refKey}`;
+          treeValues.push(`${groupKey}:${refName}:${scenario ?? ""}:${refKey}`)
           if (mappedKeys[groupKey]) {
             mappedKeys[groupKey].push(refKey, refValue);
           } 
@@ -324,6 +329,7 @@ export default class Utility {
           }
         });
         if (newGroupChildren.length > 0) {
+          treeValues.push(groupKey);
           groupsObject.children.push({
             value: groupKey,
             label: name,
@@ -349,13 +355,15 @@ export default class Utility {
         children: []
       };
       components.elements.forEach((component: any) => {
-        const { id, name, deprecated } = component.attributes;
+        const { id, name, deprecated, scenario } = component.attributes;
         const componentKey = `component:${id}`;
+        treeValues.push(componentKey);
         const newComponentChildren = component.elements.filter((cmp: any) => 
           cmp.name === "fixr:fieldRef" || cmp.name === "fixr:groupRef" || cmp.name === "fixr:componentRef"
         ).map((ref: any) => {
           const refName = ref.name.split(":")[1];
           const refKey = `${refName.toLowerCase().substring(0, refName.length-3)}:${ref.attributes && ref.attributes.id}`;
+          treeValues.push(`${componentKey}:${refName}:${scenario ?? ""}:${refKey}`)
           const refValue = `${componentKey}-${refKey}->${refKey}`;
           if (mappedKeys[componentKey]) {
             mappedKeys[componentKey].push(refKey, refValue);
@@ -401,6 +409,7 @@ export default class Utility {
         children: codesets.elements.map((codeset: any) => {
           const { name, type } = codeset.attributes;
           const codesetKey = `codeset:${name}`;
+          treeValues.push(codesetKey);
           return {
             value: codesetKey,
             label: `${name} - Type ${type}`,
@@ -409,6 +418,7 @@ export default class Utility {
                 if (code.attributes) {
                   const { name, value, group, deprecated } = code.attributes;
                   const codeKey = `${codesetKey}-code:${name}`;
+                  treeValues.push(`${codesetKey}:code:${name}`)
                   if (mappedKeys[codesetKey]) {
                     mappedKeys[codesetKey].push(codeKey);
                   } 
@@ -471,11 +481,12 @@ export default class Utility {
         children: datatypes.elements.filter((datatype: any) => (
           datatype.attributes.name !== "NumInGroup"
         )).map((datatype: any) => {
-          const { name, baseType } = datatype.attributes;
+          const { name, baseType  } = datatype.attributes;
           const datatypeName = baseType
             ? `${name} - Base Type ${baseType}`
             : name;
           const datatypeKey = `datatype:${name}`;
+          treeValues.push(datatypeKey);
           return {
             value: datatypeKey,
             label: datatypeName,
@@ -491,11 +502,28 @@ export default class Utility {
 
       res.push(datatypesObject);
     }
-
+    const dataArr = new Set(treeValues);
+    const result = [...dataArr];
+    const duplicateValues: string[] | [] = treeValues.length !== result.length ? this.getDuplicates(treeValues, result) : [];
     return {
       initialTree: res,
-      mappedKeys
+      mappedKeys,
+      duplicateValues
     };
+  }
+
+  public static getDuplicates = (array1: string[], array2: string[]) => {
+    array1.forEach((e: string) => {
+      if (array2.includes(e)) {
+        const index1 = array1.indexOf(e)
+        array1.splice(index1, 1)
+        const index2 = array2.indexOf(e)
+        array2.splice(index2, 1)
+        Utility.getDuplicates(array1, array2);
+      } 
+    });
+    const result = new Set(array1)
+    return [...result];
   }
 
   public static createFieldNodes = (fields: any, codesets: any, mappedKeys: any, checkedFields: any = []) => {

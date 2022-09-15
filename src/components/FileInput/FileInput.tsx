@@ -27,7 +27,7 @@ class FileInput extends Component<Props> {
   public render() {
     const { label, accept, multiple = false, disableButton, error } = this.props;
     const { pct, fileName } = this.state;
-
+    
     return (
       <div className="fileInput">
         <p className="inputLabel">{label}</p>

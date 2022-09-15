@@ -67,9 +67,13 @@ export default function StandardFileButton(props: any) {
   const [fixStandardFiles, setFixStandardFiles] = React.useState<any>(null);
   React.useEffect(() => {
     const fetchData = async () => {
-      const data: GitStandardFile[] = await getFileList();
-      const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
-      setFixStandardFiles(filteredData);
+      try {
+        const data: GitStandardFile[] = await getFileList();
+        const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
+        setFixStandardFiles(filteredData);
+      } catch (err) {
+        console.error(err)
+      }
     }
     fetchData();
   }, []);

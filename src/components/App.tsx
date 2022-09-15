@@ -80,6 +80,8 @@ export interface State {
   showModal: boolean,
   modalTitle: string,
   modalMessage: string,
+  modalAlternativeMessage: string,
+  activeCleanApp: boolean,
   showCircularProgress: boolean,
   isConfigFile: boolean,
   checked: Array<string>,
@@ -107,6 +109,8 @@ export default class App extends Component {
     showModal: false,
     modalTitle: "",
     modalMessage: "",
+    modalAlternativeMessage: "",
+    activeCleanApp: false,
     showCircularProgress: false,
     isConfigFile: false,
     checked: [],
@@ -171,11 +175,22 @@ export default class App extends Component {
     if (!this.state.authVerified) {
       return null
     }
-    if (this.playlist?.parseXMLError && !this.state.showModal && this.playlist.parseXMLError) {
+    if (this.playlist?.duplicateValuesError?.length) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Duplicate Values in XML",
+        modalMessage: this.playlist.duplicateValuesError,
+        activeCleanApp: true,
+        modalAlternativeMessage: "Note that this version of Playlist does not support scenarios.",
+      });
+      this.playlist.cleanDuplicateValuesError();
+    }
+    if (this.playlist?.parseXMLError && !this.state.showModal) {
       this.setState({
         showModal: true,
         modalTitle: "Bad XML File",
         modalMessage: this.playlist.parseXMLError,
+        activeCleanApp: true,
       });
       this.playlist.cleanParseXMLError();
     }
@@ -199,7 +214,15 @@ export default class App extends Component {
     return (
       <div className="App">
         {this.state.showCircularProgress && CircularIndeterminate()}
-        <BasicModal title={this.state.modalTitle} message={this.state.modalMessage} showModal={this.state.showModal} handleClose={() => this.setState({showModal: false})} cleanApp={this.handleClearFields.bind(this)} />
+        <BasicModal 
+          title={this.state.modalTitle}
+          message={this.state.modalMessage}
+          showModal={this.state.showModal}
+          handleClose={() => this.setState({showModal: false})}
+          cleanAppFunction={this.handleClearFields.bind(this)}
+          activeCleanApp={this.state.activeCleanApp}
+          alternativeMessage={this.state.modalAlternativeMessage}
+        />
         <div className="App-header container">
           <div className="titleContainer">
             <h1>FIX Playlist</h1>
@@ -420,6 +443,10 @@ export default class App extends Component {
       checkedTreeState: [],
       expandedTreeState: ["FieldsOut"],
       treeData: [],
+      activeCleanApp: false,
+      modalTitle: "",
+      modalMessage: "",
+      modalAlternativeMessage: "",
     });
   };
 
