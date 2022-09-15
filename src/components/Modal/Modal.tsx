@@ -5,12 +5,11 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import './modal.css'
 
-const style = {
+const boxStyle = {
   position: 'absolute',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
@@ -18,9 +17,35 @@ const style = {
   display: "flex!important",
   flexDirection: "column!important",
   alignItems: "center!important",
+  width: "auto",
+  maxHeight: "550px"
 };
 
-export default function BasicModal({ showModal, handleClose, title, message, cleanApp }: any) {
+const getYypographyStyle = (width: string): object => ({
+  textAlign: "center",
+  overflow: "auto",
+  width,
+})
+
+interface IProps {
+  showModal: boolean;
+  handleClose: any;
+  title: string;
+  message: string | string[];
+  cleanAppFunction?: Function;
+  activeCleanApp?: boolean;
+  alternativeMessage?: string;
+}
+
+export default function BasicModal({ 
+  showModal,
+  handleClose, 
+  title, 
+  message, 
+  cleanAppFunction=()=>{}, 
+  activeCleanApp=false, 
+  alternativeMessage 
+}: IProps) {
   return (
       <Modal
         open={showModal}
@@ -28,18 +53,19 @@ export default function BasicModal({ showModal, handleClose, title, message, cle
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
+        <Box sx={boxStyle}>
           <Typography id="modal-modal-title" variant="h6" component="h2">
             {title}
           </Typography>
-          <Typography id="modal-modal-description" style={{textAlign: "center"}} sx={{ mt: 2 }}>
-            {message}
+          <Typography id="modal-modal-description" style={getYypographyStyle(typeof message === "string" ? "200xp" : "max-content")} sx={{ mt: 2 }}>
+            {typeof message === "string" ? message : message.map((m:string) => (<p>{m}</p>))}
           </Typography>
           <Button className="closeModalButton" onClick={() => {
               handleClose();
-              title === "Bad XML File" && cleanApp();
+              activeCleanApp && cleanAppFunction();
             }
           }>Ok</Button>
+          {alternativeMessage && (<p className="alternativeMessageWrapper">{alternativeMessage}</p>)}
         </Box>
       </Modal>
   );
