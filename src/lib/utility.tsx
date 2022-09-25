@@ -485,7 +485,13 @@ export default class Utility {
           const datatypeName = baseType
             ? `${name} - Base Type ${baseType}`
             : name;
-          const datatypeKey = `datatype:${name}`;
+            const datatypeKey = `datatype:${name}`;
+            if (mappedKeys[datatypeKey]) {
+              mappedKeys[datatypeKey].push(datatypeKey);
+            } 
+            else {
+              mappedKeys[datatypeKey] = [datatypeKey];
+            }
           treeValues.push(datatypeKey);
           return {
             value: datatypeKey,
