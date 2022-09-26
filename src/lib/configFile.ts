@@ -62,6 +62,7 @@ export default class ConfigFile {
       this.keys = tree.mappedKeys;
       const newCheckedConfigFileKeys: string[] = [];
       for (const key in this.keys) {
+        newCheckedConfigFileKeys.push(key)
         this.keys[key].forEach(key => newCheckedConfigFileKeys.push(key))
       }
       return new Promise<string[]>(resolve =>
