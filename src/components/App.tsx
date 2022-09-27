@@ -218,7 +218,7 @@ export default class App extends Component {
           title={this.state.modalTitle}
           message={this.state.modalMessage}
           showModal={this.state.showModal}
-          handleClose={() => this.setState({showModal: false})}
+          myHandleClose={() => this.setState({showModal: false})}
           cleanAppFunction={this.handleClearFields.bind(this)}
           activeCleanApp={this.state.activeCleanApp}
           alternativeMessage={this.state.modalAlternativeMessage}

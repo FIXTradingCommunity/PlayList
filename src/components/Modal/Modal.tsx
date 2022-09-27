@@ -29,7 +29,7 @@ const getYypographyStyle = (width: string): object => ({
 
 interface IProps {
   showModal: boolean;
-  handleClose: any;
+  myHandleClose: any;
   title: string;
   message: string | string[];
   cleanAppFunction?: Function;
@@ -39,13 +39,19 @@ interface IProps {
 
 export default function BasicModal({ 
   showModal,
-  handleClose, 
+  myHandleClose, 
   title, 
   message, 
   cleanAppFunction=()=>{}, 
   activeCleanApp=false, 
   alternativeMessage 
 }: IProps) {
+  const handleClose = (event: any, reason: any) => {
+    console.log("reason", reason)
+    if (reason && (reason === "backdropClick" || reason === "escapeKeyDown")) 
+        return;
+    myHandleClose();
+}
   return (
       <Modal
         open={showModal}
@@ -61,7 +67,7 @@ export default function BasicModal({
             {typeof message === "string" ? message : message.map((m:string) => (<p>{m}</p>))}
           </Typography>
           <Button className="closeModalButton" onClick={() => {
-              handleClose();
+              myHandleClose();
               activeCleanApp && cleanAppFunction();
             }
           }>Ok</Button>
