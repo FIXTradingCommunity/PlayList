@@ -213,7 +213,7 @@ export default class App extends Component {
     } 
     return (
       <div className="App">
-        {this.state.showCircularProgress && CircularIndeterminate()}
+        <CircularIndeterminate showCircular={this.state.showCircularProgress} />
         <BasicModal 
           title={this.state.modalTitle}
           message={this.state.modalMessage}
@@ -459,7 +459,10 @@ export default class App extends Component {
         this.referenceFile = fileList[0];
       }
     }
-    isConfigFile ? this.readConfigFileOrchestra() : this.readOrchestra();
+    isConfigFile ? setTimeout(() => {
+      this.readConfigFileOrchestra()
+    }, 1000)
+    : this.readOrchestra();
   };
 
   private outputOrchestra = (fileName: string | undefined): void => {
