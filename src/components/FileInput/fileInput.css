@@ -71,18 +71,3 @@
 .inputTextError {
   color: #FC1E1E;
 }
-
-.chooseGenericFileButton {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 28px;
-  padding: 0 30px;
-  background: #009FE3;
-  border-radius: 14px;
-  color: #FFF;
-  cursor: pointer;
-  border: 1px solid #009FE3;
-  margin: 5px 0;
-  width: 100%;
-}
