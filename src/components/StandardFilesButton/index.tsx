@@ -69,7 +69,7 @@ export default function StandardFileButton(props: any) {
     const fetchData = async () => {
       try {
         const data: GitStandardFile[] = await getFileList();
-        const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml"));
+        const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml" || !e.name.includes(".xml")));
         setFixStandardFiles(filteredData);
       } catch (err) {
         console.error(err)
