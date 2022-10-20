@@ -510,7 +510,7 @@ export default class Utility {
     }
     const dataArr = new Set(treeValues);
     const result = [...dataArr];
-    const duplicateValues: string[] | [] = treeValues.length !== result.length ? this.getDuplicates(treeValues, result) : [];
+    const duplicateValues: string[] | [] = treeValues.length !== result.length ? this.getDuplicates(treeValues) : [];
     return {
       initialTree: res,
       mappedKeys,
@@ -518,17 +518,14 @@ export default class Utility {
     };
   }
 
-  public static getDuplicates = (array1: string[], array2: string[]) => {
-    array1.forEach((e: string) => {
-      if (array2.includes(e)) {
-        const index1 = array1.indexOf(e)
-        array1.splice(index1, 1)
-        const index2 = array2.indexOf(e)
-        array2.splice(index2, 1)
-        Utility.getDuplicates(array1, array2);
-      } 
+  public static getDuplicates = (array1: string[]) => {
+    const duplicatedValues: string[] = [];
+    array1.forEach((e: string, index: number) => {
+      if (index !== array1.lastIndexOf(e)) {
+        duplicatedValues.push(e);
+      }
     });
-    const result = new Set(array1)
+    const result = new Set(duplicatedValues)
     return [...result];
   }
 
