@@ -21,6 +21,7 @@ export default class OrchestraFile {
     private progressNode: HTMLElement | null;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
     private appendOnly: boolean;
+    static errorDescription: any;
 
     constructor(file: File, appendOnly: boolean = false, progressNode: HTMLElement | null, progressFunc: (progressNode: HTMLElement, percent: number) => void) {
         this.file = file;
@@ -34,8 +35,8 @@ export default class OrchestraFile {
         let parsererrorNS: string | null = parser.parseFromString('INVALID', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
         let doc: Document = parser.parseFromString(xml, OrchestraFile.MIME_TYPE);
         if (parsererrorNS && doc.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0) {
-            const errors = doc.getElementsByTagNameNS(parsererrorNS, 'parsererror');
-            return new Error(OrchestraFile.getErrorMessage(errors[0].textContent));
+            const errors: any = doc.getElementsByTagNameNS(parsererrorNS, 'parsererror');
+            return new Error(OrchestraFile.getErrorMessage(errors[0].getElementsByTagName('div')[0].textContent), );
         } else if (!parsererrorNS && doc.getElementsByTagName('parsererror').length > 0) {
             const errors = doc.getElementsByTagName('parsererror');
             return new Error(OrchestraFile.getErrorMessage(errors[0].textContent));
@@ -43,7 +44,17 @@ export default class OrchestraFile {
             return doc;
         }
     }
+    static removeDocumentNodes = (document: Document): void => {
+      const listElements = ["fixr:categories"]
+      listElements.forEach(e => {
+        const node = document.getElementsByTagName(e)[0];
+        if (node) {
+            node.remove();
+        }
+      })
+    }
     static serialize(document: Document): string {
+        this.removeDocumentNodes(document);
         const serializer = new XMLSerializer();
         const text = serializer.serializeToString(document);
         return xml(text, 2);
@@ -132,7 +143,6 @@ export default class OrchestraFile {
     updateDomFromModel(dataModel: SelectionModel, progressNode: HTMLElement | null): void {
         this.updateDomMetadata();
         this.updateDomSections(dataModel.sections);
-        this.updateDomCategories(dataModel.categories);
         this.updateDomMessages(dataModel.messages);
         this.updateDomComponents(dataModel.components);
         this.updateDomGroups(dataModel.groups);
@@ -889,31 +899,6 @@ export default class OrchestraFile {
 
       this.repositoryStatistics.Add("Sections.Removed", countSectionsRemoved);
       this.repositoryStatistics.Add("Sections.Added", countSectionsAdded);
-    }
-    private updateDomCategories(categoriesModel: NameSelectionModel[]): void {
-      const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-      const categoriesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:categories", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-      const categoriesElement: Element = categoriesSnapshot.snapshotItem(0) as Element;
-      const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:categories/fixr:category", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-      let countCategoriesRemoved : number = 0;
-      let countCategoriesAdded : number = 0;
-
-      for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
-          const node: Element = nodesSnapshot.snapshotItem(i) as Element;
-          const name: string | null = node.getAttribute("name");
-          const categoryFound = categoriesModel.find((categoryModel) => (categoryModel.name === name));
-          if (!categoryFound) {
-            categoriesElement.removeChild(node);
-            countCategoriesRemoved++;
-          }
-          else {
-            categoriesElement.appendChild(node);
-            countCategoriesAdded++;
-          }
-      }
-
-      this.repositoryStatistics.Add("Categories.Removed", countCategoriesRemoved);
-      this.repositoryStatistics.Add("Categories.Added", countCategoriesAdded);
     }
     private removeUnusedComponentMembers(componentsModel: ComponentsModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);

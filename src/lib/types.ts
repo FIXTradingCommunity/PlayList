@@ -510,7 +510,6 @@ export interface OneChildrenTC {
 export interface SelectionModel {
   fields: IdSelectionModel[];
   datatypes: NameSelectionModel[];
-  categories: NameSelectionModel[];
   sections: NameSelectionModel[];
   codesets: CodesetSelectionModel;
   groups: GroupSelectionModel;

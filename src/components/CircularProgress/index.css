@@ -1,5 +1,5 @@
 .circularWrapper {
-  position: absolute;
+  position: fixed;
   background: white;
   opacity: 0.7;
   width: 100%;
@@ -8,4 +8,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.waitTextWrapper {
+  color: #009FE3;
+  font-weight: 900;
+  font-size: 20px;
 }

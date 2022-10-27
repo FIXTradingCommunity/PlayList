@@ -299,7 +299,7 @@ footer p {
   background-color: #006c9a;
 }
 
-.redirectButtonContainers, .clearFieldsButtonContainers {
+.redirectButtonContainers, .fieldsButtonContainers {
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -367,7 +367,7 @@ footer p {
   height: 36px;
   width: 150px;
   margin-bottom: 10px;
-  margin-top: 15px;
+  margin-top: 75px;
   border: 2px solid #c7c7c7;
   border-radius: 23px;
   color: #009FE3;

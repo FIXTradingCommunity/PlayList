@@ -14,6 +14,7 @@ import FileInput from './FileInput/FileInput';
 import ProgressBar from './ProgressBar/ProgressBar';
 import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
+import ConfigFile from '../lib/configFile';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import BasicModal from './Modal/Modal';
@@ -77,7 +78,12 @@ export interface State {
   checkedTreeState: Array<string>,
   expandedTreeState: Array<string>,
   showModal: boolean,
+  modalTitle: string,
+  modalMessage: string,
+  modalAlternativeMessage: string,
+  activeCleanApp: boolean,
   showCircularProgress: boolean,
+  isConfigFile: boolean,
   checked: Array<string>,
   targetNode: any,
 }
@@ -101,7 +107,12 @@ export default class App extends Component {
     checkedTreeState: [],
     expandedTreeState: ["FieldsOut"],
     showModal: false,
+    modalTitle: "",
+    modalMessage: "",
+    modalAlternativeMessage: "",
+    activeCleanApp: false,
     showCircularProgress: false,
+    isConfigFile: false,
     checked: [],
     targetNode: "",
   };
@@ -111,10 +122,13 @@ export default class App extends Component {
   private outputProgress: HTMLElement | undefined = undefined;
   private alertMsg: ErrorMsg = { title: "", message: "" };
   private playlist: Playlist | undefined = undefined;
+
+  private configFile: ConfigFile | undefined = undefined;
+  private referenceConfigFile: File | undefined = undefined;
+  private inputConfigProgress: HTMLElement | undefined = undefined;
   
   constructor(props: {}) {
     super(props);
-
     Sentry.init({ dsn: SENTRY_DNS_KEY });
   }
 
@@ -126,14 +140,14 @@ export default class App extends Component {
     const oldState = [...this.state.checkedTreeState];
     let added: any[] = [];
     let removed: any[] = [];
-    if (targetNode.parent.className === "lastLeaf") {
-      if (targetNode.checked) {
+    if (targetNode?.parent?.className === "lastLeaf") {
+      if (targetNode?.checked) {
         added = [targetNode.value];
       } else {
         removed = [targetNode.value];
       }
     } else {
-      if (targetNode.checked) {
+      if (targetNode?.checked) {
       added = checked.filter((x: string) => (!oldState.includes(x)));
       } else {
         removed = oldState.filter((y: string) => (!checked.includes(y)));
@@ -141,7 +155,10 @@ export default class App extends Component {
     }
     if (this.playlist) {
       const runner = this.playlist;
-      const updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed); 
+      let updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed);
+      if (removed.length > 0 ) {
+        updatedValues = runner.updateTree([...updatedValues.newCheckedList], [...updatedValues.newCheckedList], []);
+      }
       this.setState({
         showCircularProgress: false,
         treeData: updatedValues.newTree,
@@ -158,14 +175,54 @@ export default class App extends Component {
     if (!this.state.authVerified) {
       return null
     }
-    if (this.playlist && this.playlist.lastCodesetItem) {
+    if (this.playlist?.duplicateValuesError?.length) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Duplicate Values in XML",
+        modalMessage: this.playlist.duplicateValuesError,
+        activeCleanApp: true,
+        modalAlternativeMessage: "Note that this version of Playlist does not support scenarios.",
+      });
+      this.playlist.cleanDuplicateValuesError();
+    }
+    if (this.playlist?.parseXMLError && !this.state.showModal) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Bad XML File",
+        modalMessage: this.playlist.parseXMLError,
+        activeCleanApp: true,
+      });
+      this.playlist.cleanParseXMLError();
+    }
+    if (this.configFile?.lastCodesetItem) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Warning",
+        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+      });
+      this.configFile.updateLastCodesetItem();
+    }
+    if (this.playlist?.lastCodesetItem) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Warning",
+        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+      });
       this.setState({showModal: true});
       this.playlist.updateLastCodesetItem();
     } 
     return (
       <div className="App">
-        {this.state.showCircularProgress && CircularIndeterminate()}
-        <BasicModal showModal={this.state.showModal} handleClose={() => this.setState({showModal: false})} />
+        <CircularIndeterminate showCircular={this.state.showCircularProgress} />
+        <BasicModal 
+          title={this.state.modalTitle}
+          message={this.state.modalMessage}
+          showModal={this.state.showModal}
+          myHandleClose={() => this.setState({showModal: false})}
+          cleanAppFunction={this.handleClearFields.bind(this)}
+          activeCleanApp={this.state.activeCleanApp}
+          alternativeMessage={this.state.modalAlternativeMessage}
+        />
         <div className="App-header container">
           <div className="titleContainer">
             <h1>FIX Playlist</h1>
@@ -179,16 +236,18 @@ export default class App extends Component {
             <div className="inputsContainer">
               <div className="field">
                 <FileInput
-                  label="Reference Orchestra file"
+                  label="Source Orchestra file"
                   accept=".xml"
                   onChange={this.inputOrchestra}
+                  disableButton={this.state.treeData.length === 0}
                   ref={this.setInputFileBarRef as () => {}}
                   error={this.state.referenceFileError}
                   clearError={() => {
                     this.setState({ referenceFileError: "", showAlerts: false })
                   }}
+                  clearFields={this.handleClearFields.bind(this)}
                 />
-                <div className="clearFieldsButtonContainers">
+                <div className="fieldsButtonContainers">
                   <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
                     Clear Input File
                   </button>
@@ -320,40 +379,40 @@ export default class App extends Component {
   }
 
   public componentDidUpdate(nextProps: any, nextState: any) {
-    if (this.state.showCircularProgress) { 
+    if (this.state.showCircularProgress && !this.state.isConfigFile) { 
       setTimeout(() => {
         this.checkTreeNode(this.state.checked, this.state.targetNode);
       }, 100)
     } 
-      if (this.playlist && this.playlist.lastCodesetItem) {
-        this.setState({showModal: true});
-        this.playlist.updateLastCodesetItem();
-      } 
-      const nodes: any = document.querySelectorAll(".rct-node-expanded");  
-      for(let i = 0; i < nodes.length; i++) {
-        if (nodes[i]) {       
-          const doc2: any = nodes[i].querySelector(".rct-title")
-          if (doc2 && doc2.innerText === 'CODESETS') {
-            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
-            for (let checkbox of allFirstCheckbox) { 
-              checkbox.disabled = true;
-              checkbox.className="disabledCheckbox";
-            }
+    if (this.playlist && this.playlist.lastCodesetItem) {
+      this.setState({showModal: true});
+      this.playlist.updateLastCodesetItem();
+    } 
+    const nodes: any = document.querySelectorAll(".rct-node-expanded");  
+    for(let i = 0; i < nodes.length; i++) {
+      if (nodes[i]) {       
+        const doc2: any = nodes[i].querySelector(".rct-title")
+        if (doc2 && doc2.innerText === 'CODESETS') {
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+          for (let checkbox of allFirstCheckbox) { 
+            checkbox.disabled = true;
+            checkbox.className="disabledCheckbox";
           }
-          if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
-            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
-            for (let checkbox of allFirstCheckbox) { 
-              checkbox.className="disabledCheckbox";
-            }
+        }
+        if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
+          for (let checkbox of allFirstCheckbox) { 
+            checkbox.className="disabledCheckbox";
           }
-          if (doc2 && doc2.innerText === 'FIELDS') {
-            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");      
-            for (let checkbox of allFirstCheckbox) {  
-              checkbox.className="disabledCheckbox";
-            }
+        }
+        if (doc2 && doc2.innerText === 'FIELDS') {
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");      
+          for (let checkbox of allFirstCheckbox) {  
+            checkbox.className="disabledCheckbox";
           }
         }
       }
+    }
       
     if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
       const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
@@ -368,14 +427,13 @@ export default class App extends Component {
     this.CheckAuthenticated();
   }
 
-  private handleClearFields() {
+  public handleClearFields() {
     if (this.referenceFile) {
       this.referenceFile = undefined;
     }
     if (this.inputProgress instanceof FileInput) {
       this.inputProgress.clear();
     }
-
     this.setState({
       downloadHref: "",
       downloadUrl: "",
@@ -385,14 +443,26 @@ export default class App extends Component {
       checkedTreeState: [],
       expandedTreeState: ["FieldsOut"],
       treeData: [],
+      activeCleanApp: false,
+      modalTitle: "",
+      modalMessage: "",
+      modalAlternativeMessage: "",
     });
   };
 
-  private inputOrchestra = (fileList: FileList | null): void => {
+  private inputOrchestra = (fileList: FileList | null, isConfigFile: boolean): void => {
     if (fileList && fileList.length > 0) {
-      this.referenceFile = fileList[0];
+      if (isConfigFile) {
+        this.setState({ showCircularProgress: true, isConfigFile: true })
+        this.referenceConfigFile = fileList[0];
+      } else {
+        this.referenceFile = fileList[0];
+      }
     }
-    this.readOrchestra();
+    isConfigFile ? setTimeout(() => {
+      this.readConfigFileOrchestra()
+    }, 1000)
+    : this.readOrchestra();
   };
 
   private outputOrchestra = (fileName: string | undefined): void => {
@@ -406,6 +476,7 @@ export default class App extends Component {
 
   private setInputFileBarRef = (instance: HTMLDivElement): void => {
     this.inputProgress = instance;
+    this.inputConfigProgress = instance;
   };
 
   private setOutputFileBarRef = (instance: HTMLDivElement): void => {
@@ -439,7 +510,6 @@ export default class App extends Component {
       "component:1024-field:52->field:52",
       "component:1025-field:10->field:10",
     ];
-    
     if (this.referenceFile && this.inputProgress && this.outputProgress) {
       this.setState({
         showAlerts: false,
@@ -451,7 +521,7 @@ export default class App extends Component {
         showResults: false,
         checkedTreeState: [],
         expandedTreeState: ["FieldsOut"],
-        showModal: false,
+        showModal: false
       });
       const runner: Playlist = new Playlist(
         this.referenceFile,
@@ -459,7 +529,7 @@ export default class App extends Component {
         this.outputProgress,
         this.showProgress
         );
-      this.playlist = runner; 
+      this.playlist = runner;
       try {
         // read local reference Orchestra file
         const tree = await runner.runReader();
@@ -477,9 +547,37 @@ export default class App extends Component {
     } else if (!this.referenceFile) {
       this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
     }
-    const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);    
+    const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);
     this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
   }
+
+  private async readConfigFileOrchestra(): Promise<void> {
+   if (this.referenceConfigFile && this.inputConfigProgress && this.outputProgress) {
+     const runner: ConfigFile = new ConfigFile(
+       this.referenceConfigFile,
+       this.inputConfigProgress,
+       this.outputProgress,
+       this.showProgress
+       );
+     this.configFile = runner;
+     try {
+       // read local config file
+       const newCheckedConfigFileKeys = await runner.runReader();
+       const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, newCheckedConfigFileKeys, [] as Array<string>);  
+       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [], showCircularProgress: false, isConfigFile: false });
+     } catch (error) {
+      this.setState({ showCircularProgress: false, isConfigFile: false })
+       if (error) {   
+        Sentry.captureException(error);
+        this.alertMsg = {
+          title: this.getErrorTitle(error.name),
+          message: this.setMessageError(error.message || error)
+        };
+       }
+      this.setState({ showAlerts: true });
+     }
+   }
+ }
 
   // Uncomment this lines when adding content to Modal. Also add the missing values
   // private handleReaderFinish = (output: OrchestraFile) => {

@@ -24,6 +24,8 @@ export default class Playlist {
   private firstKeyIsCodeset: boolean = false;
   public onFinish: undefined | ((output: OrchestraFile) => void);
   public lastCodesetItem: boolean = false;
+  public parseXMLError: string | null = null;
+  public duplicateValuesError: string[] | null = null;
   constructor(
     referenceFile: File,
     inputProgress: HTMLElement | null,
@@ -37,6 +39,14 @@ export default class Playlist {
     }
   public updateLastCodesetItem() {
     this.lastCodesetItem = !this.lastCodesetItem;
+  }
+
+  public cleanParseXMLError() {
+    this.parseXMLError = null;
+  }
+
+  public cleanDuplicateValuesError() {
+    this.duplicateValuesError = null;
   }
 
   private sortTree(tree: Array<any>) {
@@ -69,7 +79,6 @@ export default class Playlist {
 
   public async runReader(): Promise<TreeControl | string> {
     try {
-      
       const input = new OrchestraFile(this.referenceFile, false, this.inputProgress, this.progressFunc);
       // read local reference Orchestra file
       const inputDom = await input.readFile();
@@ -79,12 +88,21 @@ export default class Playlist {
       const tree = Utility.createInitialTree(this.mappedData);      
       this.keys = tree.mappedKeys;
       const sortedTree = this.sortTree(tree.initialTree)
-      
+      if (!!tree.duplicateValues.length) {
+        this.duplicateValuesError = tree.duplicateValues;
+        return new Promise<string>((resolve, reject) =>
+        reject("")
+      )
+      }
       this.mainTreeNode = sortedTree;
       return new Promise<TreeControl>(resolve =>
         resolve(sortedTree)
       );
     } catch (e) {
+      if (String(e).includes("tag mismatch")) {
+        this.parseXMLError = String(e).replace("Error:", "XML");
+        return "";
+      }
       return new Promise<string>((resolve, reject) =>
         reject(e)
       )
@@ -109,7 +127,7 @@ export default class Playlist {
        ) {
           filteredKeyRemoved.pop();
       }
-      if (filteredKeyRemoved[0].length > 1 && filteredKeyRemoved[0].startsWith("group:") && filteredKeyRemoved[0].split("->").length === 1) {
+      if (filteredKeyRemoved.length > 1 && filteredKeyRemoved[0].startsWith("group:") && filteredKeyRemoved[0].split("->").length === 1) {
         filteredKeyRemoved.shift();
       }
     }
@@ -239,7 +257,7 @@ export default class Playlist {
     if (this.firstKeyIsCodeset && keysToRemove.length > 0 && keysToRemove[0].startsWith("codeset")) {
       this.firstKeyIsCodeset = false;
       const splittedCodesetKey = keysToRemove[0].split('-');
-      const totalCodeset = checked.filter(c => c.startsWith(splittedCodesetKey[0]))
+      const totalCodeset = checked.filter(c => c.startsWith(splittedCodesetKey[0]) && c.includes("-"))
       if (totalCodeset.length === 1) {
         breakProcess = true;
         this.updateLastCodesetItem();
@@ -249,9 +267,10 @@ export default class Playlist {
       const preSplitedKey = keysToRemove[0].split('->');
       const key = preSplitedKey[preSplitedKey.length - 1];
       if (key.startsWith("field")) {
-        newChecked.forEach(e => {
-          if (e.startsWith('component') || e.startsWith('group') || e.startsWith('section')) {  
-            if (e.indexOf(key) !== -1 && e !== keysToRemove[0]) {
+        newChecked.forEach(checkedElement => {
+          if (checkedElement.startsWith('component') || checkedElement.startsWith('group') || checkedElement.startsWith('section')) {  
+            const keyMatched = checkedElement.split(/->|-/).filter(e => e === key).length > 0;
+            if (keyMatched && checkedElement !== keysToRemove[0]) {
               newChecked = newChecked.filter(e => e !== keysToRemove[0]);
               breakProcess = true;
             }
@@ -275,10 +294,10 @@ export default class Playlist {
           checkKeys = mainKeysChecked.filter((item) => 
             item.endsWith(splittedKey[splittedKey.length - 1]) && splittedKey[splittedKey.length - 1] !== item);
       }
-      if (checkKeys.length <= 1) {    
+      if (checkKeys.length <= 1) {
         switch (splittedKey.length) {
           case 1:
-            const foundKeys = newChecked.filter((item) => item.endsWith(key));   
+            const foundKeys = newChecked.filter((item) => item.endsWith(key));
             newChecked = newChecked.filter((item) => !item.endsWith(key));
             if (key.startsWith('field')) {
               const result = newChecked.filter(e => {
@@ -309,6 +328,10 @@ export default class Playlist {
                 if (foundKeyRefs.length === 1) {
                   newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [newKey]);
                 }
+              } else if (foundKey.startsWith("group")) {
+                const preKeysRemoved: any = [];
+                  this.preRemoveCheckedReference(preKeysRemoved, foundKeys);
+                  newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
               }
             });
             break;

@@ -9,3 +9,8 @@
   color: #FFF!important;
   cursor: pointer!important;
 }
+
+.alternativeMessageWrapper {
+  position: relative;
+  bottom: -30px;
+}

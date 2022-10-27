@@ -1,15 +1,19 @@
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import ProgressCircle from "../ProgressCircle/ProgressCircle";
+import StandardFileButton from '../StandardFilesButton';
+import InputButton from '../InputButton';
 import "./fileInput.css";
 
 interface Props {
   label: string;
   accept?: HTMLInputElement['accept'];
   multiple?: boolean;
-  onChange: (files: FileList) => void;
+  disableButton: boolean;
+  onChange: (files: FileList, isConfigFile: boolean) => void;
   error?: string;
   clearError?: () => void;
+  clearFields: () => void;
 }
 
 class FileInput extends Component<Props> {
@@ -17,12 +21,13 @@ class FileInput extends Component<Props> {
   public state = {
     fileName: "",
     pct: 0,
+    isConfigFile: false,
   }
 
   public render() {
-    const { label, accept, multiple = false, error } = this.props;
+    const { label, accept, multiple = false, disableButton, error } = this.props;
     const { pct, fileName } = this.state;
-
+    
     return (
       <div className="fileInput">
         <p className="inputLabel">{label}</p>
@@ -60,7 +65,21 @@ class FileInput extends Component<Props> {
                         <ProgressCircle value={pct} />
                         <div className="inputContent">
                           <p className="inputText">Drag file to read or</p>
-                          <div className="chooseFileButton">Choose File{multiple ? "s" : ""}</div>
+                          <InputButton 
+                            onChange={this.changeReferenceFile}
+                            disableButton={false}
+                            buttonStyle={"chooseGenericFileButton"}
+                            buttonTitle={`Choose File${multiple ? "s" : ""}`}
+                            titleAttributes={"Orchestra file required as source of messages and elements to be selected"}
+                          />
+                          <StandardFileButton onChange={this.standardFileChange}/>
+                          <InputButton 
+                            onChange={this.changeConfigFile}
+                            disableButton={disableButton}
+                            buttonStyle={"configFileFieldsButton"}
+                            buttonTitle={"Use Selector File"}
+                            titleAttributes={"Optional Orchestra file to pre-select a subset of the source file, subject to subsequent changes"}
+                          />
                         </div>
                         { !error && <p className="fileName">{fileName}</p>}
                         { error && <p className="fileName inputTextError">{error}</p> }
@@ -74,6 +93,26 @@ class FileInput extends Component<Props> {
       </div>
     )
 
+  }
+
+  public changeConfigFile = () => {
+    this.setState({
+      isConfigFile: true,
+    })
+  }
+
+  public changeReferenceFile = () => {
+    this.setState({
+      isConfigFile: false,
+    })
+  }
+
+  public standardFileChange = (files: FileList) => {
+    this.props.clearFields();
+    this.setState({
+      isConfigFile: false,
+    })
+    this.handleChange(files as FileList);
   }
 
   public isValidType = (file: File | undefined) => {
@@ -90,6 +129,9 @@ class FileInput extends Component<Props> {
 
     if (this.props.clearError) {
       this.props.clearError();
+    }
+    if (!this.state.isConfigFile) {
+      this.props.clearFields();
     }
     this.handleChange(files as FileList);
   };
@@ -109,12 +151,12 @@ class FileInput extends Component<Props> {
         fileName: `${files.length} files loaded`
       })
     } else {
+      !this.state.isConfigFile &&
       this.setState({
         fileName: files[0] ? files[0].name : ""
       })
     }
-
-    this.props.onChange(files);
+    this.props.onChange(files, this.state.isConfigFile);
   }
 
   public setProgress = (value: number) => {
@@ -126,7 +168,8 @@ class FileInput extends Component<Props> {
   public clear = () => {
     this.setState({
       fileName: "",
-      pct: 0
+      pct: 0,
+      isConfigFile: false,
     })
   }
 
