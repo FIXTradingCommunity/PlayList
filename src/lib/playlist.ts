@@ -127,7 +127,7 @@ export default class Playlist {
        ) {
           filteredKeyRemoved.pop();
       }
-      if (filteredKeyRemoved[0].length > 1 && filteredKeyRemoved[0].startsWith("group:") && filteredKeyRemoved[0].split("->").length === 1) {
+      if (filteredKeyRemoved.length > 1 && filteredKeyRemoved[0].startsWith("group:") && filteredKeyRemoved[0].split("->").length === 1) {
         filteredKeyRemoved.shift();
       }
     }
@@ -294,10 +294,10 @@ export default class Playlist {
           checkKeys = mainKeysChecked.filter((item) => 
             item.endsWith(splittedKey[splittedKey.length - 1]) && splittedKey[splittedKey.length - 1] !== item);
       }
-      if (checkKeys.length <= 1) {    
+      if (checkKeys.length <= 1) {
         switch (splittedKey.length) {
           case 1:
-            const foundKeys = newChecked.filter((item) => item.endsWith(key));   
+            const foundKeys = newChecked.filter((item) => item.endsWith(key));
             newChecked = newChecked.filter((item) => !item.endsWith(key));
             if (key.startsWith('field')) {
               const result = newChecked.filter(e => {
@@ -328,6 +328,10 @@ export default class Playlist {
                 if (foundKeyRefs.length === 1) {
                   newChecked = this.removeCheckedReference(mainKeysChecked, newChecked, [newKey]);
                 }
+              } else if (foundKey.startsWith("group")) {
+                const preKeysRemoved: any = [];
+                  this.preRemoveCheckedReference(preKeysRemoved, foundKeys);
+                  newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
               }
             });
             break;
