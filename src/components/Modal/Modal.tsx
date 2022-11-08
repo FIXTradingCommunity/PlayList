@@ -64,7 +64,7 @@ export default function BasicModal({
             {title}
           </Typography>
           <Typography id="modal-modal-description" style={getYypographyStyle(typeof message === "string" ? "200xp" : "max-content")} sx={{ mt: 2 }}>
-            {typeof message === "string" ? message : message.map((m:string) => (<p>{m}</p>))}
+            {typeof message === "string" ? message : message.map((m:string) => (<p key={m}>{m}</p>))}
           </Typography>
           <Button className="closeModalButton" onClick={() => {
               myHandleClose();

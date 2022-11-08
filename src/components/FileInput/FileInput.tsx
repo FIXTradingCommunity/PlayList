@@ -14,6 +14,7 @@ interface Props {
   error?: string;
   clearError?: () => void;
   clearFields: () => void;
+  setErrorMessage?: (modalTitle: string, modalMessage: string) => void;
 }
 
 class FileInput extends Component<Props> {
@@ -25,7 +26,7 @@ class FileInput extends Component<Props> {
   }
 
   public render() {
-    const { label, accept, multiple = false, disableButton, error } = this.props;
+    const { label, accept, multiple = false, disableButton, error, setErrorMessage } = this.props;
     const { pct, fileName } = this.state;
     
     return (
@@ -72,7 +73,7 @@ class FileInput extends Component<Props> {
                             buttonTitle={`Choose File${multiple ? "s" : ""}`}
                             titleAttributes={"Orchestra file required as source of messages and elements to be selected"}
                           />
-                          <StandardFileButton onChange={this.standardFileChange}/>
+                          <StandardFileButton setErrorMessage={setErrorMessage} onChange={this.standardFileChange}/>
                           <InputButton 
                             onChange={this.changeConfigFile}
                             disableButton={disableButton}
