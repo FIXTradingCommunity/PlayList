@@ -19,7 +19,6 @@ import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import BasicModal from './Modal/Modal';
 import CircularIndeterminate from './CircularProgress';
-// import ResultsPage from './ResultsPage/ResultsPage';
 
 const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
 
@@ -563,8 +562,8 @@ export default class App extends Component {
      try {
        // read local config file
        const newCheckedConfigFileKeys = await runner.runReader();
-       const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, newCheckedConfigFileKeys, [] as Array<string>);  
-       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [], showCircularProgress: false, isConfigFile: false });
+      const updatedValues = [...newCheckedConfigFileKeys, ...this.state.checkedTreeState] 
+      this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isConfigFile: false });
      } catch (error) {
       this.setState({ showCircularProgress: false, isConfigFile: false })
        if (error) {   
