@@ -502,7 +502,6 @@ export default class App extends Component {
      const standardHeaderTrailerPreSelected = [
       "component:1024-field:8->field:8",
       "component:1024-field:9->field:9",
-      "component:1024-field:35->field:35",
       "component:1024-field:49->field:49",
       "component:1024-field:56->field:56",
       "component:1024-field:34->field:34",
@@ -560,9 +559,11 @@ export default class App extends Component {
        );
      this.configFile = runner;
      try {
-       // read local config file
-       const newCheckedConfigFileKeys = await runner.runReader();
-      const updatedValues = [...newCheckedConfigFileKeys, ...this.state.checkedTreeState] 
+      // Read local config file.
+      const newCheckedConfigFileKeys = await runner.runReader();
+      // Removing duplicated elements from the checked list.
+      const dataArr = new Set([...newCheckedConfigFileKeys, ...this.state.checkedTreeState]);
+      const updatedValues = [...dataArr];
       this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isConfigFile: false });
      } catch (error) {
       this.setState({ showCircularProgress: false, isConfigFile: false })
