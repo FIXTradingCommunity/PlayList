@@ -212,7 +212,7 @@ export default class Utility {
   }
 
   public static getReferenceMessageError = (refName: string, id: number): string => 
-    `Missing definition for ${refName.includes('field') ? 'filed' : refName.includes('group') ? 'group' : 'component'} reference: ${id}`
+    `Missing definition for ${refName.includes('field') ? 'field' : refName.includes('group') ? 'group' : 'component'} reference: ${id}`
   
 
   public static createInitialTree(data: { [key: string]: any }) {
