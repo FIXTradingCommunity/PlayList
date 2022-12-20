@@ -14,7 +14,6 @@ import "./index.css";
 import { FixStandardFile, GitStandardFile } from './types';
 import { getFileList, readXMLfromURL } from './helpers';
 
-
 const useStyles = makeStyles({
   avatar: {
     backgroundColor: blue[100],
@@ -63,24 +62,36 @@ function StandardFile(props: StandardFileProps) {
 }
 
 export default function StandardFileButton(props: any) {
+  const { setErrorMessage } = props;
   const [open, setOpen] = React.useState(false);
   const [fixStandardFiles, setFixStandardFiles] = React.useState<any>(null);
   React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data: GitStandardFile[] = await getFileList();
+    try {
+      const fetchData = async () => {
+        const data: GitStandardFile[] | any = await getFileList();
+        if (data.message) {
+          setErrorMessage("Standard Files Error", "Error reading Standard Files")
+          throw new Error("Error reading Standard Files");
+        }
         const filteredData = data && data.filter((e: GitStandardFile) => !(e.name === "Readme.md" || e.name === "pom.xml" || !e.name.includes(".xml")));
         setFixStandardFiles(filteredData);
-      } catch (err) {
-        console.error(err)
       }
+      fetchData();
+    } catch (err) {
+      setErrorMessage("Standard Files Error", "Error reading Standard Files")
+      console.error(err)
     }
-    fetchData();
-  }, []);
+  }, [setErrorMessage]);
   
-  const fixOnClick = async (fileObject: any): Promise<any> => { 
-    const file: FixStandardFile = await readXMLfromURL(fileObject)
-    props.onChange([file]);
+  const fixOnClick = async (fileObject: any) => {
+      await readXMLfromURL(fileObject)
+      .then((res: FixStandardFile) => {
+        props.onChange([res]);
+      })
+      .catch((err: any) => {
+        setErrorMessage("Standard Files Error", "Error reading Standard File")
+        throw err;
+      })
   }
 
   const handleClickOpen = (e: any) => {
@@ -90,7 +101,11 @@ export default function StandardFileButton(props: any) {
   
   
   const handleClose = (value: any) => {
-    if (value) fixOnClick(value)
+    try {
+      if (value) fixOnClick(value)
+    } catch (error) {
+      throw error
+    }
     setOpen(false);
   };
 
