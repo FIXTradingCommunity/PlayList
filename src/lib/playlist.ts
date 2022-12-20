@@ -67,8 +67,8 @@ export default class Playlist {
       return node;
     });
     return sortedChildren.sort((a: any, b: any) => {
-      const labelA = Number.parseInt(a.label.split("-")[0]);
-          const labelB = Number.parseInt(b.label.split("-")[0]);
+      const labelA = Number.parseInt(a.label?.split("-")[0]);
+          const labelB = Number.parseInt(b.label?.split("-")[0]);
            if (isNaN(labelA) && isNaN(labelB)) {
              return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
            } else if (!isNaN(labelA) && !isNaN(labelB)){
@@ -99,6 +99,10 @@ export default class Playlist {
         resolve(sortedTree)
       );
     } catch (e) {
+      if (String(e).includes("reference")) {
+        this.parseXMLError = String(e).replace("Error:", "XML");
+        return "";
+      }
       if (String(e).includes("tag mismatch")) {
         this.parseXMLError = String(e).replace("Error:", "XML");
         return "";

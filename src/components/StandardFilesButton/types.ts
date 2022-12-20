@@ -11,7 +11,6 @@ export interface GitStandardFile {
   _links: any;
 }
 
-
 export interface FixStandardFile extends Blob {
   path?: string;
   name?: string;
