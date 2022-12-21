@@ -4,7 +4,6 @@
 
 import React, { Component } from 'react';
 import { version } from '../../package.json';
-import * as Sentry from '@sentry/browser';
 import * as jwt from 'jsonwebtoken';
 import * as QueryString from 'query-string';
 import CheckboxTree from 'react-checkbox-tree';
@@ -19,16 +18,14 @@ import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import BasicModal from './Modal/Modal';
 import CircularIndeterminate from './CircularProgress';
-// import ResultsPage from './ResultsPage/ResultsPage';
-
-const SENTRY_DNS_KEY = "https://de40e3ceeeda4e5aadcd414b588c3428@sentry.io/5747100";
+import ErrorHandler from '../lib/ErrorHandler';
 
 const splittedVersion = version.split('.');
 const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}${splittedVersion[2] ? `.${splittedVersion[2]}` : ""}`;
 
 const currentYear = new Date().getFullYear();
 
-interface IDecodedUserData {
+export interface IDecodedUserData {
   at_hash: string;
   sub: string;
   firstname: string;
@@ -122,6 +119,7 @@ export default class App extends Component {
   private outputProgress: HTMLElement | undefined = undefined;
   private alertMsg: ErrorMsg = { title: "", message: "" };
   private playlist: Playlist | undefined = undefined;
+  private errorHandler: ErrorHandler | undefined = undefined;
 
   private configFile: ConfigFile | undefined = undefined;
   private referenceConfigFile: File | undefined = undefined;
@@ -129,13 +127,31 @@ export default class App extends Component {
   
   constructor(props: {}) {
     super(props);
-    Sentry.init({ dsn: SENTRY_DNS_KEY });
+    window.addEventListener("offline", (event: any) => {
+      this.setState({
+        showModal: true,
+        modalTitle: "Error Connection",
+        modalMessage: "There is no Internet connection",
+        activeCleanApp: false,
+      });
+    });
+    window.onunhandledrejection = (event: any) => {
+      this.errorHandler?.captureException(event)
+      this.setState({
+        showModal: true,
+        modalTitle: "Unhandled Rejection",
+        modalMessage: event?.reason ?? "",
+        activeCleanApp: false,
+      });;
+    };
+    this.errorHandler = ErrorHandler.getInstance();
+    
   }
 
   checkTreeNodeStart(checked: Array<string>, targetNode: any) {
     this.setState({ showCircularProgress: true, checked, targetNode });
   }
-  
+
   checkTreeNode = (checked: Array<string>, targetNode: any) => {
     const oldState = [...this.state.checkedTreeState];
     let added: any[] = [];
@@ -170,7 +186,14 @@ export default class App extends Component {
       });
     }
   }
-
+  public setErrorMessage = (modalTitle: string, modalMessage: string) => {
+    this.setState({
+      showModal: true,
+      modalTitle,
+      modalMessage,
+      activeCleanApp: true,
+    });
+  }
   public render() {
     if (!this.state.authVerified) {
       return null
@@ -246,6 +269,7 @@ export default class App extends Component {
                     this.setState({ referenceFileError: "", showAlerts: false })
                   }}
                   clearFields={this.handleClearFields.bind(this)}
+                  setErrorMessage={this.setErrorMessage}
                 />
                 <div className="fieldsButtonContainers">
                   <button className="clearFieldsButton" onClick={this.handleClearFields.bind(this)}>
@@ -503,7 +527,6 @@ export default class App extends Component {
      const standardHeaderTrailerPreSelected = [
       "component:1024-field:8->field:8",
       "component:1024-field:9->field:9",
-      "component:1024-field:35->field:35",
       "component:1024-field:49->field:49",
       "component:1024-field:56->field:56",
       "component:1024-field:34->field:34",
@@ -534,14 +557,13 @@ export default class App extends Component {
         // read local reference Orchestra file
         const tree = await runner.runReader();
         this.setState({ treeData: tree });
-      } catch (error) {
-        if (error) {
-          Sentry.captureException(error);
-          this.alertMsg = {
-            title: this.getErrorTitle(error.name),
-            message: this.setMessageError(error.message || error)
-          };
-        }
+      } catch (err) {
+        const error = err as {name: string, message: string}
+        this.errorHandler?.captureException(error);
+        this.alertMsg = {
+          title: this.getErrorTitle(error?.name ?? ""),
+          message: this.setMessageError(error?.message ?? error)
+        };
         this.setState({ showAlerts: true });
       }
     } else if (!this.referenceFile) {
@@ -561,19 +583,20 @@ export default class App extends Component {
        );
      this.configFile = runner;
      try {
-       // read local config file
-       const newCheckedConfigFileKeys = await runner.runReader();
-       const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, newCheckedConfigFileKeys, [] as Array<string>);  
-       this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [], showCircularProgress: false, isConfigFile: false });
-     } catch (error) {
+      // Read local config file.
+      const newCheckedConfigFileKeys = await runner.runReader();
+      // Removing duplicated elements from the checked list.
+      const dataArr = new Set([...newCheckedConfigFileKeys, ...this.state.checkedTreeState]);
+      const updatedValues = [...dataArr];
+      this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isConfigFile: false });
+     } catch (err) {
+      const error = err as {name: string, message: string}
       this.setState({ showCircularProgress: false, isConfigFile: false })
-       if (error) {   
-        Sentry.captureException(error);
-        this.alertMsg = {
-          title: this.getErrorTitle(error.name),
-          message: this.setMessageError(error.message || error)
-        };
-       }
+      this.errorHandler?.captureException(error);
+      this.alertMsg = {
+        title: this.getErrorTitle(error?.name ?? ""),
+        message: this.setMessageError(error?.message ?? error)
+      };
       this.setState({ showAlerts: true });
      }
    }
@@ -627,14 +650,14 @@ export default class App extends Component {
           this.outputProgress.setProgress(0);
         }
         
-      } catch (error) {
-        if (error) {
-          Sentry.captureException(error);
-          this.alertMsg = {
-            title: this.getErrorTitle(error.name),
-            message: this.setMessageError(error.message || error)
-          };
-        }
+      } catch (err) {
+        const error = err as {name: string, message: string}
+        this.errorHandler?.captureException(error);
+        this.alertMsg = {
+          title: this.getErrorTitle(error?.name ?? ""),
+          message: this.setMessageError(error?.message ?? error)
+        };
+
         this.setState({ showAlerts: true });
       }
 
@@ -722,19 +745,7 @@ export default class App extends Component {
       if (!verified) {
         throw new Error("unauthenticated");
       }
-
-      const userData = (decoded as IDecodedUserData);
-      Sentry.configureScope((scope) => {
-        scope.setUser({
-          Employer: userData.Employer,
-          email: userData.email,
-          firstname: userData.firstname,
-          groups: userData.groups,
-          lastname: userData.lastname,
-          sub: userData.sub,
-        });
-      });
-
+      this.errorHandler?.configureScope(decoded as IDecodedUserData);
       this.setState({
         authVerified: true,
       })

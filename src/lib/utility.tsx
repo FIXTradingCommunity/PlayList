@@ -211,6 +211,10 @@ export default class Utility {
     return dataModel;
   }
 
+  public static getReferenceMessageError = (refName: string, id: number): string => 
+    `Missing definition for ${refName.includes('field') ? 'field' : refName.includes('group') ? 'group' : 'component'} reference: ${id}`
+  
+
   public static createInitialTree(data: { [key: string]: any }) {
     const res: TreeControl = [];
     const treeValues: string[] = [];
@@ -226,7 +230,7 @@ export default class Utility {
       componentNames,
       groupNames
     } = data;
-    
+
     const getReferencesNames = (referenceType: string, referenceId: string) => {
       switch(referenceType) {
         case 'fieldRef':
@@ -322,9 +326,11 @@ export default class Utility {
           else {
             mappedKeys[groupKey] = [refKey, refValue];
           }
+          const label = getReferencesNames(refName, ref.attributes.id || '');  
+          if (!label) throw new Error(this.getReferenceMessageError(refName, ref?.attributes?.id))
           return {
             value: refValue,
-            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
+            label,
             className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
           }
         });
@@ -371,9 +377,11 @@ export default class Utility {
           else {
             mappedKeys[componentKey] = [refKey, refValue];
           }
+          const label = getReferencesNames(refName, ref.attributes.id || '');
+          if (!label) throw new Error(this.getReferenceMessageError(refName, ref?.attributes?.id))
           return {
             value: refValue,
-            label: getReferencesNames(refName, ref.attributes ? ref.attributes.id : ''),
+            label,
             className: ref.attributes.deprecated ? 'deprecatedItem' : 'lastLeaf'
           }
         });
