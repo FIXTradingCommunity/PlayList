@@ -602,20 +602,6 @@ export default class App extends Component {
    }
  }
 
-  // Uncomment this lines when adding content to Modal. Also add the missing values
-  // private handleReaderFinish = (output: OrchestraFile) => {
-  //   //return the values from the statistics dictionary
-  //   const addedFields = output.statistics.Item("Fields.Added");
-  //   const removedFields = output.statistics.Item("Fields.Removed");
-
-  //   this.setState({
-  //     results: {
-  //       addedFields,
-  //       removedFields
-  //     }
-  //   });
-  // }
-
   private openResults = () => {
     this.setState({
       showResults: true,
