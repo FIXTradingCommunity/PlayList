@@ -105,28 +105,6 @@ export default class LogModel {
             }
         }
     }
-    getMessageModelKey(msgType: string, keyFieldId: string, fieldValue: string): string {
-        const message: MessageModel = this.model.messages.getByMsgType(msgType)[0];
-        let messageName;
-        if (message) {
-            messageName = message.name;
-        }
-        else {
-            messageName = msgType;
-        }
-        let scenario = MessageModel.defaultScenario;
-        let field: FieldModel | undefined = this.model.fields.getById(keyFieldId, scenario);
-        if (field) {
-            let codeset: CodesetModel | undefined = this.model.codesets.get(field.datatype);
-            if (codeset) {
-                let code: CodeModel | undefined = codeset.getByValue(fieldValue);
-                if (code) {
-                    scenario = code.name;
-                }
-            }
-        }
-        return MessageModel.key(messageName, scenario);
-    }
     messageListener = (messageInstance: MessageInstance) => {
         // skip a malformed message
         if (!messageInstance.msgType) {
