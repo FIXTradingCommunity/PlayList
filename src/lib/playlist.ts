@@ -163,6 +163,29 @@ export default class Playlist {
       if (headerTrailerFilterKeyRemoved && headerTrailerFilterKeyRemoved.length > 0) {
         newChecked = newChecked.filter(key => !headerTrailerFilterKeyRemoved.includes(key))
       }
+      
+    }
+    if (keysRemoved.length === 1 && keysRemoved[0].includes("group:")) {
+      const groupToRemove = keysRemoved[0].split('-')[0];
+      if (this.keys[groupToRemove]) {
+        const numInGroupToRemove = this.keys[groupToRemove].find((e) => e.includes("numInGroup"))?.split("->")?.[1];
+        if (numInGroupToRemove) {
+          let count = 0;
+          newChecked.forEach(e => {
+            if (e.includes("group")) {
+              const group = keysRemoved[0].split('-')[0];
+              const numInGroup = this.keys[group].find((e) => e.includes("numInGroup"))?.split("->")?.[1];
+              numInGroupToRemove === numInGroup && ++count;
+            }
+          })
+          if (!count) {
+            newChecked = [...newChecked].filter(e => !(e.includes(numInGroupToRemove) || e.includes("datatype:NumInGroup")));
+          }
+        }
+      }
+      if (keysRemoved.length > 1 && !!keysRemoved.find((e: any) => e.includes("group:"))?.length) {
+        
+      }
     }
     const newCheckedList = uniq(newChecked);
     const checkedFields = newCheckedList.filter((item) => {
@@ -198,6 +221,15 @@ export default class Playlist {
   public addCheckedReference(checked: Array<string>, keysToAdd: Array<string>) {
     if (Object.keys(this.keys).length > 0) {
       keysToAdd.forEach((key) => {
+        if (!checked.includes(key) && key.includes("group:")) {
+          const group = key.split('-')[0];
+          if (this.keys[group]) {
+            const numInGroup = this.keys[group].find((e) => e.includes("numInGroup"))?.split("->")?.[1];
+            if (numInGroup) {
+              checked.push(numInGroup);
+            }
+          }
+        }
         if (!checked.includes(key) || key.includes("components") || key.includes("field")) {
           const splittedKey = key.split('->');
           const newKey = splittedKey[splittedKey.length-1];

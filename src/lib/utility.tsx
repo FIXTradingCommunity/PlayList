@@ -219,6 +219,7 @@ export default class Utility {
     const res: TreeControl = [];
     const treeValues: string[] = [];
     const mappedKeys: { [key: string]: Array<string> } = {};
+
     const {
       messages,
       components,
@@ -313,6 +314,8 @@ export default class Utility {
         const { id, name, deprecated, scenario } = group.attributes;
         const groupKey = `group:${id}`;
         treeValues.push(`group:${name}`);
+        const numInGroup = group.elements.filter((e: any) => e.name === "fixr:numInGroup")[0];
+        const noLabel = getReferencesNames("fieldRef", numInGroup.attributes.id || '').split(" - ")[0];
         const newGroupChildren = group.elements.filter((grp: any) => 
           grp.name === "fixr:fieldRef" || grp.name === "fixr:groupRef" || grp.name === "fixr:componentRef"
         ).map((ref: any) => {
@@ -335,16 +338,17 @@ export default class Utility {
           }
         });
         if (newGroupChildren.length > 0) {
+          mappedKeys[groupKey].push(`numInGroup->field:${numInGroup.attributes.id}`)
           treeValues.push(groupKey);
           groupsObject.children.push({
-            value: groupKey,
-            label: name,
+            value: `${groupKey}`,
+            label: `${name}${noLabel ? ` - ${noLabel}` : ""}`,
             children: newGroupChildren,
             className: deprecated ? 'deprecatedItem' : 'lastLeaf'
           });
         }
       });
-      
+     
       groupsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
       groupsObject.children.forEach((e: any) => {
         e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
@@ -522,7 +526,7 @@ export default class Utility {
     return {
       initialTree: res,
       mappedKeys,
-      duplicateValues
+      duplicateValues,
     };
   }
 
@@ -587,45 +591,42 @@ export default class Utility {
     
     fields?.elements?.forEach((field: any) => {
       const { id, name, type, deprecated } = field?.attributes;
-      if (type !== 'NumInGroup') {
-        const fieldKey = `field:${id}`;
-        let typeRef;
-        let mapKeys = [];
-        if (type.includes('CodeSet')) {
-          const codeset = codesets?.elements?.find((cset: any) => cset?.attributes?.name === type);
-          typeRef = `${codeset?.attributes?.name} - Type ${codeset?.attributes?.type}`;
-          mapKeys.push(`codeset:${type}`, `datatype:${codeset?.attributes?.type}`)
-        }
-        else {
-          typeRef = `Type ${type}`;
-          mapKeys.push(`datatype:${type}`);
-        }
-        if (mappedKeys[fieldKey]) {
-          mappedKeys[fieldKey].push(...mapKeys);
-        } 
-        else {
-          mappedKeys[fieldKey] = [...mapKeys];
-        }
-
-        const fieldName = `${id} - ${name} - ${typeRef}`;
-        const fieldNode = {
-          value: fieldKey,
-          label: fieldName,
-          disabled: true,
-          className: deprecated ? 'deprecatedItem' : 'lastLeaf'
-        };
-
-          if (id >= 1 && id <= 999) fieldsList[0].children.push(fieldNode)
-          else if (id >= 1000 && id <= 1999) fieldsList[1].children.push(fieldNode)
-          else if (id >= 2000 && id <= 2999) fieldsList[2].children.push(fieldNode)
-          else if (id >= 3000 && id <= 3999) fieldsList[3].children.push(fieldNode)
-          else if (id >= 4000 && id <= 4999) fieldsList[4].children.push(fieldNode)
-          else if (id >= 5000 && id <= 5999) fieldsList[5].children.push(fieldNode)
-          else if (id >= 10000 && id <= 19999) fieldsList[6].children.push(fieldNode)
-          else if (id >= 20000 && id <= 39999) fieldsList[7].children.push(fieldNode)
-          else if (id >= 40000 && id <= 49999) fieldsList[8].children.push(fieldNode)
-        // }
+      const fieldKey = `field:${id}`;
+      let typeRef;
+      let mapKeys = [];
+      if (type.includes('CodeSet')) {
+        const codeset = codesets?.elements?.find((cset: any) => cset?.attributes?.name === type);
+        typeRef = `${codeset?.attributes?.name} - Type ${codeset?.attributes?.type}`;
+        mapKeys.push(`codeset:${type}`, `datatype:${codeset?.attributes?.type}`)
       }
+      else {
+        typeRef = `Type ${type}`;
+        mapKeys.push(`datatype:${type}`);
+      }
+      if (mappedKeys[fieldKey]) {
+        mappedKeys[fieldKey].push(...mapKeys);
+      } 
+      else {
+        mappedKeys[fieldKey] = [...mapKeys];
+      }
+
+      const fieldName = `${id} - ${name} - ${typeRef}`;
+      const fieldNode = {
+        value: fieldKey,
+        label: fieldName,
+        disabled: true,
+        className: deprecated ? 'deprecatedItem' : 'lastLeaf'
+      };
+
+        if (id >= 1 && id <= 999) fieldsList[0].children.push(fieldNode)
+        else if (id >= 1000 && id <= 1999) fieldsList[1].children.push(fieldNode)
+        else if (id >= 2000 && id <= 2999) fieldsList[2].children.push(fieldNode)
+        else if (id >= 3000 && id <= 3999) fieldsList[3].children.push(fieldNode)
+        else if (id >= 4000 && id <= 4999) fieldsList[4].children.push(fieldNode)
+        else if (id >= 5000 && id <= 5999) fieldsList[5].children.push(fieldNode)
+        else if (id >= 10000 && id <= 19999) fieldsList[6].children.push(fieldNode)
+        else if (id >= 20000 && id <= 39999) fieldsList[7].children.push(fieldNode)
+        else if (id >= 40000 && id <= 49999) fieldsList[8].children.push(fieldNode)
     });
 
     const fieldsOut: TwoChildrenTC = {
