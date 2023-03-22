@@ -194,46 +194,7 @@ export default class App extends Component {
       activeCleanApp: true,
     });
   }
-  public render() {
-    if (!this.state.authVerified) {
-      return null
-    }
-    if (this.playlist?.duplicateValuesError?.length) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Duplicate Values in XML",
-        modalMessage: this.playlist.duplicateValuesError,
-        activeCleanApp: true,
-        modalAlternativeMessage: "Note that this version of Playlist does not support scenarios.",
-      });
-      this.playlist.cleanDuplicateValuesError();
-    }
-    if (this.playlist?.parseXMLError && !this.state.showModal) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Bad XML File",
-        modalMessage: this.playlist.parseXMLError,
-        activeCleanApp: true,
-      });
-      this.playlist.cleanParseXMLError();
-    }
-    if (this.configFile?.lastCodesetItem) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Warning",
-        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
-      });
-      this.configFile.updateLastCodesetItem();
-    }
-    if (this.playlist?.lastCodesetItem) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Warning",
-        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
-      });
-      this.setState({showModal: true});
-      this.playlist.updateLastCodesetItem();
-    } 
+  public render() { 
     return (
       <div className="App">
         <CircularIndeterminate showCircular={this.state.showCircularProgress} />
@@ -403,6 +364,45 @@ export default class App extends Component {
   }
 
   public componentDidUpdate(nextProps: any, nextState: any) {
+    if (!this.state.authVerified) {
+      return null
+    }
+    if (this.playlist?.duplicateValuesError?.length) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Duplicate Values in XML",
+        modalMessage: this.playlist.duplicateValuesError,
+        activeCleanApp: true,
+        modalAlternativeMessage: "Note that this version of Playlist does not support scenarios.",
+      });
+      this.playlist.cleanDuplicateValuesError();
+    }
+    if (this.playlist?.parseXMLError && !this.state.showModal) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Bad XML File",
+        modalMessage: this.playlist.parseXMLError,
+        activeCleanApp: true,
+      });
+      this.playlist.cleanParseXMLError();
+    }
+    if (this.configFile?.lastCodesetItem) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Warning",
+        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+      });
+      this.configFile.updateLastCodesetItem();
+    }
+    if (this.playlist?.lastCodesetItem) {
+      this.setState({
+        showModal: true,
+        modalTitle: "Warning",
+        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+      });
+      this.setState({showModal: true});
+      this.playlist.updateLastCodesetItem();
+    }
     if (this.state.showCircularProgress && !this.state.isConfigFile) { 
       setTimeout(() => {
         this.checkTreeNode(this.state.checked, this.state.targetNode);

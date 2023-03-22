@@ -63,7 +63,7 @@ export default function BasicModal({
           <Typography id="modal-modal-title" variant="h6" component="h2">
             {title}
           </Typography>
-          <Typography id="modal-modal-description" style={getYypographyStyle(typeof message === "string" ? "200xp" : "max-content")} sx={{ mt: 2 }}>
+          <Typography id="modal-modal-description" style={getYypographyStyle(typeof message === "string" ? "200xp" : "max-content")} sx={{ mt: 2 }} component="span">
             {typeof message === "string" ? message : message.map((m:string) => (<p key={m}>{m}</p>))}
           </Typography>
           <Button className="closeModalButton" onClick={() => {
