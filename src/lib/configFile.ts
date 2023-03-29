@@ -62,7 +62,11 @@ export default class ConfigFile {
       this.keys = tree.mappedKeys;
       const newCheckedConfigFileKeys: string[] = [];
       for (const key in this.keys) {
-        this.keys[key].forEach(key => newCheckedConfigFileKeys.push(key))
+        this.keys[key].forEach(key => {
+          if (!key.toLowerCase().includes("numingroup")) {
+          newCheckedConfigFileKeys.push(key)
+          }
+        })
       }
       return new Promise<string[]>(resolve =>
         resolve(newCheckedConfigFileKeys)

@@ -112,6 +112,7 @@ export default class Playlist {
       )
     }
   }
+  
   public updateTree(
       checked: Array<string>,
       keysAdded: Array<string>,
@@ -120,11 +121,14 @@ export default class Playlist {
       [key: string]: Array<string> | any
     } {
     let filteredKeyRemoved: any = [];
+    let headerTrailerFilterKeyRemoved: any = [];
+
     // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
 
     if (keysRemoved.length > 0) {
+      headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"));
       filteredKeyRemoved = keysRemoved.filter(key => (!key.includes("component:1024") && !key.includes("component:1025")) || key.startsWith("component:1024") || key.startsWith("component:1025"))
       if (filteredKeyRemoved.length === 3 &&
         (filteredKeyRemoved[0].startsWith("component:1024") || filteredKeyRemoved[0].startsWith("component:1025")) 
@@ -151,19 +155,17 @@ export default class Playlist {
       }
     }
     if (filteredKeyRemoved.length > 0) {
-      const headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"));
-      this.firstKeyIsCodeset = filteredKeyRemoved.length > 0 && filteredKeyRemoved[0].startsWith("codeset");
+      this.firstKeyIsCodeset = !!filteredKeyRemoved.length && filteredKeyRemoved[0].startsWith("codeset");
       const preKeysRemoved: any = [];
-      if (!this.firstKeyIsCodeset && (keysRemoved.length > 2 || keysRemoved.filter(e => e.startsWith("section:")).length > 0)) {
+      if (!this.firstKeyIsCodeset && (keysRemoved.length > 2 || keysRemoved.filter(e => !!e.startsWith("section:")).length)) {
         this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved) 
         newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
       } else {
         newChecked = this.removeCheckedReference(checked, newChecked, filteredKeyRemoved);
       }
-      if (headerTrailerFilterKeyRemoved && headerTrailerFilterKeyRemoved.length > 0) {
+      if (!!headerTrailerFilterKeyRemoved.length) {
         newChecked = newChecked.filter(key => !headerTrailerFilterKeyRemoved.includes(key))
       }
-      
     }
     if (keysRemoved.length === 1 && keysRemoved[0].includes("group:")) {
       const groupToRemove = keysRemoved[0].split('-')[0];

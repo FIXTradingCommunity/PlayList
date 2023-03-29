@@ -22,8 +22,14 @@ import ErrorHandler from '../lib/ErrorHandler';
 
 const splittedVersion = version.split('.');
 const appVersion = `${splittedVersion[0]}.${splittedVersion[1]}${splittedVersion[2] ? `.${splittedVersion[2]}` : ""}`;
-
 const currentYear = new Date().getFullYear();
+
+interface INode {
+  value: string;
+  label: string;
+  children?: INode[];
+  className?: string;
+};
 
 export interface IDecodedUserData {
   at_hash: string;
@@ -171,7 +177,7 @@ export default class App extends Component {
     }
     if (this.playlist) {
       const runner = this.playlist;
-      let updatedValues = runner.updateTree(this.state.checkedTreeState, added, removed);
+      let updatedValues = runner.updateTree(oldState, added, removed);
       if (removed.length > 0 ) {
         updatedValues = runner.updateTree([...updatedValues.newCheckedList], [...updatedValues.newCheckedList], []);
       }
@@ -571,6 +577,35 @@ export default class App extends Component {
     }
     const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);
     this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
+    // this.setState({ readingFile: false, checkedTreeState: [] });
+  }
+
+  private checkIfExistInTree = (tree: Array<INode>, checkedList: Array<string>): Array<string> => {
+    const newCheckedList: Array<string> = [];
+    for (let i = 0; i < checkedList.length; i++) {
+      const value = checkedList[i];
+      const exist = this.checkIfExistInTreeRecursive(tree, value);
+      if (exist) {
+        newCheckedList.push(value);
+      }
+    }
+    return newCheckedList;
+  }
+
+  private checkIfExistInTreeRecursive = (tree: Array<INode>, value: string): boolean => {
+    for (let i = 0; i < tree.length; i++) {
+      const node = tree[i];
+      if (node.value === value) {
+        return true;
+      }
+      if (node.children) {
+        const exist = this.checkIfExistInTreeRecursive(node.children, value);
+        if (exist) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private async readConfigFileOrchestra(): Promise<void> {
@@ -585,8 +620,9 @@ export default class App extends Component {
      try {
       // Read local config file.
       const newCheckedConfigFileKeys = await runner.runReader();
+      const filteredCheckedConfigFileKeys = this.checkIfExistInTree(this.state.treeData, newCheckedConfigFileKeys);
       // Removing duplicated elements from the checked list.
-      const dataArr = new Set([...newCheckedConfigFileKeys, ...this.state.checkedTreeState]);
+      const dataArr = new Set([...filteredCheckedConfigFileKeys, ...this.state.checkedTreeState]);
       const updatedValues = [...dataArr];
       this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isConfigFile: false });
      } catch (err) {
