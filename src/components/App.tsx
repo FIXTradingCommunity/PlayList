@@ -175,12 +175,10 @@ export default class App extends Component {
         removed = oldState.filter((y: string) => (!checked.includes(y)));
       } 
     }
+    
     if (this.playlist) {
       const runner = this.playlist;
-      let updatedValues = runner.updateTree(oldState, added, removed);
-      if (removed.length > 0 ) {
-        updatedValues = runner.updateTree([...updatedValues.newCheckedList], [...updatedValues.newCheckedList], []);
-      }
+      let updatedValues = !!added.length ? runner.checkValues(oldState, added) : runner.uncheckValues(oldState, removed);
       this.setState({
         showCircularProgress: false,
         treeData: updatedValues.newTree,
@@ -575,7 +573,7 @@ export default class App extends Component {
     } else if (!this.referenceFile) {
       this.setState({ ReferenceFileError: 'Reference Orchestra file not selected' });
     }
-    const updatedValues = this.playlist?.updateTree(this.state.checkedTreeState, standardHeaderTrailerPreSelected, [] as Array<string>);
+    const updatedValues = this.playlist?.checkValues(this.state.checkedTreeState, standardHeaderTrailerPreSelected);
     this.setState({ readingFile: false, checkedTreeState: updatedValues?.newCheckedList || [] });
     // this.setState({ readingFile: false, checkedTreeState: [] });
   }

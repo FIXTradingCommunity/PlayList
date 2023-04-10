@@ -112,83 +112,27 @@ export default class Playlist {
       )
     }
   }
-  
-  public updateTree(
-      checked: Array<string>,
-      keysAdded: Array<string>,
-      keysRemoved: Array<string>
-    ): {
-      [key: string]: Array<string> | any
-    } {
-    let filteredKeyRemoved: any = [];
-    let headerTrailerFilterKeyRemoved: any = [];
-
-    // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
+      // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
-
-    if (keysRemoved.length > 0) {
-      headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"));
-      filteredKeyRemoved = keysRemoved.filter(key => (!key.includes("component:1024") && !key.includes("component:1025")) || key.startsWith("component:1024") || key.startsWith("component:1025"))
-      if (filteredKeyRemoved.length === 3 &&
-        (filteredKeyRemoved[0].startsWith("component:1024") || filteredKeyRemoved[0].startsWith("component:1025")) 
-       ) {
-          filteredKeyRemoved.pop();
-      }
-      if (filteredKeyRemoved.length > 1 && filteredKeyRemoved[0].startsWith("group:") && filteredKeyRemoved[0].split("->").length === 1) {
-        filteredKeyRemoved.shift();
-      }
-    }
-  
+  public checkValues = (
+    checked: Array<string>,
+    keysAdded: Array<string>
+  ): {
+    [key: string]: Array<string> | any
+  } => {
     let newChecked = [...checked];
-    if (keysAdded.length > 0) {
-      const messegesKey = keysAdded.find(key => key.includes("message:"))  
-      if (messegesKey && messegesKey.length > 0) {
-        const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
-        this.addCheckedReference(newChecked, [
-          ...keysAdded,
-          `${messageHeaderTrailer}-component:1024->component:1024`,
-          `${messageHeaderTrailer}-component:1025->component:1025`,
-        ]);
-      } else {
-        this.addCheckedReference(newChecked, keysAdded);
-      }
-    }
-    if (filteredKeyRemoved.length > 0) {
-      this.firstKeyIsCodeset = !!filteredKeyRemoved.length && filteredKeyRemoved[0].startsWith("codeset");
-      const preKeysRemoved: any = [];
-      if (!this.firstKeyIsCodeset && (keysRemoved.length > 2 || keysRemoved.filter(e => !!e.startsWith("section:")).length)) {
-        this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved) 
-        newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
-      } else {
-        newChecked = this.removeCheckedReference(checked, newChecked, filteredKeyRemoved);
-      }
-      if (!!headerTrailerFilterKeyRemoved.length) {
-        newChecked = newChecked.filter(key => !headerTrailerFilterKeyRemoved.includes(key))
-      }
-    }
-    if (keysRemoved.length === 1 && keysRemoved[0].includes("group:")) {
-      const groupToRemove = keysRemoved[0].split('-')[0];
-      if (this.keys[groupToRemove]) {
-        const numInGroupToRemove = this.keys[groupToRemove].find((e) => e.includes("numInGroup"))?.split("->")?.[1];
-        if (numInGroupToRemove) {
-          let count = 0;
-          newChecked.forEach(e => {
-            if (e.includes("group")) {
-              const group = keysRemoved[0].split('-')[0];
-              const numInGroup = this.keys[group].find((e) => e.includes("numInGroup"))?.split("->")?.[1];
-              numInGroupToRemove === numInGroup && ++count;
-            }
-          })
-          if (!count) {
-            newChecked = [...newChecked].filter(e => !(e.includes(numInGroupToRemove) || e.includes("datatype:NumInGroup")));
-          }
-        }
-      }
-      if (keysRemoved.length > 1 && !!keysRemoved.find((e: any) => e.includes("group:"))?.length) {
-        
-      }
-    }
+    const messegesKey = keysAdded.find(key => key.includes("message:"))  
+    if (messegesKey && messegesKey.length > 0) {
+      const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
+      this.addCheckedReference(newChecked, [
+        ...keysAdded,
+        `${messageHeaderTrailer}-component:1024->component:1024`,
+        `${messageHeaderTrailer}-component:1025->component:1025`,
+      ]);
+    } else {
+      this.addCheckedReference(newChecked, keysAdded);
+    };
     const newCheckedList = uniq(newChecked);
     const checkedFields = newCheckedList.filter((item) => {
       return item.split('->').length === 1 && item.includes('field:');
@@ -198,28 +142,6 @@ export default class Playlist {
     return { newCheckedList, newTree };
   }
 
-  public updateFieldsNode(checkedFields: Array<string>) {
-    const newTree = [...this.mainTreeNode ];
-    if (this.mappedData.fields && this.mappedData.fields.elements) {
-      const fieldsObject = Utility.createFieldNodes(
-        this.mappedData.fields,
-        this.mappedData.codesets,
-        this.keys, checkedFields
-      );
-      const { fieldsOut } = fieldsObject;
-      let treeIndex = -1;
-      const fieldsOutIndex = newTree.findIndex((node) => node.value === 'FieldsOut');   
-      if (fieldsOutIndex > -1) { 
-        treeIndex = fieldsOutIndex;
-        newTree.splice(fieldsOutIndex, 1)
-      }
-      if (fieldsOut.children.length > 0) {
-        newTree.splice(treeIndex > -1 ? treeIndex : newTree.length, 0, fieldsOut);
-      }
-    }
-    return newTree;
-  }
-  
   public addCheckedReference(checked: Array<string>, keysToAdd: Array<string>) {
     if (Object.keys(this.keys).length > 0) {
       keysToAdd.forEach((key) => {
@@ -261,14 +183,118 @@ export default class Playlist {
     }
   }
 
-  public preRemoveCheckedReference(preKeysRemoved: Array<string>, keysToRemove: Array<string>) {
+  public uncheckValues = (
+    checked: Array<string>,
+    keysRemoved: Array<string>
+  ): {
+    [key: string]: Array<string> | any
+  } => {
+    let newChecked = [...checked];
+
+    // find the StandardHeader and StandardTrailer components from the keys to remove array.
+    const headerTrailerFilterKeyRemoved = keysRemoved.filter(key => key.includes("component:1024") || key.includes("component:1025"));
+    const filteredKeyRemoved = keysRemoved.filter(key => (!key.includes("component:1024") && !key.includes("component:1025")) || key.startsWith("component:1024") || key.startsWith("component:1025"))
+    
+    if (filteredKeyRemoved.length === 3 &&
+      (filteredKeyRemoved[0].startsWith("component:1024") || filteredKeyRemoved[0].startsWith("component:1025")) 
+      ) {
+        filteredKeyRemoved.pop();
+    }
+    if (filteredKeyRemoved.length > 1 && filteredKeyRemoved[0].startsWith("group:") && filteredKeyRemoved[0].split("->").length === 1) {
+      filteredKeyRemoved.shift();
+    }
+    if (filteredKeyRemoved.length > 0) {
+      this.firstKeyIsCodeset = !!filteredKeyRemoved.length && filteredKeyRemoved[0].startsWith("codeset");
+      const preKeysRemoved: Array<string> = [];
+      if (!this.firstKeyIsCodeset && (keysRemoved.length > 2 || keysRemoved.filter(e => !!e.startsWith("section:")).length)) {
+        this.preRemoveCheckedReference(preKeysRemoved, filteredKeyRemoved, checked) 
+        newChecked = this.removeCheckedReference(checked, newChecked, uniq(preKeysRemoved));
+      } else {
+        newChecked = this.removeCheckedReference(checked, newChecked, filteredKeyRemoved);
+      }
+      if (!!headerTrailerFilterKeyRemoved.length) {
+        newChecked = newChecked.filter(key => !headerTrailerFilterKeyRemoved.includes(key))
+      }
+    }
+    // check if a numInGroup is removed and if it is, check if there are any other groups with the same numInGroup and if not, remove the numInGroup and the datatype:NumInGroup
+    if (keysRemoved.length === 1 && keysRemoved[0].includes("group:")) {
+      const groupToRemove = keysRemoved[0].split('-')[0];
+      if (this.keys[groupToRemove]) {
+        const numInGroupToRemove = this.keys[groupToRemove].find((e) => e.includes("numInGroup"))?.split("->")?.[1];
+        if (numInGroupToRemove) {
+          let count = 0;
+          newChecked.forEach(e => {
+            if (e.includes("group")) {
+              const group = keysRemoved[0].split('-')[0];
+              const numInGroup = this.keys[group].find((e) => e.includes("numInGroup"))?.split("->")?.[1];
+              numInGroupToRemove === numInGroup && ++count;
+            }
+          })
+          if (!count) {
+            newChecked = [...newChecked].filter(e => !(e.includes(numInGroupToRemove) || e.includes("datatype:NumInGroup")));
+          }
+        }
+      }
+      if (keysRemoved.length > 1 && !!keysRemoved.find((e: any) => e.includes("group:"))?.length) {
+        
+      }
+    }
+    // delete duplicate keys
+    const newCheckedList = uniq(newChecked);
+    // obtain the fields to update the tree
+    const checkedFields = newCheckedList.filter((item) => {
+      return item.split('->').length === 1 && item.includes('field:');
+    });
+    const newTree = this.updateFieldsNode(checkedFields);
+    this.mainTreeNode = newTree;
+    return { newCheckedList, newTree };
+  }
+
+  public updateFieldsNode(checkedFields: Array<string>) {
+    const newTree = [...this.mainTreeNode ];
+    if (this.mappedData.fields && this.mappedData.fields.elements) {
+      const fieldsObject = Utility.createFieldNodes(
+        this.mappedData.fields,
+        this.mappedData.codesets,
+        this.keys, checkedFields
+      );
+      const { fieldsOut } = fieldsObject;
+      let treeIndex = -1;
+      const fieldsOutIndex = newTree.findIndex((node) => node.value === 'FieldsOut');   
+      if (fieldsOutIndex > -1) { 
+        treeIndex = fieldsOutIndex;
+        newTree.splice(fieldsOutIndex, 1)
+      }
+      if (fieldsOut.children.length > 0) {
+        newTree.splice(treeIndex > -1 ? treeIndex : newTree.length, 0, fieldsOut);
+      }
+    }
+    return newTree;
+  }
+
+  public preRemoveCheckedReference(preKeysRemoved: Array<string>, keysToRemove: Array<string>, checked: Array<string> = []) {
     keysToRemove.forEach((key) => {
       if (!preKeysRemoved.includes(key)) {
         const splittedKey = key.split('->');
         const newKey = splittedKey[splittedKey.length-1];
-        preKeysRemoved.push(key)
-        this.removeCheckKeys(preKeysRemoved, key);
-        if (key !== newKey) {
+        let countKey = 0;
+        let countNewKey = 0;
+        if (key.startsWith("field:") || newKey.startsWith("field:") || key.startsWith("group:") || newKey.startsWith("group:")) {
+          // check uf the newKey is included on each value of the checked array
+          checked.forEach((checkedKey) => {
+            if (checkedKey.includes(key) && checkedKey !== key) {
+              ++countKey;
+            }
+            if (checkedKey.includes(newKey) && checkedKey !== newKey) {
+              ++countNewKey;
+            }
+          })
+        }
+        if (countKey < 2) {
+          preKeysRemoved.push(key)
+          this.removeCheckKeys(preKeysRemoved, key);
+        }
+        if (key !== newKey && countNewKey < 2) {
           preKeysRemoved.push(newKey)
           this.removeCheckKeys(preKeysRemoved, newKey);
         }
@@ -324,10 +350,22 @@ export default class Playlist {
     !breakProcess &&
     keysToRemove.forEach((key) => {
       const splittedKey = key.split('->');
+      let count = 0;
+      if (splittedKey?.[1]?.includes("field:")) {
+        // check uf the newKey is included on each value of the checked array
+        checked.forEach((checkedKey) => {
+          if (checkedKey.includes(splittedKey[1]) && checkedKey !== splittedKey[1]) {
+            ++count;
+          }
+        })
+      }
+      if (count > 1) {
+        splittedKey.pop();
+      }
       let checkKeys: any = [];
-      if ((key.startsWith("field:") || key.startsWith("group:")) && splittedKey.length === 1) {
+      if ((key.startsWith("field:") || key.startsWith("group:")) && splittedKey.length === 1) { 
         checkKeys = mainKeysChecked.filter((item) => 
-            item.startsWith("section:") && item.endsWith(key) && item !== key);
+          item.startsWith("section:") && item.endsWith(key) && item !== key);
       } else if (key.startsWith("section:") && (key.includes("field:") || key.includes("group:"))) {
           checkKeys = mainKeysChecked.filter((item) => 
             item.endsWith(splittedKey[splittedKey.length - 1]) && splittedKey[splittedKey.length - 1] !== item);
