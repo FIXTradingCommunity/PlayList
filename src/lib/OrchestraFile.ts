@@ -10,14 +10,22 @@ import { KeyedCollection } from "./KeyedCollection";
 import { xml } from "vkbeautify";
 import { CodesetSelectionModel, ComponentSelectionModel, IdSelectionModel, MessageSelectionModel, NameSelectionModel, SelectionModel, GroupSelectionModel } from "./types";
 
+enum DOMParserSupportedType {
+  TEXT_HTML = "text/html",
+  TEXT_XML = "text/xml",
+  APPLICATION_XML = "application/xml",
+  APPLICATION_XHTML = "application/xhtml+xml",
+  IMAGE_SVG = "image/svg+xml"
+};
+
 export default class OrchestraFile {
-    static readonly MIME_TYPE: SupportedType = "application/xml";
+    static readonly MIME_TYPE: DOMParserSupportedType = DOMParserSupportedType.APPLICATION_XML;
     static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra/repository";
 
     private repositoryStatistics = new KeyedCollection<Number>();
 
     private file: File;
-    private document: Document = new Document();
+    private document: Document | any = new Document();
     private progressNode: HTMLElement | null;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
     private appendOnly: boolean;
