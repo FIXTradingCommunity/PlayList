@@ -162,7 +162,8 @@ export default class App extends Component {
     const oldState = [...this.state.checkedTreeState];
     let added: any[] = [];
     let removed: any[] = [];
-    if (targetNode?.parent?.className === "lastLeaf") {
+    
+    if (targetNode?.parent?.className === "lastLeaf" || targetNode?.value.startsWith('codeset')) {
       if (targetNode?.checked) {
         added = [targetNode.value];
       } else {
@@ -171,14 +172,17 @@ export default class App extends Component {
     } else {
       if (targetNode?.checked) {
       added = checked.filter((x: string) => (!oldState.includes(x)));
+      } else if (targetNode?.children) {    
+        removed = [...targetNode.children.map((x: any) => x.value), targetNode.value];
       } else {
-        removed = oldState.filter((y: string) => (!checked.includes(y)));
-      } 
+        removed = [targetNode.value]// oldState.filter((y: string) => (!checked.includes(y)));
+      }
     }
     
     if (this.playlist) {
       const runner = this.playlist;
-      let updatedValues = !!added.length ? runner.checkValues(oldState, added) : runner.uncheckValues(oldState, removed);
+      let updatedValues = !!added.length ? runner.checkValues(oldState, added) : runner.newUncheckValues(oldState, removed);
+
       this.setState({
         showCircularProgress: false,
         treeData: updatedValues.newTree,
@@ -344,7 +348,7 @@ export default class App extends Component {
                       check: <span className="rct-icon rct-icon-check" />,
                     }}
                     iconsClass="fa5"
-                    checked={this.state.checkedTreeState}
+                    checked={[...this.state.checkedTreeState]}
                     expanded={this.state.expandedTreeState}
                     onCheck={(checked: Array<string>, targetNode: any) => {
                       this.checkTreeNodeStart(checked, targetNode)
