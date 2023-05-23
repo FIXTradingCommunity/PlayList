@@ -338,7 +338,13 @@ export default class Utility {
           }
         });
         if (newGroupChildren.length > 0) {
-          mappedKeys[groupKey].push(`numInGroup->field:${numInGroup.attributes.id}`)
+          mappedKeys[groupKey].push(`${groupKey}-numInGroup->field:${numInGroup.attributes.id}`)
+          newGroupChildren.push({
+            value: `${groupKey}-numInGroup->field:${numInGroup.attributes.id}`,
+            label: `NumInGroup - ${noLabel}`,
+            className: 'deprecatedItem',
+            disabled: true
+          })
           treeValues.push(groupKey);
           groupsObject.children.push({
             value: `${groupKey}`,
