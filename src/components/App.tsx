@@ -10,6 +10,7 @@ import CheckboxTree from 'react-checkbox-tree';
 import logo from '../assets/FIXorchestraLogo.png';
 import './app.css';
 import FileInput from './FileInput/FileInput';
+import ResultsPage from './ResultsPage/ResultsPage';
 import ProgressBar from './ProgressBar/ProgressBar';
 import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
@@ -367,6 +368,27 @@ export default class App extends Component {
           <p>Version {appVersion}</p>
           <p>{App.rightsMsg}</p>
         </footer>
+        {
+          this.state.showResults &&
+          <ResultsPage
+            results={this.state.results}
+            onClose={this.closeResults}
+            downloadButton={
+              this.state.downloadHref ? <a
+              className="submitButton downloadButton"
+              href={this.state.downloadHref}
+              download={this.orchestraFileName}
+              data-downloadurl={this.state.downloadUrl}
+              onClick={this.handleDownloadClick.bind(this)}
+            >
+              { this.state.downloaded ? "Downloaded" : "Download File"}
+            </a> : 
+            <button className="submitButton closeResultsButton" onClick={this.closeResults}>
+              Close Results
+            </button>
+            }
+          />
+        }
       </div>
     );
   }
@@ -666,7 +688,7 @@ export default class App extends Component {
       const runner = this.playlist;
       try {
         // Uncomment this line when adding content to Modal
-        // runner.onFinish = this.handleReaderFinish;
+        runner.onFinish = this.handleReaderFinish;
         await runner.runCreator(this.orchestraFileName, this.state.checkedTreeState);
 
 
@@ -696,6 +718,23 @@ export default class App extends Component {
       });
     }
     this.setState({ creatingFile: false });
+  }
+
+
+  private handleReaderFinish = (output: OrchestraFile) => {
+    //return the values from the statistics dictionary
+    this.setState({
+      results: {
+        fixMessageTypes: output.statistics.Item("Messages.Added"),
+        codes: output.statistics.Item("Codes.Added"),
+        groups: output.statistics.Item("Groups.Added"),
+        sections: output.statistics.Item("Sections.Added"),
+        fields: output.statistics.Item("Fields.Added"),
+        datatypes: output.statistics.Item("Datatypes.Added"),
+        components: output.statistics.Item("Components.Added"),
+        codesets: output.statistics.Item("Codesets.Added"),
+      }
+    })
   }
 
   private getErrorTitle(error: string): string {

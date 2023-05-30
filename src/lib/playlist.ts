@@ -223,7 +223,7 @@ export default class Playlist {
         output.dom = this.inputFile.cloneDom();
 
         const dataModel = Utility.groupSelectedItems(selectedItems, this.mappedData.groups);
-
+      
         output.updateDomFromModel(dataModel, this.outputProgress);
         if (this.onFinish) {
             this.onFinish(output);
