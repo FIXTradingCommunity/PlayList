@@ -223,7 +223,7 @@ export default class Playlist {
         output.dom = this.inputFile.cloneDom();
 
         const dataModel = Utility.groupSelectedItems(selectedItems, this.mappedData.groups);
-
+      
         output.updateDomFromModel(dataModel, this.outputProgress);
         if (this.onFinish) {
             this.onFinish(output);
@@ -263,27 +263,74 @@ export default class Playlist {
     // newKeysRemoved is an array of keys to remove
     let newKeysRemoved: Array<string> = [];
 
+    // numInGroupKeys is an array of keys to use later that include "-numInGroup->"
+    const numInGroupKeys: Array<string> = keysRemoved.filter((item) => item.includes("-numInGroup->"));
+
     if (!breakProcess) {
       newKeysRemoved = this.recursiveFindValuesToUncheck(keysRemoved, checked);
       newChecked = newChecked.filter((item) => !newKeysRemoved.includes(item));
       // remove form newKeysRemoved all the values that not start with group:, section:, component: and filed: and include "->"
-      newKeysRemoved = newKeysRemoved.filter((item) => (item.startsWith("group:") || item.startsWith("message:") || item.startsWith("section:") || item.startsWith("component:") || item.startsWith("filed:")) && !item.includes("->"));
-      // check if each item in newChecked include some item of newKeysRemoved, if it's true, remove it from newChecked
-      newChecked.forEach((item) => {
-        newKeysRemoved.forEach((key) => {
-          if (item.includes(key)) {
-            newChecked = newChecked.filter((e) => e !== item);
-          }
+      const newKeysRemoved1: Array<string> = []; 
+      const newKeysRemoved2: Array<string> = []; 
+      newKeysRemoved.forEach((item) => (
+        (
+          item.startsWith("group:")
+          || item.startsWith("message:")
+          || item.startsWith("section:")
+          || item.startsWith("component:")
+          || item.startsWith("filed:")
+        ) && !item.includes("->")) ? newKeysRemoved1.push(item) : newKeysRemoved2.push(item));
+        
+        // check if each item in newChecked include some item of newKeysRemoved, if it's true, remove it from newChecked
+      if (newKeysRemoved1.length) {
+        newChecked.forEach((item) => {
+          newKeysRemoved1.forEach((key) => {
+            if (item.includes(key)) newChecked = newChecked.filter((e) => e !== item);
+          });
         });
       }
-      );
     }
 
     const headerTrailerValuesToRemove = this.checkStandardHeaderTrailer(newChecked);
     newChecked = newChecked.filter((item) => !headerTrailerValuesToRemove.includes(item));
-    
+
+    // if a value of a group or a group was unchecked, previously the value corresponding to numInGroup of the group in question was removed from the checked array. For this reason, an array was created with all the values that included numInGroup from the keyRemoved array. Then it is checked if there is still a reference to that specific group, and if so, it is added back to the array of checked values.
+    if (numInGroupKeys.length) {
+      numInGroupKeys.forEach((numIGK) => {
+        const groupKey = numIGK.split("-numInGroup->")[0];
+        const groupKeyIndex = newChecked.findIndex((item) => item.includes(groupKey));
+        if (groupKeyIndex > -1) {
+          newChecked.push(numIGK, "datatype:NumInGroup");
+        }
+      });
+    }
+
+    // handle orphaned numInGroup values
+    newChecked = this.uncheckOrphanedNumInGroup(newChecked);
+
     const newTree = this.updateFieldsNode(newChecked);
     return { newCheckedList: uniq(newChecked), newTree };
+  };
+
+  private uncheckOrphanedNumInGroup = (checked: Array<string>): Array<string> => {
+    const groupKeys: Array<string> = [];
+    let numInGroups: Array<string> = [];
+    checked.forEach((item) => {
+      if (item.includes("-numInGroup->")) {
+        numInGroups.push(item);
+      }
+      if (item.startsWith("group:") && !item.includes("-numInGroup->") && item.includes("->")) {
+        groupKeys.push(item.split("-")[0]);
+      }
+    });
+
+    numInGroups = numInGroups.filter((item) => 
+      !groupKeys.includes(item.split("-numInGroup->")[0])
+    )
+    numInGroups.forEach((item) => {
+      numInGroups.push(item.split("->")[item.split("->").length - 1]);
+    });
+    return checked.filter((item) => !numInGroups.includes(item));
   };
 
   // function to verify if the header and trailer messages values are included in more than one message, if it's not, remove them from checked array
