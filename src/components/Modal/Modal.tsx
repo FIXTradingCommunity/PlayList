@@ -47,7 +47,6 @@ export default function BasicModal({
   alternativeMessage 
 }: IProps) {
   const handleClose = (event: any, reason: any) => {
-    console.log("reason", reason)
     if (reason && (reason === "backdropClick" || reason === "escapeKeyDown")) 
         return;
     myHandleClose();

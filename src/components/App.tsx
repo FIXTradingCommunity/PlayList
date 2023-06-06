@@ -163,12 +163,16 @@ export default class App extends Component {
     const oldState = [...this.state.checkedTreeState];
     let added: any[] = [];
     let removed: any[] = [];
-    
     if (targetNode?.parent?.className === "lastLeaf" || targetNode?.value.startsWith('codeset')) {
       if (targetNode?.checked) {
-        added = [targetNode.value];
+        added = checked.filter((x: string) => (!oldState.includes(x)));
       } else {
-        removed = [targetNode.value];
+        if (targetNode.value.startsWith('group')) {
+          const numInGroup = targetNode.parent.children.find((e: any) => e.value.includes('numInGroup'));
+          removed = [targetNode.value, numInGroup?.value || ""];
+        } else {
+          removed = [targetNode.value];
+        }
       }
     } else {
       if (targetNode?.checked) {
