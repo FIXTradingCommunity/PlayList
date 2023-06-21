@@ -131,7 +131,7 @@ export default class App extends Component {
   private configFile: ConfigFile | undefined = undefined;
   private referenceConfigFile: File | undefined = undefined;
   private inputConfigProgress: HTMLElement | undefined = undefined;
-  
+
   constructor(props: {}) {
     super(props);
     window.addEventListener("offline", (event: any) => {
@@ -152,7 +152,7 @@ export default class App extends Component {
       });;
     };
     this.errorHandler = ErrorHandler.getInstance();
-    
+
   }
 
   checkTreeNodeStart(checked: Array<string>, targetNode: any) {
@@ -177,13 +177,13 @@ export default class App extends Component {
     } else {
       if (targetNode?.checked) {
       added = checked.filter((x: string) => (!oldState.includes(x)));
-      } else if (targetNode?.children) {    
+      } else if (targetNode?.children) {
         removed = [...targetNode.children.map((x: any) => x.value), targetNode.value];
       } else {
         removed = [targetNode.value]// oldState.filter((y: string) => (!checked.includes(y)));
       }
     }
-    
+
     if (this.playlist) {
       const runner = this.playlist;
       let updatedValues = !!added.length ? runner.checkValues(oldState, added) : runner.newUncheckValues(oldState, removed);
@@ -193,7 +193,7 @@ export default class App extends Component {
         treeData: updatedValues.newTree,
         checkedTreeState: [...updatedValues.newCheckedList],
         downloadHref: "",
-        downloadUrl: "", 
+        downloadUrl: "",
         results: undefined,
         showResults: false
       });
@@ -207,11 +207,11 @@ export default class App extends Component {
       activeCleanApp: true,
     });
   }
-  public render() { 
+  public render() {
     return (
       <div className="App">
         <CircularIndeterminate showCircular={this.state.showCircularProgress} />
-        <BasicModal 
+        <BasicModal
           title={this.state.modalTitle}
           message={this.state.modalMessage}
           showModal={this.state.showModal}
@@ -338,7 +338,7 @@ export default class App extends Component {
             )}
           </div>
           {this.state.treeData.length > 0 && (
-            <> 
+            <>
               <div className="treeContainer">
                 <h2 className="treeTitle" >Select Your Content</h2>
                 <h3 className="treeReference">(All elements sorted alphabetically. Greyed out items are deprecated)</h3>
@@ -386,7 +386,7 @@ export default class App extends Component {
               onClick={this.handleDownloadClick.bind(this)}
             >
               { this.state.downloaded ? "Downloaded" : "Download File"}
-            </a> : 
+            </a> :
             <button className="submitButton closeResultsButton" onClick={this.closeResults}>
               Close Results
             </button>
@@ -437,46 +437,46 @@ export default class App extends Component {
       this.setState({showModal: true});
       this.playlist.updateLastCodesetItem();
     }
-    if (this.state.showCircularProgress && !this.state.isConfigFile) { 
+    if (this.state.showCircularProgress && !this.state.isConfigFile) {
       setTimeout(() => {
         this.checkTreeNode(this.state.checked, this.state.targetNode);
       }, 100)
-    } 
+    }
     if (this.playlist && this.playlist.lastCodesetItem) {
       this.setState({showModal: true});
       this.playlist.updateLastCodesetItem();
-    } 
-    const nodes: any = document.querySelectorAll(".rct-node-expanded");  
+    }
+    const nodes: any = document.querySelectorAll(".rct-node-expanded");
     for(let i = 0; i < nodes.length; i++) {
-      if (nodes[i]) {       
+      if (nodes[i]) {
         const doc2: any = nodes[i].querySelector(".rct-title")
         if (doc2 && doc2.innerText === 'CODESETS') {
-          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
-          for (let checkbox of allFirstCheckbox) { 
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");
+          for (let checkbox of allFirstCheckbox) {
             checkbox.disabled = true;
             checkbox.className="disabledCheckbox";
           }
         }
         if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
-          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");      
-          for (let checkbox of allFirstCheckbox) { 
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");
+          for (let checkbox of allFirstCheckbox) {
             checkbox.className="disabledCheckbox";
           }
         }
         if (doc2 && doc2.innerText === 'FIELDS') {
-          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");      
-          for (let checkbox of allFirstCheckbox) {  
+          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");
+          for (let checkbox of allFirstCheckbox) {
             checkbox.className="disabledCheckbox";
           }
         }
       }
     }
-      
+
     if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
       const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
-      for (let checkbox of allFirstCheckbox) { 
-        checkbox.disabled = true;   
-        checkbox.className="disabledCheckbox";   
+      for (let checkbox of allFirstCheckbox) {
+        checkbox.disabled = true;
+        checkbox.className="disabledCheckbox";
       }
     }
   };
@@ -572,7 +572,7 @@ export default class App extends Component {
         showAlerts: false,
         readingFile: true,
         downloadHref: "",
-        downloadUrl: "", 
+        downloadUrl: "",
         downloaded: false,
         results: undefined,
         showResults: false,
@@ -637,23 +637,27 @@ export default class App extends Component {
   }
 
   private async readConfigFileOrchestra(): Promise<void> {
-   if (this.referenceConfigFile && this.inputConfigProgress && this.outputProgress) {
-     const runner: ConfigFile = new ConfigFile(
-       this.referenceConfigFile,
-       this.inputConfigProgress,
-       this.outputProgress,
-       this.showProgress
-       );
-     this.configFile = runner;
-     try {
+    if (this.referenceConfigFile && this.inputConfigProgress && this.outputProgress) {
+      const runner: ConfigFile = new ConfigFile(
+        this.referenceConfigFile,
+        this.inputConfigProgress,
+        this.outputProgress,
+        this.showProgress
+      );
+    this.configFile = runner;
+    try {
       // Read local config file.
-      const newCheckedConfigFileKeys = await runner.runReader();
-      const filteredCheckedConfigFileKeys = this.checkIfExistInTree(this.state.treeData, newCheckedConfigFileKeys);
+      const configKeys = await runner.runReader();
+      const filteredCheckedConfigFileKeys = this.checkIfExistInTree(this.state.treeData, configKeys.newCheckedConfigFileKeys);
       // Removing duplicated elements from the checked list.
       const dataArr = new Set([...filteredCheckedConfigFileKeys, ...this.state.checkedTreeState]);
       const updatedValues = [...dataArr];
       this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isConfigFile: false });
-     } catch (err) {
+      if (configKeys.newNumInGroupConfigFileKeys.length) {
+        const updatedNumInGroupValues = this.playlist?.checkValues(this.state.checkedTreeState, configKeys.newNumInGroupConfigFileKeys);
+        this.setState({ readingFile: false, checkedTreeState: updatedNumInGroupValues?.newCheckedList || [] });
+      }
+    } catch (err) {
       const error = err as {name: string, message: string}
       this.setState({ showCircularProgress: false, isConfigFile: false })
       this.errorHandler?.captureException(error);
@@ -662,9 +666,9 @@ export default class App extends Component {
         message: this.setMessageError(error?.message ?? error)
       };
       this.setState({ showAlerts: true });
-     }
-   }
- }
+    }
+  }
+}
 
   private openResults = () => {
     this.setState({
@@ -679,11 +683,11 @@ export default class App extends Component {
 
   private async createOrchestra(): Promise<void> {
     this.setState({
-      creatingFile: true, 
+      creatingFile: true,
       showAlerts: false,
       readingFile: true,
       downloadHref: "",
-      downloadUrl: "", 
+      downloadUrl: "",
       downloaded: false,
       results: undefined,
       showResults: false
@@ -699,7 +703,7 @@ export default class App extends Component {
         if (this.outputProgress instanceof ProgressBar) {
           this.outputProgress.setProgress(0);
         }
-        
+
       } catch (err) {
         const error = err as {name: string, message: string}
         this.errorHandler?.captureException(error);
