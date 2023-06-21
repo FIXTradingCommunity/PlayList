@@ -69,11 +69,11 @@ export default class Playlist {
     return sortedChildren.sort((a: any, b: any) => {
       const labelA = Number.parseInt(a.label?.split("-")[0]);
           const labelB = Number.parseInt(b.label?.split("-")[0]);
-           if (isNaN(labelA) && isNaN(labelB)) {
-             return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
-           } else if (!isNaN(labelA) && !isNaN(labelB)){
+          if (isNaN(labelA) && isNaN(labelB)) {
+            return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
+          } else if (!isNaN(labelA) && !isNaN(labelB)) {
             return labelA-labelB
-           } else {return 0}
+          } else {return 0}
     })
   }
 
@@ -85,7 +85,7 @@ export default class Playlist {
       this.inputFile = input;
       const jsonDom = convert.xml2js(inputDom);
       this.mappedData = Utility.mapOrchestraDom(jsonDom.elements[0].elements)
-      const tree = Utility.createInitialTree(this.mappedData);      
+      const tree = Utility.createInitialTree(this.mappedData);
       this.keys = tree.mappedKeys;
       const sortedTree = this.sortTree(tree.initialTree)
       if (!!tree.duplicateValues.length) {
@@ -122,7 +122,7 @@ export default class Playlist {
     [key: string]: Array<string> | any
   } => {
     let newChecked = [...checked];
-    const messegesKey = keysAdded.find(key => key.includes("message:"))  
+    const messegesKey = keysAdded.find(key => key.includes("message:"))
     if (messegesKey && messegesKey.length > 0) {
       const messageHeaderTrailer = keysAdded[0].split(/-\w/g)[0]
       this.addCheckedReference(newChecked, [
@@ -139,7 +139,7 @@ export default class Playlist {
     });
     const newTree = this.updateFieldsNode(checkedFields);
     this.mainTreeNode = newTree;
-    
+
     return { newCheckedList, newTree };
   }
 
@@ -170,11 +170,11 @@ export default class Playlist {
   }
 
   private checkKeys(checked: Array<string>, key: string) {
-    if (this.keys[key]) { 
+    if (this.keys[key]) {
       if (this.keys[key].filter(x => checked.includes(x)).length === 0) {
         const keysFilter = this.keys[key].filter((k) => (
           !checked.includes(k) &&
-          !(k.startsWith('codeset') && 
+          !(k.startsWith('codeset') &&
           checked.find((checkedKey) => checkedKey.startsWith(k)))
         ));
         this.addCheckedReference(checked, keysFilter);
@@ -194,8 +194,8 @@ export default class Playlist {
       );
       const { fieldsOut } = fieldsObject;
       let treeIndex = -1;
-      const fieldsOutIndex = newTree.findIndex((node) => node.value === 'FieldsOut');   
-      if (fieldsOutIndex > -1) { 
+      const fieldsOutIndex = newTree.findIndex((node) => node.value === 'FieldsOut');
+      if (fieldsOutIndex > -1) {
         treeIndex = fieldsOutIndex;
         newTree.splice(fieldsOutIndex, 1)
       }
@@ -205,7 +205,7 @@ export default class Playlist {
     }
     return newTree;
   }
-  
+
   public async runCreator(orchestraFileName: string, selectedItems: Array<string>): Promise<Blob> {
     try {
       if (this.inputFile && selectedItems.length > 0) {
@@ -223,7 +223,7 @@ export default class Playlist {
         output.dom = this.inputFile.cloneDom();
 
         const dataModel = Utility.groupSelectedItems(selectedItems, this.mappedData.groups);
-      
+
         output.updateDomFromModel(dataModel, this.outputProgress);
         if (this.onFinish) {
             this.onFinish(output);
@@ -270,8 +270,8 @@ export default class Playlist {
       newKeysRemoved = this.recursiveFindValuesToUncheck(keysRemoved, checked);
       newChecked = newChecked.filter((item) => !newKeysRemoved.includes(item));
       // remove form newKeysRemoved all the values that not start with group:, section:, component: and filed: and include "->"
-      const newKeysRemoved1: Array<string> = []; 
-      const newKeysRemoved2: Array<string> = []; 
+      const newKeysRemoved1: Array<string> = [];
+      const newKeysRemoved2: Array<string> = [];
       newKeysRemoved.forEach((item) => (
         (
           item.startsWith("group:")
@@ -280,7 +280,7 @@ export default class Playlist {
           || item.startsWith("component:")
           || item.startsWith("filed:")
         ) && !item.includes("->")) ? newKeysRemoved1.push(item) : newKeysRemoved2.push(item));
-        
+
         // check if each item in newChecked include some item of newKeysRemoved, if it's true, remove it from newChecked
       if (newKeysRemoved1.length) {
         newChecked.forEach((item) => {
@@ -324,7 +324,7 @@ export default class Playlist {
       }
     });
 
-    numInGroups = numInGroups.filter((item) => 
+    numInGroups = numInGroups.filter((item) =>
       !groupKeys.includes(item.split("-numInGroup->")[0])
     )
     numInGroups.forEach((item) => {
@@ -351,7 +351,7 @@ export default class Playlist {
     })
     return headerTrailerValuesToRemove;
   }
-    
+
 
 
   // Check if the value to remove is the last codeset value
@@ -361,14 +361,14 @@ export default class Playlist {
       const splittedCodesetKey = keysRemoved[0].split('-');
       const totalCodeset = checked.filter(c => c.startsWith(splittedCodesetKey[0]) && c.includes("-"))
       if (totalCodeset.length === 1) {
-        this.updateLastCodesetItem(); 
+        this.updateLastCodesetItem();
         return true;
       }
     }
     return false;
   }
 
-  // create function deleteValuesUsedOnMoreThanOneValue to check if values in splittedKeyToRemove array are included in more than one value in keyToRemoveWithArrow and remove them from splittedKeyToRemove  
+  // create function deleteValuesUsedOnMoreThanOneValue to check if values in splittedKeyToRemove array are included in more than one value in keyToRemoveWithArrow and remove them from splittedKeyToRemove
   public deleteValuesUsedOnMoreThanOneValue = (splittedKeyToRemove: Array<string>, newChecked: Array<string>): Array<string> => {
     let newSplittedKeyToRemove: Array<string> = [];
     splittedKeyToRemove.forEach((item) => {
@@ -401,7 +401,7 @@ export default class Playlist {
 
     // to evitate infinite recursive loop, remove from keyToRemoveWithArrow all the values that includes group:, section:, component: and filed:
     filteredKeyToRemoveWithoutArrow = keyToRemoveWithoutArrow.filter((item) => !item.includes("group:") && !item.includes("message:") && !item.includes("section:") && !item.includes("component:") && !item.includes("filed:"));
-  
+
     let splittedKeyToRemove: Array<string> = [];
     keyToRemoveWithArrow.forEach((key) => {
       splittedKeyToRemove.push(key.split("->")[key.split("->").length - 1]);
