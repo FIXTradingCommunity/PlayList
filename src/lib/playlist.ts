@@ -121,6 +121,8 @@ export default class Playlist {
   ): {
     [key: string]: Array<string> | any
   } => {
+    console.log("keysAdded", keysAdded);
+
     let newChecked = [...checked];
     const messegesKey = keysAdded.find(key => key.includes("message:"))
     if (messegesKey && messegesKey.length > 0) {
@@ -170,6 +172,8 @@ export default class Playlist {
   }
 
   private checkKeys(checked: Array<string>, key: string) {
+    console.log("key", key);
+
     if (this.keys[key]) {
       if (this.keys[key].filter(x => checked.includes(x)).length === 0) {
         const keysFilter = this.keys[key].filter((k) => (
