@@ -22,6 +22,8 @@ export default class Playlist {
   private mainTreeNode: TreeControl = [];
   private blob: Blob | undefined = undefined;
   private firstKeyIsCodeset: boolean = false;
+  private groupWithNumInGroupFound: string[] = [];
+  private numInGroupValues: string[] = [];
   public onFinish: undefined | ((output: OrchestraFile) => void);
   public lastCodesetItem: boolean = false;
   public parseXMLError: string | null = null;
@@ -115,12 +117,12 @@ export default class Playlist {
       // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
-  public checkValues = (
+  public checkValues(
     checked: Array<string>,
     keysAdded: Array<string>
   ): {
     [key: string]: Array<string> | any
-  } => {
+  } {
     let newChecked = [...checked];
     const messegesKey = keysAdded.find(key => key.includes("message:"))
     if (messegesKey && messegesKey.length > 0) {
@@ -133,12 +135,15 @@ export default class Playlist {
     } else {
       this.addCheckedReference(newChecked, keysAdded);
     };
-    const newCheckedList = uniq(newChecked);
+    const newCheckedList = uniq([...newChecked, ...this.numInGroupValues]);
     const checkedFields = newCheckedList.filter((item) => {
       return item.split('->').length === 1 && item.includes('field:');
     });
     const newTree = this.updateFieldsNode(checkedFields);
     this.mainTreeNode = newTree;
+
+    this.numInGroupValues = [];
+    this.groupWithNumInGroupFound = [];
 
     return { newCheckedList, newTree };
   }
@@ -148,10 +153,11 @@ export default class Playlist {
       keysToAdd.forEach((key) => {
         if (!checked.includes(key) && key.includes("group:")) {
           const group = key.split('-')[0];
-          if (this.keys[group]) {
+          if (group.startsWith("group") && this.keys[group] && !this.groupWithNumInGroupFound.includes(group)) {
+            this.groupWithNumInGroupFound.push(group);
             const numInGroup = this.keys[group].find((e) => e.includes("numInGroup"));
             if (numInGroup) {
-              checked.push(numInGroup, numInGroup.split('->')[1]);
+              this.numInGroupValues.push(numInGroup, numInGroup.split('->')[1]);
             }
           }
         }
@@ -178,7 +184,7 @@ export default class Playlist {
           checked.find((checkedKey) => checkedKey.startsWith(k)))
         ));
         this.addCheckedReference(checked, keysFilter);
-      } else if (key.startsWith('field')) {
+      } else if (key.startsWith('field') || key.startsWith('group')) {
         this.addCheckedReference(checked, this.keys[key])
       }
     }
