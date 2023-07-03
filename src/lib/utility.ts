@@ -74,9 +74,31 @@ export default class Utility {
 
     const fieldNames = fields && fields.elements && fields.elements.reduce((fields: { [key: string]: string }, field) => {
       const { id, name, type } = field.attributes;
-      fields[id] = `${name}(${id}) - Type ${type}`;
+      // TODO PLAY-27: apparently here we should work adding the type of the field
+      let datatypeName = type;
+      datatypes?.elements.filter((datatype: any) => (
+        datatype.attributes.name !== "NumInGroup"
+      )).map((datatype: any) => {
+        const { name, baseType  } = datatype.attributes;
+        if (type === name) {
+        datatypeName = baseType
+          ? `${name} - Base Type ${baseType}`
+          : `Type ${name}`;
+        }
+      })
+      codesets?.elements.map((codeset: any) => {
+        const { name, type } = codeset.attributes;
+        if (datatypeName === name) {
+          datatypeName = `${name} - Type ${type}`;
+        }
+      })
+      if (field.attributes.unionDataType) {
+        datatypeName = `${datatypeName} - Union ${field.attributes.unionDataType}`;
+      }
+      fields[id] = `${name}(${id}) - ${datatypeName}`;
       return fields;
     }, {});
+
     const componentNames = components && components.elements && components.elements.reduce((components: { [key: string]: string }, component) => {
       const { id, name } = component.attributes;
       components[id] = `${name} - Component`;
@@ -195,7 +217,7 @@ export default class Utility {
               }
           }
           break;
-        default: 
+        default:
           break;
       }
       return data;
@@ -211,9 +233,9 @@ export default class Utility {
     return dataModel;
   }
 
-  public static getReferenceMessageError = (refName: string, id: number): string => 
+  public static getReferenceMessageError = (refName: string, id: number): string =>
     `Missing definition for ${refName.includes('field') ? 'field' : refName.includes('group') ? 'group' : 'component'} reference: ${id}`
-  
+
 
   public static createInitialTree(data: { [key: string]: any }) {
     const res: TreeControl = [];
@@ -246,13 +268,13 @@ export default class Utility {
     }
 
      // MAP MESSAGES
-     if (messages && messages.elements) {
+    if (messages && messages.elements) {
       const messagesObject: ThreeChildrenTC = {
         value: 'Messages',
         label: 'MESSAGES',
         children: []
-      };     
-        messages.elements.forEach((message: any) => {  
+      };
+        messages.elements.forEach((message: any) => {
           const { name, msgType, scenario } = message.attributes;
           let messageKey = `message:${name}`;
           treeValues.push(messageKey);
@@ -263,7 +285,7 @@ export default class Utility {
 
           if (messageStructure) {
             const newMessageChildren: any = [];
-            messageStructure.elements.filter((msgStc: any) => 
+            messageStructure.elements.filter((msgStc: any) =>
               msgStc.name === "fixr:fieldRef" || msgStc.name === "fixr:groupRef" || msgStc.name === "fixr:componentRef"
             ).map((ref: any) => {
               const refName = ref.name.split(":")[1];
@@ -272,13 +294,14 @@ export default class Utility {
               treeValues.push(`${messageKey}:${refName}:${scenario ?? ""}:${refKey}`)
               if (mappedKeys[messageKey]) {
                 mappedKeys[messageKey].push(refKey, refValue);
-              } 
+              }
               else {
                 mappedKeys[messageKey] = [refKey, refValue];
               }
               if (refValue.includes("component:1024->component:1024") || refValue.includes("component:1025->component:1025")) {
-               return ref; 
+                return ref;
               }
+
               newMessageChildren.push({
                 value: refValue,
                 label: getReferencesNames(refName, ref.attributes.id || ''),
@@ -298,11 +321,11 @@ export default class Utility {
         });
       messagesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
       messagesObject.children.forEach((e: any) => {
-        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
       })
       res.push(messagesObject);
     }
-  
+
     // MAP GROUPS
     if (groups && groups.elements) {
       const groupsObject: TwoChildrenTC = {
@@ -316,7 +339,7 @@ export default class Utility {
         treeValues.push(`group:${name}`);
         const numInGroup = group.elements.filter((e: any) => e.name === "fixr:numInGroup")[0];
         const noLabel = getReferencesNames("fieldRef", numInGroup.attributes.id || '').split(" - ")[0];
-        const newGroupChildren = group.elements.filter((grp: any) => 
+        const newGroupChildren = group.elements.filter((grp: any) =>
           grp.name === "fixr:fieldRef" || grp.name === "fixr:groupRef" || grp.name === "fixr:componentRef"
         ).map((ref: any) => {
           const refName = ref.name.split(":")[1];
@@ -325,11 +348,11 @@ export default class Utility {
           treeValues.push(`${groupKey}:${refName}:${scenario ?? ""}:${refKey}`)
           if (mappedKeys[groupKey]) {
             mappedKeys[groupKey].push(refKey, refValue);
-          } 
+          }
           else {
             mappedKeys[groupKey] = [refKey, refValue];
           }
-          const label = getReferencesNames(refName, ref.attributes.id || '');  
+          const label = getReferencesNames(refName, ref.attributes.id || '');
           if (!label) throw new Error(this.getReferenceMessageError(refName, ref?.attributes?.id))
           return {
             value: refValue,
@@ -354,10 +377,10 @@ export default class Utility {
           });
         }
       });
-     
+
       groupsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
       groupsObject.children.forEach((e: any) => {
-        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
       })
 
       res.push(groupsObject);
@@ -374,7 +397,7 @@ export default class Utility {
         const { id, name, deprecated, scenario } = component.attributes;
         const componentKey = `component:${id}`;
         treeValues.push(componentKey);
-        const newComponentChildren = component.elements.filter((cmp: any) => 
+        const newComponentChildren = component.elements.filter((cmp: any) =>
           cmp.name === "fixr:fieldRef" || cmp.name === "fixr:groupRef" || cmp.name === "fixr:componentRef"
         ).map((ref: any) => {
           const refName = ref.name.split(":")[1];
@@ -383,7 +406,7 @@ export default class Utility {
           const refValue = `${componentKey}-${refKey}->${refKey}`;
           if (mappedKeys[componentKey]) {
             mappedKeys[componentKey].push(refKey, refValue);
-          } 
+          }
           else {
             mappedKeys[componentKey] = [refKey, refValue];
           }
@@ -407,7 +430,7 @@ export default class Utility {
 
       componentsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
       componentsObject.children.forEach((e: any) => {
-        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
       })
 
       res.push(componentsObject);
@@ -439,7 +462,7 @@ export default class Utility {
                   treeValues.push(`${codesetKey}:code:${name}`)
                   if (mappedKeys[codesetKey]) {
                     mappedKeys[codesetKey].push(codeKey);
-                  } 
+                  }
                   else {
                     mappedKeys[codesetKey] = [codeKey];
                   }
@@ -464,7 +487,7 @@ export default class Utility {
 
       codesetsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
       codesetsObject.children.forEach((e: any) => {
-        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
       })
 
       codesetsObject.children.forEach((codeset: any) => {
@@ -506,7 +529,7 @@ export default class Utility {
             const datatypeKey = `datatype:${name}`;
             if (mappedKeys[datatypeKey]) {
               mappedKeys[datatypeKey].push(datatypeKey);
-            } 
+            }
             else {
               mappedKeys[datatypeKey] = [datatypeKey];
             }
@@ -521,7 +544,7 @@ export default class Utility {
 
       datatypesObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
       datatypesObject.children.forEach((e: any) => {
-        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)         
+        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
       })
 
       res.push(datatypesObject);
@@ -594,7 +617,7 @@ export default class Utility {
       disabled: true,
       children: []
     }];
-    
+
     fields?.elements?.forEach((field: any) => {
       const { id, name, type, deprecated } = field?.attributes;
       const fieldKey = `field:${id}`;
@@ -611,11 +634,13 @@ export default class Utility {
       }
       if (mappedKeys[fieldKey]) {
         mappedKeys[fieldKey].push(...mapKeys);
-      } 
+      }
       else {
         mappedKeys[fieldKey] = [...mapKeys];
       }
-
+      if (field.attributes.unionDataType) {
+        typeRef = `${typeRef} - Union ${field.attributes.unionDataType}`;
+      }
       const fieldName = `${id} - ${name} - ${typeRef}`;
       const fieldNode = {
         value: fieldKey,
