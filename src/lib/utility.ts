@@ -376,13 +376,11 @@ export default class Utility {
             className: deprecated ? 'deprecatedItem' : 'lastLeaf'
           });
         }
-      });
-
+      });      
       groupsObject.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0);
       groupsObject.children.forEach((e: any) => {
-        e.children && e.children.sort((a: any, b: any) => a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
+        e.children && e.children.sort((a: any, b: any) => a.label.includes("NumInGroup") || b.label.includes("NumInGroup") ? -1 : a.label > b.label ? 1 : a.label < b.label ? -1 : 0)
       })
-
       res.push(groupsObject);
     }
 
@@ -552,6 +550,7 @@ export default class Utility {
     const dataArr = new Set(treeValues);
     const result = [...dataArr];
     const duplicateValues: string[] | [] = treeValues.length !== result.length ? this.getDuplicates(treeValues) : [];
+
     return {
       initialTree: res,
       mappedKeys,
@@ -631,6 +630,9 @@ export default class Utility {
       else {
         typeRef = `Type ${type}`;
         mapKeys.push(`datatype:${type}`);
+      }
+      if (field?.attributes?.unionDataType) {
+        mapKeys.push(`datatype:${field?.attributes?.unionDataType}`);
       }
       if (mappedKeys[fieldKey]) {
         mappedKeys[fieldKey].push(...mapKeys);

@@ -163,8 +163,6 @@ export default class App extends Component {
     const oldState = [...this.state.checkedTreeState];
     let added: any[] = [];
     let removed: any[] = [];
-    console.log("targetNode?.value", targetNode?.value);
-
     if (targetNode?.parent?.className === "lastLeaf" || targetNode?.value.startsWith('codeset')) {
       if (targetNode?.checked) {
         added = checked.filter((x: string) => (!oldState.includes(x)));
@@ -178,13 +176,11 @@ export default class App extends Component {
       }
     } else {
       if (targetNode?.checked) {
-        console.log("entro");
-
       added = checked.filter((x: string) => (!oldState.includes(x)));
       } else if (targetNode?.children) {
         removed = [...targetNode.children.map((x: any) => x.value), targetNode.value];
       } else {
-        removed = [targetNode.value]// oldState.filter((y: string) => (!checked.includes(y)));
+        removed = [targetNode.value] // oldState.filter((y: string) => (!checked.includes(y)));
       }
     }
 
@@ -341,7 +337,7 @@ export default class App extends Component {
               </div>
             )}
           </div>
-          {this.state.treeData.length > 0 && (
+          {!!this.state.treeData.length && (
             <>
               <div className="treeContainer">
                 <h2 className="treeTitle" >Select Your Content</h2>
