@@ -51,33 +51,34 @@ export default class Playlist {
     this.duplicateValuesError = null;
   }
 
-  private sortTree(tree: Array<any>) {
-    const sortedTree = tree.map((node: any) => {
-      return {
-        ...node,
-        children: this.sortChildren(node.children),
-      }
-    })
-    return sortedTree;
-  }
+  // it's ordering into utility.createInitialTree function
+  // private sortTree(tree: Array<any>) {
+  //   const sortedTree = tree.map((node: any) => {
+  //     return {
+  //       ...node,
+  //       children: this.sortChildren(node.children),
+  //     }
+  //   })
+  //   return sortedTree;
+  // }
 
-  private sortChildren(children: any) {
-    const sortedChildren = children.map((node: any) => {
-      if (node.children) {
-        return {...node, children: this.sortChildren(node.children)}
-      };
-      return node;
-    });
-    return sortedChildren.sort((a: any, b: any) => {
-      const labelA = Number.parseInt(a.label?.split("-")[0]);
-          const labelB = Number.parseInt(b.label?.split("-")[0]);
-          if (isNaN(labelA) && isNaN(labelB)) {
-            return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
-          } else if (!isNaN(labelA) && !isNaN(labelB)) {
-            return labelA-labelB
-          } else {return 0}
-    })
-  }
+  // private sortChildren(children: any) {
+  //   const sortedChildren = children.map((node: any) => {
+  //     if (node.children) {
+  //       return {...node, children: this.sortChildren(node.children)}
+  //     };
+  //     return node;
+  //   });
+  //   return sortedChildren.sort((a: any, b: any) => {
+  //     const labelA = Number.parseInt(a.label?.split("-")[0]);
+  //         const labelB = Number.parseInt(b.label?.split("-")[0]);
+  //         if (isNaN(labelA) && isNaN(labelB)) {
+  //           return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
+  //         } else if (!isNaN(labelA) && !isNaN(labelB)) {
+  //           return labelA-labelB
+  //         } else {return 0}
+  //   })
+  // }
 
   public async runReader(): Promise<TreeControl | string> {
     try {
@@ -89,16 +90,16 @@ export default class Playlist {
       this.mappedData = Utility.mapOrchestraDom(jsonDom.elements[0].elements)
       const tree = Utility.createInitialTree(this.mappedData);
       this.keys = tree.mappedKeys;
-      const sortedTree = this.sortTree(tree.initialTree)
+      // const sortedTree = this.sortTree(tree.initialTree)
       if (!!tree.duplicateValues.length) {
         this.duplicateValuesError = tree.duplicateValues;
         return new Promise<string>((resolve, reject) =>
         reject("")
       )
       }
-      this.mainTreeNode = sortedTree;
+      this.mainTreeNode = tree.initialTree;
       return new Promise<TreeControl>(resolve =>
-        resolve(sortedTree)
+        resolve(tree.initialTree)
       );
     } catch (e) {
       if (String(e).includes("reference")) {
@@ -114,7 +115,7 @@ export default class Playlist {
       )
     }
   }
-      // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
+    // Upon creation of the Orchestra output file, StandardHeader and StandardTrailer components need to automatically be added to the messages that were selected.
     // For this we create the hardcoded headerTrailer object with the necessary values if the condition is met.
     // component:1024 and component:1025 represent the StandardHeader and StandardTrailer value groups.
   public checkValues(
@@ -122,7 +123,7 @@ export default class Playlist {
     keysAdded: Array<string>
   ): {
     [key: string]: Array<string> | any
-  } {
+  } {    
     let newChecked = [...checked];
     const messegesKey = keysAdded.find(key => key.includes("message:"))
     if (messegesKey && messegesKey.length > 0) {
@@ -357,9 +358,7 @@ export default class Playlist {
     })
     return headerTrailerValuesToRemove;
   }
-
-
-
+  
   // Check if the value to remove is the last codeset value
   public checkIfLastCodesetValue = (keysRemoved: Array<string>, checked: Array<string>): boolean => {
     if (keysRemoved?.[0]?.startsWith("codeset")) {
