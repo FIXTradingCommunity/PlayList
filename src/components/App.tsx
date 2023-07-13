@@ -187,7 +187,9 @@ export default class App extends Component {
     if (this.playlist) {
       const runner = this.playlist;
       let updatedValues = !!added.length ? runner.checkValues(oldState, added) : runner.newUncheckValues(oldState, removed);
-
+      if (removed.length) {
+        updatedValues = runner.checkValues([...updatedValues.newCheckedList], [...updatedValues.newCheckedList]);
+      }
       this.setState({
         showCircularProgress: false,
         treeData: updatedValues.newTree,
