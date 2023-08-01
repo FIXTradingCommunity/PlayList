@@ -23,9 +23,8 @@
 .resultsContainer {
   position: relative;
   z-index: 30;
-  /*  Uncomment this lines when adding content to Modal */
-  /* width: 50%; */
-  /* min-height: 50%; */
+  width: 50%;
+  min-height: 50%;
   background-color: white;
   border-radius: 20px;
   padding: 30px;
@@ -69,5 +68,5 @@
 .downloadButtonContainer {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
 }

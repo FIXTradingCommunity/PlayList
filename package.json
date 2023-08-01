@@ -1,6 +1,6 @@
 {
   "name": "playlist",
-  "version": "1.1.1",
+  "version": "1.2",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.7.1",
@@ -19,9 +19,9 @@
     "env-cmd": "^10.1.0",
     "jsonwebtoken": "^8.5.1",
     "query-string": "^6.8.1",
-    "react": "^17.0.0",
+    "react": "^17.0.2",
     "react-checkbox-tree": "^1.7.2",
-    "react-dom": "^17.0.0",
+    "react-dom": "^17.0.2",
     "react-dropzone": "^10.2.1",
     "react-scripts": "^3.4.1",
     "serve": "^11.3.2",

@@ -42,33 +42,38 @@ export default class ConfigFile {
     return sortedChildren.sort((a: any, b: any) => {
       const labelA = Number.parseInt(a.label.split("-")[0]);
           const labelB = Number.parseInt(b.label.split("-")[0]);
-           if (isNaN(labelA) && isNaN(labelB)) {
-             return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
-           } else if (!isNaN(labelA) && !isNaN(labelB)){
+          if (isNaN(labelA) && isNaN(labelB)) {
+            return a.label > b.label ? 1 : a.label < b.label ? -1 : 0
+          } else if (!isNaN(labelA) && !isNaN(labelB)){
             return labelA-labelB
-           } else {return 0}
+          } else {return 0}
     })
   }
 
-  public async runReader(): Promise<string[]> {
+  public async runReader(): Promise<{newCheckedConfigFileKeys: string[], newNumInGroupConfigFileKeys: string[]}> {
     try {
-      
       const input = new OrchestraFile(this.referenceFile, false, this.inputProgress, this.progressFunc);
       // read local reference Orchestra file
       const inputDom = await input.readFile();
       const jsonDom = convert.xml2js(inputDom);
       this.mappedData = Utility.mapOrchestraDom(jsonDom.elements[0].elements)
-      const tree = Utility.createInitialTree(this.mappedData);      
+      const tree = Utility.createInitialTree(this.mappedData);
       this.keys = tree.mappedKeys;
       const newCheckedConfigFileKeys: string[] = [];
+      const newNumInGroupConfigFileKeys: string[] = [];
       for (const key in this.keys) {
-        this.keys[key].forEach(key => newCheckedConfigFileKeys.push(key))
+        this.keys[key].forEach(key => {
+          key.includes("numInGroup->")
+            ? newNumInGroupConfigFileKeys.push(key)
+            : newCheckedConfigFileKeys.push(key)
+        })
       }
-      return new Promise<string[]>(resolve =>
-        resolve(newCheckedConfigFileKeys)
+
+      return new Promise<{newCheckedConfigFileKeys: string[], newNumInGroupConfigFileKeys: string[]}>(resolve =>
+        resolve({ newCheckedConfigFileKeys, newNumInGroupConfigFileKeys })
       );
     } catch (e) {
-      return new Promise<string[]>((resolve, reject) =>
+      return new Promise<any>((resolve, reject) =>
         reject(e)
       )
     }

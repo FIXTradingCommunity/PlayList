@@ -4,13 +4,13 @@ import "./resultsPage.css";
 
 interface Props {
   results?: {
-    componentScenarios: number;
+    codesets: number;
     components: number;
     fields: number;
+    datatypes: number;
     fixMessageTypes: number;
-    messageScenarios: number;
-    userDefinedFields: number;
-    messagesCount: number;
+    codes: number;
+    groups: number;
   };
   downloadButton: JSX.Element;
   onClose: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -19,33 +19,65 @@ interface Props {
 const ProgressCircle: React.FC<Props> = (props) => {
   const { results, downloadButton, onClose } = props;
 
-  let componentScenarios = 0;
+  let codesets = 0;
   let components = 0;
   let fields = 0;
+  let datatypes = 0;
   let fixMessageTypes = 0;
-  let messageScenarios = 0;
-  let userDefinedFields = 0;
-  let messagesCount = 0;
+  let codes = 0;
+  let groups = 0;
   
   if (results) {
-    componentScenarios = results.componentScenarios;
-    components = results.components;
-    fields = results.fields;
     fixMessageTypes = results.fixMessageTypes;
-    messageScenarios = results.messageScenarios;
-    userDefinedFields = results.userDefinedFields;
-    messagesCount = results.messagesCount;
+    codes = results.codes;
+    groups = results.groups;
+    fields = results.fields;
+    datatypes = results.datatypes;
+    components = results.components;
+    codesets = results.codesets;
+   
   }
 
   return (
     <div className="resultsPageContainer">
-      <button className="resultsPageOverlay" onClick={onClose} />
+      <div className="resultsPageOverlay" />
       <div className="resultsContainer">
-      <div className="downloadButtonContainer">
-        {downloadButton}
+        <button className="closeButton" onClick={onClose}>
+          <img className="closeIcon" src={cancelIcon} alt="close" />
+        </button>
+        <div className="resultsValueContainer no-margin-top">
+          <div className="resultsLabel"># FIX Message Types selected</div>
+          <div className="resultsValue">{fixMessageTypes}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># Groups selected</div>
+          <div className="resultsValue">{groups}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># Components selected</div>
+          <div className="resultsValue">{components}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># Standard Fields selected</div>
+          <div className="resultsValue">{fields}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># Code Sets selected</div>
+          <div className="resultsValue">{codesets}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># Datatypes selected</div>
+          <div className="resultsValue">{datatypes}</div>
+        </div>
+        <div className="resultsValueContainer">
+          <div className="resultsLabel"># Codes selected</div>
+          <div className="resultsValue">{codes}</div>
+        </div>
+        <div className="downloadButtonContainer">
+          {downloadButton}
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 

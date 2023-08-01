@@ -3,21 +3,29 @@
  */
 
 import CodesetModel, { CodeModel } from "./CodesetModel";
-import MessageModel, { ComponentModel, ComponentRef, FieldContext, FieldModel, FieldRef, GroupModel, GroupRef } from "./MessageModel";
+import MessageModel, { ComponentModel, ComponentRef, FieldModel, FieldRef, GroupModel, GroupRef } from "./MessageModel";
 import OrchestraModel, { CodesetsModel, ComponentsModel, FieldsModel, GroupsModel, MessagesModel } from "./OrchestraModel";
 import { IsSupportedfromString, Presence, PresencefromString, StructureModel } from "./StructureModel";
 import { KeyedCollection } from "./KeyedCollection";
 import { xml } from "vkbeautify";
 import { CodesetSelectionModel, ComponentSelectionModel, IdSelectionModel, MessageSelectionModel, NameSelectionModel, SelectionModel, GroupSelectionModel } from "./types";
 
+enum DOMParserSupportedType {
+  TEXT_HTML = "text/html",
+  TEXT_XML = "text/xml",
+  APPLICATION_XML = "application/xml",
+  APPLICATION_XHTML = "application/xhtml+xml",
+  IMAGE_SVG = "image/svg+xml"
+};
+
 export default class OrchestraFile {
-    static readonly MIME_TYPE: SupportedType = "application/xml";
+    static readonly MIME_TYPE: DOMParserSupportedType = DOMParserSupportedType.APPLICATION_XML;
     static readonly NAMESPACE: string = "http://fixprotocol.io/2020/orchestra/repository";
 
     private repositoryStatistics = new KeyedCollection<Number>();
 
     private file: File;
-    private document: Document = new Document();
+    private document: Document | any = new Document();
     private progressNode: HTMLElement | null;
     private progressFunc: (progressNode: HTMLElement, percent: number) => void;
     private appendOnly: boolean;
@@ -67,14 +75,14 @@ export default class OrchestraFile {
         return this.document;
     }
     cloneDom(): Document {
-        const newDocument: Document = this.document.implementation.createDocument(this.document.namespaceURI, //namespace to use
-            null, //name of the root element (or for empty document)
-            null //doctype (null for XML)
+        const newDocument: Document = this.document.implementation.createDocument(this.document.namespaceURI, // namespace to use
+            null, // name of the root element (or for empty document)
+            null // doctype (null for XML)
         );
         const rootNode: Node | null = this.document.documentElement;
         if (rootNode) {
-            const newNode: Node = newDocument.importNode(rootNode, //node to import
-                true //clone its descendants
+            const newNode: Node = newDocument.importNode(rootNode, // node to import
+                true // clone its descendants
             );
             newDocument.appendChild(newNode);
         }
@@ -153,54 +161,6 @@ export default class OrchestraFile {
             this.progressFunc(progressNode, 100);
         }
     }
-    private addDomMessages(messages: MessagesModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const messagesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        const messagesElement: Element = messagesSnapshot.snapshotItem(0) as Element;
-        const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        var countMessagesAdded : number = 0;
-        var countScenariosAdded : number = 0;
-        Array.from(messages.values()).filter(m => m.uses > 0).forEach((message: MessageModel) => {
-            let messageElement: Element | null = null;
-            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
-                const node: Element = nodesSnapshot.snapshotItem(i) as Element;
-                const name: string | null = node.getAttribute("name");
-                const scenario: string = node.getAttribute("scenario") || "base";
-                if (message.name === name && message.scenario === scenario) {
-                    messageElement = node;
-                    const structureElement = messageElement.getElementsByTagName("fixr:structure")[0];
-                    // assume that last element of an existing message is the trailer; insert new elements before it
-                    let insertionPoint: Element | null = structureElement.lastElementChild
-                    this.addDomMembers(structureElement, message, insertionPoint);
-                    break;
-                }
-            }
-            if (!messageElement) {
-                messageElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:message");
-                messageElement.setAttribute("name", message.name);
-                messageElement.setAttribute("scenario", message.scenario);
-                messageElement.setAttribute("id", message.id);
-                messageElement.setAttribute("msgType", message.msgType);
-                messagesElement.appendChild(messageElement);
-                const structureElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:structure");
-                messageElement.appendChild(structureElement);
-                this.addDomMembers(structureElement, message, null);
-                if (message.scenario === "base" )
-                    countMessagesAdded++;
-                else
-                    countScenariosAdded++;
-            }
-            else {
-            const scenario: string | null = messageElement.getAttribute("scenario");
-            if (!scenario || scenario === "base" || scenario === "")
-                countMessagesAdded++;
-            else
-                countScenariosAdded++;
-            }
-        });
-        this.repositoryStatistics.Add("Messages.Added",countMessagesAdded);
-        this.repositoryStatistics.Add("Scenarios.Added",countScenariosAdded);
-    }
     private updateDomMessages(messagesModel: MessageSelectionModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const messagesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -250,91 +210,6 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Messages.Added", countMessagesAdded);
         this.repositoryStatistics.Add("Messages.Removed", countMessagesRemoved);
     }
-    private addDomMembers(structureElement: Element, structure: StructureModel, insertionPoint: Node | null) {
-        const fieldRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:fieldRef");
-        const componentRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:componentRef");
-        const groupRefElements: HTMLCollectionOf<Element> = structureElement.getElementsByTagName("fixr:groupRef");
-        var countMembersAdded : number = 0;
-        structure.members.forEach(m => {
-            if (m.uses > 0) {
-                var found = false;
-                if (m instanceof FieldRef) {
-                    for (let i: number = 0; i < fieldRefElements.length; i++) {
-                        const id: string | null = fieldRefElements[i].getAttribute("id");
-                        const scenario: string | null = fieldRefElements[i].getAttribute("scenario") || "base";
-                        if (m.id === id && m.scenario === scenario) {
-                            found = true;
-                        }
-                    }
-                    if (!found) {
-                        this.addDomFieldRef(m, structureElement, insertionPoint);
-                        countMembersAdded++;
-                    }
-                }
-                else if (m instanceof ComponentRef) {
-                    for (let i: number = 0; i < componentRefElements.length; i++) {
-                        const id: string | null = componentRefElements[i].getAttribute("id");
-                        const scenario: string | null = componentRefElements[i].getAttribute("scenario") || "base";
-                        if (m.id === id && m.scenario === scenario) {
-                            found = true;
-                        }
-                    }
-                    if (!found) {
-                        this.addDomComponentRef(m, structureElement, insertionPoint);
-                        countMembersAdded++;
-                    }
-                }
-                else if (m instanceof GroupRef) {
-                    for (let i: number = 0; i < groupRefElements.length; i++) {
-                        const id: string | null = groupRefElements[i].getAttribute("id");
-                        const scenario: string | null = groupRefElements[i].getAttribute("scenario") || "base";
-                        if (m.id === id && m.scenario === scenario) {
-                            found = true;
-                        }
-                    }
-                    if (!found) {
-                        this.addDomGroupRef(m, structureElement, insertionPoint);
-                        countMembersAdded++;
-                    }
-                }              
-            }
-        });
-        this.repositoryStatistics.Add("Members.Added",countMembersAdded);
-    }
-
-    private addDomGroupRef(m: GroupRef, structureElement: Element, insertionPoint: Node | null): void {
-        const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:groupRef");
-        memberElement.setAttribute("id", m.id);
-        memberElement.setAttribute("presence", m.presence.toString());
-        if (m.scenario !== FieldRef.defaultScenario) {
-            memberElement.setAttribute("scenario", m.scenario);
-        }
-        structureElement.insertBefore(memberElement, insertionPoint);
-    }
-
-    private addDomComponentRef(m: ComponentRef, structureElement: Element, insertionPoint: Node | null): void {
-        const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:componentRef");
-        memberElement.setAttribute("id", m.id);
-        memberElement.setAttribute("presence", m.presence.toString());
-        if (m.scenario !== FieldRef.defaultScenario) {
-            memberElement.setAttribute("scenario", m.scenario);
-        }
-        structureElement.insertBefore(memberElement, insertionPoint);
-    }
-
-    private addDomFieldRef(m: FieldRef, structureElement: Element, insertionPoint: Node | null): void {
-        const memberElement: Element = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:fieldRef");
-        memberElement.setAttribute("id", m.id);
-        memberElement.setAttribute("presence", m.presence.toString());
-        if (m.value) {
-            memberElement.setAttribute("value", m.value);
-        }
-        if (m.field && (m.field.scenario !== FieldRef.defaultScenario)) {
-            memberElement.setAttribute("scenario", m.field.scenario);
-        }
-        structureElement.insertBefore(memberElement, insertionPoint);
-    }
-
     private updateDomMetadata(): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:metadata", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -498,102 +373,6 @@ export default class OrchestraFile {
             messageElement = iterator.iterateNext() as Element;
         }
     }
-    private removeUnusedMessages(messagesModel: MessagesModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-        const elementsToRemove = new Array<Element>();
-        var countMessagesRemoved : number = 0;
-        let messageElement: Element = iterator.iterateNext() as Element;
-        while (messageElement) {
-            const elementName: string = messageElement.localName;
-            if (elementName === "message") {
-                const name: string | null = messageElement.getAttribute("name");
-                const scenario: string = messageElement.getAttribute("scenario") || "base";
-                if (name) {
-                    const key: string = MessageModel.key(name, scenario);
-                    const messageModel: MessageModel | undefined = messagesModel.get(key);
-                    if (!messageModel || messageModel.uses === 0) {
-                        elementsToRemove.push(messageElement);
-                    }
-                }
-            }
-            messageElement = iterator.iterateNext() as Element;
-        }
-        for (let element of elementsToRemove) {
-            const parent = element.parentElement;
-            if (parent) {
-                parent.removeChild(element);
-                countMessagesRemoved++ ;
-            }
-        }
-        this.repositoryStatistics.Add("Messages.Removed",countMessagesRemoved);
-    }
-    private removeUnusedMessageMembers(messagesModel: MessagesModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:messages/fixr:message", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-        const elementsToRemove = new Array<Element>();
-        var countMembersRemoved : number = 0;
-        let messageElement: Element = iterator.iterateNext() as Element;
-        while (messageElement) {
-            let elementName: string = messageElement.localName;
-            if (elementName === "message") {
-                const messageName: string | null = messageElement.getAttribute("name");
-                const scenario: string = messageElement.getAttribute("scenario") || "base";
-                if (messageName) {
-                    const key: string = MessageModel.key(messageName, scenario);
-                    const messageModel: MessageModel | undefined = messagesModel.get(key);
-                    const structureElement: Element | null = messageElement.firstElementChild;
-                    if (structureElement) {
-                        let childElement: Element | null = structureElement.firstElementChild;
-                        while (messageModel && childElement) {
-                            elementName = childElement.localName;
-                            switch (elementName) {
-                                case "fieldRef":
-                                    const id: string | null = childElement.getAttribute("id");
-                                    if (id) {
-                                        const fieldContext: FieldContext | undefined = messageModel.findFieldRef(id);
-                                        if (fieldContext && fieldContext[0].uses === 0) {
-                                            elementsToRemove.push(childElement);
-                                        }
-                                    }
-                                    break;
-                                case "componentRef":
-                                    const componentId: string | null = childElement.getAttribute("id");
-                                    if (componentId) {
-                                        const componentRef: ComponentRef | undefined = messageModel.findComponentRef(componentId);
-                                        if (componentRef && componentRef.uses === 0) {
-                                            elementsToRemove.push(childElement);
-                                        }
-                                    }
-                                    break;
-                                case "groupRef":
-                                    const groupId: string | null = childElement.getAttribute("id");
-                                    if (groupId) {
-                                        const groupRef: GroupRef | undefined = messageModel.findGroupRef(groupId);
-                                        if (groupRef && groupRef.uses === 0) {
-                                            elementsToRemove.push(childElement);
-                                        }
-                                    }
-                                    break;
-                            }
-                            if (childElement) {
-                                childElement = childElement.nextElementSibling;
-                            }
-                        }
-                    }
-                }
-                messageElement = iterator.iterateNext() as Element;
-            }
-        }
-        for (let element of elementsToRemove) {
-            const parent = element.parentElement;
-            if (parent) {
-                parent.removeChild(element);
-                countMembersRemoved++;
-            }
-        }
-        this.repositoryStatistics.Add("Members.Unused", countMembersRemoved);
-    }
     private updateDomCodes(codesetsModel: CodesetSelectionModel): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
         const codesetsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:codeSets", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -637,13 +416,6 @@ export default class OrchestraFile {
         this.repositoryStatistics.Add("Codesets.Added", countCodesetsAdded);
         this.repositoryStatistics.Add("Codes.Removed", countCodesRemoved);
         this.repositoryStatistics.Add("Codes.Added", countCodesAdded);
-    }
-    private isUserDefined(field: FieldModel) : boolean {
-        let tagNumber: number = +field.id;
-        if ((tagNumber >= 5000 && tagNumber <= 40000) || tagNumber >= 60000) {
-            return true;
-        }
-        return false;
     }
     private updateDomFields(fieldsModel: IdSelectionModel[]): void {
         const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
@@ -713,48 +485,6 @@ export default class OrchestraFile {
       this.repositoryStatistics.Add("Groups.Removed", countGroupsRemoved);
       this.repositoryStatistics.Add("Groups.Added", countGroupsAdded);
   }
-    private addDomComponents(componentsModel: ComponentsModel) {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const componentsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        const componentsElement: Element = componentsSnapshot.snapshotItem(0) as Element;
-        const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        var countComponentsUsed: number = 0;
-        var countComponentsRemoved : number = 0;
-        var countComponentsAdded : number = 0;
-        componentsModel.forEach((component: ComponentModel) => {
-            let componentElement: Element | null = null;
-            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
-                const node: Element = nodesSnapshot.snapshotItem(i) as Element;
-                const name: string | null = node.getAttribute("name");
-                const scenario: string = node.getAttribute("scenario") || "base";
-                if (component.name === name && component.scenario === scenario) {
-                    componentElement = node;
-                    this.addDomMembers(componentElement, component, null);
-                    break;
-                }
-            }
-            if (!componentElement) {
-                componentElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:component");
-                componentElement.setAttribute("name", component.name);
-                componentElement.setAttribute("scenario", component.scenario);
-                componentElement.setAttribute("id", component.id);
-                componentsElement.appendChild(componentElement);
-                this.addDomMembers(componentElement, component, null);
-                countComponentsAdded++;
-            }
-            if (component.uses > 0) {
-                componentElement.setAttribute("supported", "supported");
-                countComponentsUsed++;
-            }
-            else if (!this.appendOnly) {
-                componentsElement.removeChild(componentElement);
-                countComponentsRemoved++;
-            }
-        });
-        this.repositoryStatistics.Add("Components.Used", countComponentsUsed);
-        this.repositoryStatistics.Add("Components.Removed",countComponentsRemoved);
-        this.repositoryStatistics.Add("Components.Added",countComponentsAdded);
-    }
     private updateDomComponents(componentsModel: ComponentSelectionModel): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const componentsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -805,51 +535,6 @@ export default class OrchestraFile {
       this.repositoryStatistics.Add("Components.Added", countComponentsAdded);
       this.repositoryStatistics.Add("Components.Removed", countComponentsRemoved);
   }
-    private addDomGroups(groupsModel: GroupsModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const groupsSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        const groupsElement: Element = groupsSnapshot.snapshotItem(0) as Element;
-        const nodesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-        var countGroupsUsed : number = 0;
-        var countGroupsRemoved : number = 0;
-        var countGroupsAdded : number = 0 ;
-        groupsModel.forEach((group: GroupModel) => {
-            let groupElement: Element | null = null;
-            for (let i = 0; i < nodesSnapshot.snapshotLength; i++) {
-                const node: Element = nodesSnapshot.snapshotItem(i) as Element;
-                const name: string | null = node.getAttribute("name");
-                const scenario: string = node.getAttribute("scenario") || "base";
-                if (group.name === name && group.scenario === scenario) {
-                    groupElement = node;
-                    this.addDomMembers(groupElement, group, null);
-                    break;
-                }
-            }
-            if (!groupElement) {
-                groupElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:group");
-                groupElement.setAttribute("name", group.name);
-                groupElement.setAttribute("scenario", group.scenario);
-                groupElement.setAttribute("id", group.id);
-                groupsElement.appendChild(groupElement);
-                const numInGroupElement = this.dom.createElementNS(OrchestraFile.NAMESPACE, "fixr:numInGroup");
-                numInGroupElement.setAttribute("id", group.numInGroup);
-                groupElement.appendChild(numInGroupElement);
-                this.addDomMembers(groupElement, group, null);
-                countGroupsAdded++;
-            }
-            if (group.uses > 0) {
-                groupElement.setAttribute("supported", "supported");
-                countGroupsUsed++;
-            }
-            else if (!this.appendOnly) {
-                groupsElement.removeChild(groupElement);
-                countGroupsRemoved++;
-            }           
-        });
-        this.repositoryStatistics.Add("Groups.Used", countGroupsUsed);
-        this.repositoryStatistics.Add("Groups.Removed", countGroupsRemoved);
-        this.repositoryStatistics.Add("Groups.Added", countGroupsAdded);
-    }
     private updateDomDatatypes(datatypesModel: NameSelectionModel[]): void {
       const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
       const datatypesSnapshot: XPathResult = this.dom.evaluate("/fixr:repository/fixr:datatypes", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -899,176 +584,6 @@ export default class OrchestraFile {
 
       this.repositoryStatistics.Add("Sections.Removed", countSectionsRemoved);
       this.repositoryStatistics.Add("Sections.Added", countSectionsAdded);
-    }
-    private removeUnusedComponentMembers(componentsModel: ComponentsModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-        const elementsToRemove = new Array<Element>();
-        let componentElement: Element = iterator.iterateNext() as Element;
-        while (componentElement) {
-            let elementName: string = componentElement.localName;
-            if (elementName === "component") {
-                const componentName: string | null = componentElement.getAttribute("name");
-                const scenario: string | null = componentElement.getAttribute("scenario") || "base";
-                if (componentName) {
-                    const key: string = ComponentModel.key(componentName, scenario);
-                    const componentModel: ComponentModel | undefined = componentsModel.get(key);
-                    let childElement: Element | null = componentElement.firstElementChild;
-                    while (componentModel && childElement) {
-                        elementName = childElement.localName;
-                        switch (elementName) {
-                            case "fieldRef":
-                                const fieldId: string | null = childElement.getAttribute("id");
-                                if (fieldId) {
-                                    const fieldContext: FieldContext | undefined = componentModel.findFieldRef(fieldId);
-                                    if (fieldContext && fieldContext[0].uses === 0) {
-                                        elementsToRemove.push(childElement);
-                                    }
-                                }
-                                break;
-                            case "componentRef":
-                                const componentId: string | null = childElement.getAttribute("id");
-                                if (componentId) {
-                                    const componentRef: ComponentRef | undefined = componentModel.findComponentRef(componentId);
-                                    if (componentRef && componentRef.uses === 0) {
-                                        elementsToRemove.push(childElement);
-                                    }
-                                }
-                                break;
-                            case "groupRef":
-                                const groupId: string | null = childElement.getAttribute("id");
-                                if (groupId) {
-                                    const groupRef: GroupRef | undefined = componentModel.findGroupRef(groupId);
-                                    if (groupRef && groupRef.uses === 0) {
-                                        elementsToRemove.push(childElement);
-                                    }
-                                }
-                                break;
-                        }
-                        childElement = childElement.nextElementSibling;
-                    }
-                }
-            }
-            componentElement = iterator.iterateNext() as Element;
-        }
-        for (let element of elementsToRemove) {
-            const parent = element.parentElement;
-            if (parent) {
-                parent.removeChild(element);
-            }
-        }
-    }
-    private removeUnusedGroupMembers(groupsModel: GroupsModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-        const elementsToRemove = new Array<Element>();
-        let componentElement: Element = iterator.iterateNext() as Element;
-        while (componentElement) {
-            let elementName: string = componentElement.localName;
-            if (elementName === "group") {
-                const groupName: string | null = componentElement.getAttribute("name");
-                const scenario: string | null = componentElement.getAttribute("scenario") || "base";
-                if (groupName) {
-                    const key: string = GroupModel.key(groupName, scenario);
-                    const groupModel: GroupModel | undefined = groupsModel.get(key);
-                    let childElement: Element | null = componentElement.firstElementChild;
-                    while (groupModel && childElement) {
-                        elementName = childElement.localName;
-                        switch (elementName) {
-                            case "fieldRef":
-                                const id: string | null = childElement.getAttribute("id");
-                                if (id) {
-                                    const fieldContext: FieldContext | undefined = groupModel.findFieldRef(id);
-                                    if (fieldContext && fieldContext[0].uses === 0) {
-                                        elementsToRemove.push(childElement);
-                                    }
-                                }
-                                break;
-                            case "componentRef":
-                                const componentId: string | null = childElement.getAttribute("id");
-                                if (componentId) {
-                                    const componentRef: ComponentRef | undefined = groupModel.findComponentRef(componentId);
-                                    if (componentRef && componentRef.uses === 0) {
-                                        elementsToRemove.push(childElement);
-                                    }
-                                }
-                                break;
-                            case "groupRef":
-                                const groupId: string | null = childElement.getAttribute("id");
-                                if (groupId) {
-                                    const groupRef: GroupRef | undefined = groupModel.findGroupRef(groupId);
-                                    if (groupRef && groupRef.uses === 0) {
-                                        elementsToRemove.push(childElement);
-                                    }
-                                }
-                                break;
-                        }
-                        childElement = childElement.nextElementSibling;
-                    }
-                }
-            }
-            componentElement = iterator.iterateNext() as Element;
-        }
-        for (let element of elementsToRemove) {
-            const parent = element.parentElement;
-            if (parent) {
-                parent.removeChild(element);
-            }
-        }
-    }
-    private removeUnusedComponents(componentsModel: ComponentsModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:components/fixr:component", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-        const elementsToRemove = new Array<Element>();
-        let componentElement: Element = iterator.iterateNext() as Element;
-        while (componentElement) {
-            const elementName: string = componentElement.localName;
-            if (elementName === "component") {
-                const name: string | null = componentElement.getAttribute("name");
-                const scenario: string = componentElement.getAttribute("scenario") || "base";
-                if (name) {
-                    const key: string = ComponentModel.key(name, scenario);
-                    const componentModel: ComponentModel | undefined = componentsModel.get(key);
-                    if (!componentModel || componentModel.uses === 0) {
-                        elementsToRemove.push(componentElement);
-                    }
-                }
-            }
-            componentElement = iterator.iterateNext() as Element;
-        }
-        for (let element of elementsToRemove) {
-            const parent = element.parentElement;
-            if (parent) {
-                parent.removeChild(element);
-            }
-        }
-    }
-    private removeUnusedGroups(groups: GroupsModel): void {
-        const namespaceResolver: XPathNSResolver = new XPathEvaluator().createNSResolver(this.dom);
-        const iterator: XPathResult = this.dom.evaluate("/fixr:repository/fixr:groups/fixr:group", this.dom, namespaceResolver, XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-        const elementsToRemove = new Array<Element>();
-        let groupElement: Element = iterator.iterateNext() as Element;
-        while (groupElement) {
-            const elementName: string = groupElement.localName;
-            if (elementName === "group") {
-                const name: string | null = groupElement.getAttribute("name");
-                const scenario: string | null = groupElement.getAttribute("scenario") || "base";
-                if (name) {
-                    const key: string = GroupModel.key(name, scenario);
-                    const groupModel: GroupModel | undefined = groups.get(key);
-                    if (!groupModel || groupModel.uses === 0) {
-                        elementsToRemove.push(groupElement);
-                    }
-                }
-            }
-            groupElement = iterator.iterateNext() as Element;
-        }
-        for (let element of elementsToRemove) {
-            const parent = element.parentElement;
-            if (parent) {
-                parent.removeChild(element);
-            }
-        }
     }
     private extractStructureMembers(memberElement: Element, structuralModel: StructureModel): void {
         let nextElement: Element | null = memberElement;
