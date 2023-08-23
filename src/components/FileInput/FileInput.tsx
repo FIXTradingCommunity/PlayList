@@ -10,7 +10,7 @@ interface Props {
   accept?: HTMLInputElement['accept'];
   multiple?: boolean;
   disableButton: boolean;
-  onChange: (files: FileList, isConfigFile: boolean) => void;
+  onChange: (files: FileList, isSelectorFile: boolean) => void;
   error?: string;
   clearError?: () => void;
   clearFields: () => void;
@@ -22,7 +22,7 @@ class FileInput extends Component<Props> {
   public state = {
     fileName: "",
     pct: 0,
-    isConfigFile: false,
+    isSelectorFile: false,
   }
 
   public render() {
@@ -75,9 +75,9 @@ class FileInput extends Component<Props> {
                           />
                           <StandardFileButton setErrorMessage={setErrorMessage} onChange={this.standardFileChange}/>
                           <InputButton 
-                            onChange={this.changeConfigFile}
+                            onChange={this.changeSelectorFile}
                             disableButton={disableButton}
-                            buttonStyle={"configFileFieldsButton"}
+                            buttonStyle={"selectorFileFieldsButton"}
                             buttonTitle={"Use Selector File"}
                             titleAttributes={"Optional Orchestra file to pre-select a subset of the source file, subject to subsequent changes"}
                           />
@@ -96,22 +96,22 @@ class FileInput extends Component<Props> {
 
   }
 
-  public changeConfigFile = () => {
+  public changeSelectorFile = () => {
     this.setState({
-      isConfigFile: true,
+      isSelectorFile: true,
     })
   }
 
   public changeReferenceFile = () => {
     this.setState({
-      isConfigFile: false,
+      isSelectorFile: false,
     })
   }
 
   public standardFileChange = (files: FileList) => {
     this.props.clearFields();
     this.setState({
-      isConfigFile: false,
+      isSelectorFile: false,
     })
     this.handleChange(files as FileList);
   }
@@ -131,7 +131,7 @@ class FileInput extends Component<Props> {
     if (this.props.clearError) {
       this.props.clearError();
     }
-    if (!this.state.isConfigFile) {
+    if (!this.state.isSelectorFile) {
       this.props.clearFields();
     }
     this.handleChange(files as FileList);
@@ -152,12 +152,12 @@ class FileInput extends Component<Props> {
         fileName: `${files.length} files loaded`
       })
     } else {
-      !this.state.isConfigFile &&
+      !this.state.isSelectorFile &&
       this.setState({
         fileName: files[0] ? files[0].name : ""
       })
     }
-    this.props.onChange(files, this.state.isConfigFile);
+    this.props.onChange(files, this.state.isSelectorFile);
   }
 
   public setProgress = (value: number) => {
@@ -170,7 +170,7 @@ class FileInput extends Component<Props> {
     this.setState({
       fileName: "",
       pct: 0,
-      isConfigFile: false,
+      isSelectorFile: false,
     })
   }
 
