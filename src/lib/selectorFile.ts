@@ -6,9 +6,9 @@ import convert from 'xml-js';
 import Utility from './utility';
 
 /**
- * Controller for ConfigFile operations
+ * Controller for SelectorFile operations
  */
-export default class ConfigFile {
+export default class SelectorFile {
   private inputProgress: HTMLElement | null;
   private outputProgress: HTMLElement | null;
   private progressFunc: (progressNode: HTMLElement, percent: number) => void;
@@ -50,7 +50,7 @@ export default class ConfigFile {
     })
   }
 
-  public async runReader(): Promise<{newCheckedConfigFileKeys: string[], newNumInGroupConfigFileKeys: string[]}> {
+  public async runReader(): Promise<{newCheckedSelectorFileKeys: string[], newNumInGroupSelectorFileKeys: string[]}> {
     try {
       const input = new OrchestraFile(this.referenceFile, false, this.inputProgress, this.progressFunc);
       // read local reference Orchestra file
@@ -59,18 +59,20 @@ export default class ConfigFile {
       this.mappedData = Utility.mapOrchestraDom(jsonDom.elements[0].elements)
       const tree = Utility.createInitialTree(this.mappedData);
       this.keys = tree.mappedKeys;
-      const newCheckedConfigFileKeys: string[] = [];
-      const newNumInGroupConfigFileKeys: string[] = [];
+      console.log("keys", this.keys);
+      
+      const newCheckedSelectorFileKeys: string[] = [];
+      const newNumInGroupSelectorFileKeys: string[] = [];
       for (const key in this.keys) {
         this.keys[key].forEach(key => {
           key.includes("numInGroup->")
-            ? newNumInGroupConfigFileKeys.push(key)
-            : newCheckedConfigFileKeys.push(key)
+            ? newNumInGroupSelectorFileKeys.push(key)
+            : newCheckedSelectorFileKeys.push(key)
         })
       }
 
-      return new Promise<{newCheckedConfigFileKeys: string[], newNumInGroupConfigFileKeys: string[]}>(resolve =>
-        resolve({ newCheckedConfigFileKeys, newNumInGroupConfigFileKeys })
+      return new Promise<{newCheckedSelectorFileKeys: string[], newNumInGroupSelectorFileKeys: string[]}>(resolve =>
+        resolve({ newCheckedSelectorFileKeys, newNumInGroupSelectorFileKeys })
       );
     } catch (e) {
       return new Promise<any>((resolve, reject) =>

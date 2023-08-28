@@ -14,7 +14,7 @@ import ResultsPage from './ResultsPage/ResultsPage';
 import ProgressBar from './ProgressBar/ProgressBar';
 import OrchestraFile from "../lib/OrchestraFile";
 import Playlist from '../lib/playlist';
-import ConfigFile from '../lib/configFile';
+import SelectorFile from '../lib/selectorFile';
 import Utility from '../lib/utility';
 import TextField from '@material-ui/core/TextField';
 import BasicModal from './Modal/Modal';
@@ -87,7 +87,7 @@ export interface State {
   modalAlternativeMessage: string,
   activeCleanApp: boolean,
   showCircularProgress: boolean,
-  isConfigFile: boolean,
+  isSelectorFile: boolean,
   checked: Array<string>,
   targetNode: any,
 }
@@ -116,7 +116,7 @@ export default class App extends Component {
     modalAlternativeMessage: "",
     activeCleanApp: false,
     showCircularProgress: false,
-    isConfigFile: false,
+    isSelectorFile: false,
     checked: [],
     targetNode: "",
   };
@@ -128,8 +128,8 @@ export default class App extends Component {
   private playlist: Playlist | undefined = undefined;
   private errorHandler: ErrorHandler | undefined = undefined;
 
-  private configFile: ConfigFile | undefined = undefined;
-  private referenceConfigFile: File | undefined = undefined;
+  private selectorFile: SelectorFile | undefined = undefined;
+  private referenceSelectorFile: File | undefined = undefined;
   private inputConfigProgress: HTMLElement | undefined = undefined;
 
   constructor(props: {}) {
@@ -422,13 +422,13 @@ export default class App extends Component {
       });
       this.playlist.cleanParseXMLError();
     }
-    if (this.configFile?.lastCodesetItem) {
+    if (this.selectorFile?.lastCodesetItem) {
       this.setState({
         showModal: true,
         modalTitle: "Warning",
         modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
       });
-      this.configFile.updateLastCodesetItem();
+      this.selectorFile.updateLastCodesetItem();
     }
     if (this.playlist?.lastCodesetItem) {
       this.setState({
@@ -439,7 +439,7 @@ export default class App extends Component {
       this.setState({showModal: true});
       this.playlist.updateLastCodesetItem();
     }
-    if (this.state.showCircularProgress && !this.state.isConfigFile) {
+    if (this.state.showCircularProgress && !this.state.isSelectorFile) {
       setTimeout(() => {
         this.checkTreeNode(this.state.checked, this.state.targetNode);
       }, 100)
@@ -510,17 +510,17 @@ export default class App extends Component {
     });
   };
 
-  private inputOrchestra = (fileList: FileList | null, isConfigFile: boolean): void => {
+  private inputOrchestra = (fileList: FileList | null, isSelectorFile: boolean): void => {
     if (fileList && fileList.length > 0) {
-      if (isConfigFile) {
-        this.setState({ showCircularProgress: true, isConfigFile: true })
-        this.referenceConfigFile = fileList[0];
+      if (isSelectorFile) {
+        this.setState({ showCircularProgress: true, isSelectorFile: true })
+        this.referenceSelectorFile = fileList[0];
       } else {
         this.referenceFile = fileList[0];
       }
     }
-    isConfigFile ? setTimeout(() => {
-      this.readConfigFileOrchestra()
+    isSelectorFile ? setTimeout(() => {
+      this.readSelectorFileOrchestra()
     }, 1000)
     : this.readOrchestra();
   };
@@ -627,8 +627,10 @@ export default class App extends Component {
   private checkIfExistInTreeRecursive = (tree: Array<INode>, value: string): boolean => {
     for (let i = 0; i < tree.length; i++) {
       const node = tree[i];
-      if (node.value === value) {
-        return true;
+      if (value.startsWith("message:")) {
+        if (value.includes(node.value)) return true; 
+      } else {
+        if (value === node.value) return true;
       }
       if (node.children) {
         const exist = this.checkIfExistInTreeRecursive(node.children, value);
@@ -640,30 +642,30 @@ export default class App extends Component {
     return false;
   }
 
-  private async readConfigFileOrchestra(): Promise<void> {
-    if (this.referenceConfigFile && this.inputConfigProgress && this.outputProgress) {
-      const runner: ConfigFile = new ConfigFile(
-        this.referenceConfigFile,
+  private async readSelectorFileOrchestra(): Promise<void> {
+    if (this.referenceSelectorFile && this.inputConfigProgress && this.outputProgress) {
+      const runner: SelectorFile = new SelectorFile(
+        this.referenceSelectorFile,
         this.inputConfigProgress,
         this.outputProgress,
         this.showProgress
       );
-    this.configFile = runner;
+    this.selectorFile = runner;
     try {
       // Read local config file.
-      const configKeys = await runner.runReader();
-      const filteredCheckedConfigFileKeys = this.checkIfExistInTree(this.state.treeData, configKeys.newCheckedConfigFileKeys);
+      const selectorKeys = await runner.runReader();
+      const filteredCheckedSelectorFileKeys = this.checkIfExistInTree(this.state.treeData, selectorKeys.newCheckedSelectorFileKeys);
       // Removing duplicated elements from the checked list.
-      const dataArr = new Set([...filteredCheckedConfigFileKeys, ...this.state.checkedTreeState]);
+      const dataArr = new Set([...filteredCheckedSelectorFileKeys, ...this.state.checkedTreeState]);
       const updatedValues = [...dataArr];
-      this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isConfigFile: false });
-      if (configKeys.newNumInGroupConfigFileKeys.length) {
-        const updatedNumInGroupValues = this.playlist?.checkValues(this.state.checkedTreeState, configKeys.newNumInGroupConfigFileKeys);
+      this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isSelectorFile: false });
+      if (selectorKeys.newNumInGroupSelectorFileKeys.length) {
+        const updatedNumInGroupValues = this.playlist?.checkValues(this.state.checkedTreeState, selectorKeys.newNumInGroupSelectorFileKeys);
         this.setState({ readingFile: false, checkedTreeState: updatedNumInGroupValues?.newCheckedList || [] });
       }
     } catch (err) {
       const error = err as {name: string, message: string}
-      this.setState({ showCircularProgress: false, isConfigFile: false })
+      this.setState({ showCircularProgress: false, isSelectorFile: false })
       this.errorHandler?.captureException(error);
       this.alertMsg = {
         title: this.getErrorTitle(error?.name ?? ""),
