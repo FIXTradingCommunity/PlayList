@@ -568,8 +568,6 @@ export default class App extends Component {
       "component:1024-field:34->field:34",
       "component:1024-field:52->field:52",
       "component:1025-field:10->field:10",
-      "message:AccountSummaryReport-component:1024->component:1024",
-      "message:AccountSummaryReport-component:1025->component:1025",
     ];
     if (this.referenceFile && this.inputProgress && this.outputProgress) {
       this.setState({
