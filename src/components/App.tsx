@@ -400,86 +400,91 @@ export default class App extends Component {
   }
 
   public componentDidUpdate(nextProps: any, nextState: any) {
-    if (!this.state.authVerified) {
-      return null
-    }
-    if (this.playlist?.duplicateValuesError?.length) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Duplicate Values in XML",
-        modalMessage: this.playlist.duplicateValuesError,
-        activeCleanApp: true,
-        modalAlternativeMessage: "Note that this version of Playlist does not support scenarios.",
-      });
-      this.playlist.cleanDuplicateValuesError();
-    }
-    if (this.playlist?.parseXMLError && !this.state.showModal) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Bad XML File",
-        modalMessage: this.playlist.parseXMLError,
-        activeCleanApp: true,
-      });
-      this.playlist.cleanParseXMLError();
-    }
-    if (this.selectorFile?.lastCodesetItem) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Warning",
-        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
-      });
-      this.selectorFile.updateLastCodesetItem();
-    }
-    if (this.playlist?.lastCodesetItem) {
-      this.setState({
-        showModal: true,
-        modalTitle: "Warning",
-        modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
-      });
-      this.setState({showModal: true});
-      this.playlist.updateLastCodesetItem();
-    }
-    if (this.state.showCircularProgress && !this.state.isSelectorFile) {
-      setTimeout(() => {
-        this.checkTreeNode(this.state.checked, this.state.targetNode);
-      }, 100)
-    }
-    if (this.playlist && this.playlist.lastCodesetItem) {
-      this.setState({showModal: true});
-      this.playlist.updateLastCodesetItem();
-    }
-    const nodes: any = document.querySelectorAll(".rct-node-expanded");
-    for(let i = 0; i < nodes.length; i++) {
-      if (nodes[i]) {
-        const doc2: any = nodes[i].querySelector(".rct-title")
-        if (doc2 && doc2.innerText === 'CODESETS') {
-          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");
-          for (let checkbox of allFirstCheckbox) {
-            checkbox.disabled = true;
-            checkbox.className="disabledCheckbox";
-          }
-        }
-        if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
-          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");
-          for (let checkbox of allFirstCheckbox) {
-            checkbox.className="disabledCheckbox";
-          }
-        }
-        if (doc2 && doc2.innerText === 'FIELDS') {
-          const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");
-          for (let checkbox of allFirstCheckbox) {
-            checkbox.className="disabledCheckbox";
-          }
-        }
-      }
-    }
+    try {
 
-    if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
-      const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
-      for (let checkbox of allFirstCheckbox) {
-        checkbox.disabled = true;
-        checkbox.className="disabledCheckbox";
+      if (!this.state.authVerified) {
+        return null
       }
+      if (this.playlist?.duplicateValuesError?.length) {
+        this.setState({
+          showModal: true,
+          modalTitle: "Duplicate Values in XML",
+          modalMessage: this.playlist.duplicateValuesError,
+          activeCleanApp: true,
+          modalAlternativeMessage: "Note that this version of Playlist does not support scenarios.",
+        });
+        this.playlist.cleanDuplicateValuesError();
+      }
+      if (this.playlist?.parseXMLError && !this.state.showModal) {
+        this.setState({
+          showModal: true,
+          modalTitle: "Bad XML File",
+          modalMessage: this.playlist.parseXMLError,
+          activeCleanApp: true,
+        });
+        this.playlist.cleanParseXMLError();
+      }
+      if (this.selectorFile?.lastCodesetItem) {
+        this.setState({
+          showModal: true,
+          modalTitle: "Warning",
+          modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+        });
+        this.selectorFile.updateLastCodesetItem();
+      }
+      if (this.playlist?.lastCodesetItem) {
+        this.setState({
+          showModal: true,
+          modalTitle: "Warning",
+          modalMessage: "The last code of a code set cannot be removed. Instead, please remove the field(s) using this code set from messages, groups and/or components."
+        });
+        this.setState({showModal: true});
+        this.playlist.updateLastCodesetItem();
+      }
+      if (this.state.showCircularProgress && !this.state.isSelectorFile) {
+        setTimeout(() => {
+          this.checkTreeNode(this.state.checked, this.state.targetNode);
+        }, 100)
+      }
+      if (this.playlist && this.playlist.lastCodesetItem) {
+        this.setState({showModal: true});
+        this.playlist.updateLastCodesetItem();
+      }
+      const nodes: any = document.querySelectorAll(".rct-node-expanded");
+      for(let i = 0; i < nodes.length; i++) {
+        if (nodes[i]) {
+          const doc2: any = nodes[i].querySelector(".rct-title")
+          if (doc2 && doc2.innerText === 'CODESETS') {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");
+            for (let checkbox of allFirstCheckbox) {
+              checkbox.disabled = true;
+              checkbox.className="disabledCheckbox";
+            }
+          }
+          if (doc2 && ['DATATYPES', 'FIELDS'].includes(doc2.innerText)) {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > .rct-text > label > input");
+            for (let checkbox of allFirstCheckbox) {
+              checkbox.className="disabledCheckbox";
+            }
+          }
+          if (doc2 && doc2.innerText === 'FIELDS') {
+            const allFirstCheckbox: any = nodes[i].querySelectorAll(".tree > div > ol > li > ol > li > ol > li > .rct-text > label > input");
+            for (let checkbox of allFirstCheckbox) {
+              checkbox.className="disabledCheckbox";
+            }
+          }
+        }
+      }
+  
+      if (this.state.treeData.length > 0 && nextState.treeData.length === 0) {
+        const allFirstCheckbox: any = document.querySelectorAll(".tree > div > ol > li > .rct-text > label > input");
+        for (let checkbox of allFirstCheckbox) {
+          checkbox.disabled = true;
+          checkbox.className="disabledCheckbox";
+        }
+      }
+    } catch (error) {
+      this.errorHandler?.captureException(error);
     }
   };
 
@@ -641,25 +646,26 @@ export default class App extends Component {
   }
 
   private async readSelectorFileOrchestra(): Promise<void> {
-    if (this.referenceSelectorFile && this.inputConfigProgress && this.outputProgress) {
-      const runner: SelectorFile = new SelectorFile(
-        this.referenceSelectorFile,
-        this.inputConfigProgress,
-        this.outputProgress,
-        this.showProgress
-      );
-    this.selectorFile = runner;
     try {
-      // Read local config file.
-      const selectorKeys = await runner.runReader();
-      const filteredCheckedSelectorFileKeys = this.checkIfExistInTree(this.state.treeData, selectorKeys.newCheckedSelectorFileKeys);
-      // Removing duplicated elements from the checked list.
-      const dataArr = new Set([...filteredCheckedSelectorFileKeys, ...this.state.checkedTreeState]);
-      const updatedValues = [...dataArr];
-      this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isSelectorFile: false });
-      if (selectorKeys.newNumInGroupSelectorFileKeys.length) {
-        const updatedNumInGroupValues = this.playlist?.checkValues(this.state.checkedTreeState, selectorKeys.newNumInGroupSelectorFileKeys);
-        this.setState({ readingFile: false, checkedTreeState: updatedNumInGroupValues?.newCheckedList || [] });
+      if (this.referenceSelectorFile && this.inputConfigProgress && this.outputProgress) {
+        const runner: SelectorFile = new SelectorFile(
+          this.referenceSelectorFile,
+          this.inputConfigProgress,
+          this.outputProgress,
+          this.showProgress
+        );
+        this.selectorFile = runner;
+        // Read local config file.
+        const selectorKeys = await runner.runReader();
+        const filteredCheckedSelectorFileKeys = this.checkIfExistInTree(this.state.treeData, selectorKeys.newCheckedSelectorFileKeys);
+        // Removing duplicated elements from the checked list.
+        const dataArr = new Set([...filteredCheckedSelectorFileKeys, ...this.state.checkedTreeState]);
+        const updatedValues = [...dataArr];
+        this.setState({ readingFile: false, checkedTreeState: updatedValues || [], showCircularProgress: false, isSelectorFile: false });
+        if (selectorKeys.newNumInGroupSelectorFileKeys.length) {
+          const updatedNumInGroupValues = this.playlist?.checkValues(this.state.checkedTreeState, selectorKeys.newNumInGroupSelectorFileKeys);
+          this.setState({ readingFile: false, checkedTreeState: updatedNumInGroupValues?.newCheckedList || [] });
+        }
       }
     } catch (err) {
       const error = err as {name: string, message: string}
@@ -672,7 +678,6 @@ export default class App extends Component {
       this.setState({ showAlerts: true });
     }
   }
-}
 
   private openResults = () => {
     this.setState({
@@ -791,17 +796,17 @@ export default class App extends Component {
   }
 
   private CheckAuthenticated() {
-
-    if (process.env.NODE_ENV === "development") {
-      this.setState({
-        authVerified: true,
-      })
-      return;
-    }
-
-    const urlparsed = QueryString.parse(window.location.search);
-    const id_token = urlparsed.id_token as string;
     try {
+      if (process.env.NODE_ENV === "development") {
+        this.setState({
+          authVerified: true,
+        })
+        return;
+      }
+
+      const urlparsed = QueryString.parse(window.location.search);
+      const id_token = urlparsed.id_token as string;
+    
       const decoded: null | IDecoded | string = jwt.decode(id_token);
       if (!decoded) {
         throw new Error("unauthenticated");
@@ -826,7 +831,7 @@ export default class App extends Component {
       })
 
     } catch (e) {
-      Utility.Log(e);
+      console.error(e);
 
       const redirectUri = process.env.REACT_APP_REDIRECT_URL;
       const clientId = process.env.REACT_APP_CLIENT_ID;
