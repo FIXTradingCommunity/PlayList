@@ -134,6 +134,7 @@ export default class App extends Component {
 
   constructor(props: {}) {
     super(props);
+    this.errorHandler = ErrorHandler.getInstance();
     window.addEventListener("offline", (event: any) => {
       this.setState({
         showModal: true,
@@ -143,15 +144,10 @@ export default class App extends Component {
       });
     });
     window.onunhandledrejection = (event: any) => {
-      this.errorHandler?.captureException(event)
-      this.setState({
-        showModal: true,
-        modalTitle: "Unhandled Rejection",
-        modalMessage: event?.reason ?? "",
-        activeCleanApp: false,
-      });;
+      this.errorHandler?.captureException(event);
+      event.preventDefault();
     };
-    this.errorHandler = ErrorHandler.getInstance();
+    
 
   }
 
