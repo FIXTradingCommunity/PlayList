@@ -90,7 +90,7 @@ export default function StandardFileButton(props: any) {
       })
       .catch((err: any) => {
         setErrorMessage("Standard Files Error", "Error reading Standard File")
-        throw err;
+        console.error(err);
       })
   }
 
