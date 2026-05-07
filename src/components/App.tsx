@@ -529,11 +529,11 @@ export default class App extends Component {
       this.errorHandler?.captureException(error);
     }
   }
-
+/*!  Remove authentication via xecurify
   public componentDidMount() {
     this.CheckAuthenticated();
   }
-
+*/
   public handleClearFields() {
     if (this.referenceFile) {
       this.referenceFile = undefined;
