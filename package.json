@@ -38,7 +38,9 @@
     "build:dev": "env-cmd -f .env.development react-scripts build",
     "build:prod": "env-cmd -f .env.production react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "npm run build:dev && wrangler deploy",
+    "preview": "npm run build:dev && wrangler dev"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -51,6 +53,7 @@
   ],
   "devDependencies": {
     "@types/lodash": "^4.14.168",
-    "webpack-manifest-plugin": "^2.0.4"
+    "webpack-manifest-plugin": "^2.0.4",
+    "wrangler": "^4.88.0"
   }
 }
